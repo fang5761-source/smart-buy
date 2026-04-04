@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>智能採買</title>
+  
+  <!-- 綁定專屬徽章 (對應我們剛才請產圖大樂做的 apple-touch-icon.png) -->
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="智能採買">
+
+  <!-- 載入 Tailwind CSS 戰術塗裝 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 載入 React 核心引擎 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- 載入 Babel 翻譯機 -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-neutral-100 text-neutral-800 antialiased selection:bg-emerald-200">
+  <div id="root"></div>
+
+  <!-- 應用程式邏輯 -->
+  <script type="text/babel" data-type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    // ==========================================
+    // ⚠️ 姊姊注意！請把下面這段 firebaseConfig 
+    // 替換成妳存在記事本裡的那串金鑰！
+    // 記得保留前後的雙引號 "" 喔！
+    // ==========================================
+    const firebaseConfig = {
+  apiKey: "AIzaSyC36SqZOaZR3iYfMMDg5NQlADKdwEaZ5bk",
+  authDomain: "smart-buy-dbaae.firebaseapp.com",
+  projectId: "smart-buy-dbaae",
+  storageBucket: "smart-buy-dbaae.firebasestorage.app",
+  messagingSenderId: "176643347488",
+  appId: "1:176643347488:web:182ef57838ae4358e4d845",
+  measurementId: "G-7E04LF7E9P"
+};
+    // ==========================================
+
+    // 啟動 Firebase 裝備
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // SVG 圖示包 (確保穩定不破圖)
+    const Icons = {
+      ShoppingCart: () => <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>,
+      Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
+      Trash2: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
+      Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    };
+
+    const App = () => {
+      const [items, setItems] = React.useState([]);
+      const [inputValue, setInputValue] = React.useState('');
+      const [user, setUser] = React.useState(null);
+      const [isLoading, setIsLoading] = React.useState(true);
+      const [authError, setAuthError] = React.useState(false);
+
+      // 預設戰術分類標籤
+      const categories = [
+        { id: 'all', name: '全部', color: 'bg-neutral-500' },
+        { id: 'pxmart', name: '全聯', color: 'bg-blue-600' },
+        { id: 'costco', name: '好市多', color: 'bg-red-600' },
+        { id: 'market', name: '菜市場', color: 'bg-orange-500' },
+        { id: 'other', name: '其他', color: 'bg-emerald-500' }
+      ];
+      const [activeCategory, setActiveCategory] = React.useState('all');
+      const [selectedTag, setSelectedTag] = React.useState('pxmart');
+
+      // 啟動隱形警衛 (匿名登入)
+      React.useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          if (currentUser) {
+            setUser(currentUser);
+            setAuthError(false);
+          } else {
+            signInAnonymously(auth).catch((error) => {
+              console.error("登入失敗:", error);
+              setAuthError(true);
+              setIsLoading(false);
+            });
+          }
+        });
+        return () => unsubscribe();
+      }, []);
+
+      // 連線保險箱抓取資料
+      React.useEffect(() => {
+        if (!user) return;
+        
+        setIsLoading(true);
+        // 路徑：users / 專屬ID / items
+        const itemsRef = collection(db, 'users', user.uid, 'items');
+        const q = query(itemsRef, orderBy('createdAt', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const fetchedItems = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setItems(fetchedItems);
+          setIsLoading(false);
+        }, (error) => {
+          console.error("讀取資料失敗:", error);
+          setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+      }, [user]);
+
+      // 新增裝備 (防擠壓設計)
+      const addItem = async (e) => {
+        e.preventDefault();
+        if (!inputValue.trim() || !user) return;
+        
+        const newItem = {
+          name: inputValue.trim(),
+          category: selectedTag,
+          completed: false,
+          createdAt: serverTimestamp()
+        };
+        
+        setInputValue(''); // 先清空輸入框，保持手感
+        try {
+          await addDoc(collection(db, 'users', user.uid, 'items'), newItem);
+        } catch (error) {
+          console.error("新增失敗:", error);
+        }
+      };
+
+      // 切換完成狀態
+      const toggleItem = async (id, currentStatus) => {
+        if(!user) return;
+        const itemRef = doc(db, 'users', user.uid, 'items', id);
+        await updateDoc(itemRef, { completed: !currentStatus });
+      };
+
+      // 刪除裝備
+      const deleteItem = async (id) => {
+        if(!user) return;
+        const itemRef = doc(db, 'users', user.uid, 'items', id);
+        await deleteDoc(itemRef);
+      };
+
+      // 根據上方頁籤過濾顯示
+      const filteredItems = items.filter(item => 
+        activeCategory === 'all' ? true : item.category === activeCategory
+      );
+
+      // 計算分類顏色
+      const getCategoryColor = (catId) => {
+        const cat = categories.find(c => c.id === catId);
+        return cat ? cat.color : 'bg-gray-500';
+      };
+      const getCategoryName = (catId) => {
+        const cat = categories.find(c => c.id === catId);
+        return cat ? cat.name : '未知';
+      };
+
+      return (
+        <div className="min-h-screen bg-neutral-200 flex justify-center font-sans">
+          <div className="w-full max-w-md bg-white shadow-2xl flex flex-col h-screen sm:h-[90vh] sm:mt-8 sm:rounded-3xl overflow-hidden relative">
+            
+            {/* 頂部標題列 */}
+            <header className="bg-emerald-600 text-white p-3 sm:p-4 flex items-center justify-between shadow-sm z-20 shrink-0">
+              <div className="flex items-center gap-2">
+                <Icons.ShoppingCart />
+                <h1 className="text-lg font-bold tracking-wider">智能採買</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                {isLoading && !authError && <span className="text-xs text-emerald-200 animate-pulse">連線中...</span>}
+                {authError && <span className="text-xs text-red-200">金鑰設定有誤</span>}
+              </div>
+            </header>
+
+            {/* 分類過濾頁籤 */}
+            <div className="flex overflow-x-auto hide-scrollbar bg-white border-b border-neutral-100 shadow-sm shrink-0 px-2 py-2">
+              {categories.map(cat => (
+                <button
+                  key={`filter-${cat.id}`}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`whitespace-nowrap px-4 py-1.5 mx-1 rounded-full text-sm font-medium transition-colors ${
+                    activeCategory === cat.id 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'text-neutral-400 hover:bg-neutral-50'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+
+            {/* 清單主體區塊 */}
+            <main className="flex-1 overflow-y-auto p-4 bg-neutral-50/50 pb-24">
+              {authError ? (
+                <div className="h-full flex flex-col items-center justify-center text-neutral-400 gap-3 text-center p-6">
+                  <p className="text-red-500 font-bold mb-2">無法連線到資料庫</p>
+                  <p className="text-sm">請確認您貼在 index.html 裡的 firebaseConfig 金鑰是否完整正確。</p>
+                </div>
+              ) : items.length === 0 && !isLoading ? (
+                <div className="h-full flex flex-col items-center justify-center text-neutral-400 gap-3">
+                  <Icons.ShoppingCart size={48} className="opacity-20" />
+                  <p>目前沒有待買物品喔</p>
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {filteredItems.map(item => (
+                    <li 
+                      key={item.id} 
+                      className={`flex items-center justify-between p-3 rounded-2xl border ${
+                        item.completed ? 'bg-neutral-50 border-neutral-100' : 'bg-white border-neutral-200 shadow-sm'
+                      } transition-all active:scale-[0.98]`}
+                    >
+                      <div className="flex items-center gap-3 flex-1 overflow-hidden cursor-pointer" onClick={() => toggleItem(item.id, item.completed)}>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          item.completed ? 'bg-emerald-500 border-emerald-500' : 'border-neutral-300'
+                        }`}>
+                          {item.completed && <span className="text-white"><Icons.Check /></span>}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <span className={`truncate text-lg ${item.completed ? 'text-neutral-400 line-through' : 'text-neutral-700 font-medium'}`}>
+                            {item.name}
+                          </span>
+                          <span className={`text-[10px] w-fit px-1.5 py-0.5 rounded text-white ${getCategoryColor(item.category)} ${item.completed ? 'opacity-50' : ''}`}>
+                            {getCategoryName(item.category)}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        onClick={() => deleteItem(item.id)}
+                        className="p-2 text-neutral-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors ml-2 shrink-0"
+                      >
+                        <Icons.Trash2 />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </main>
+
+            {/* 底部固定輸入區 */}
+            <div className="absolute bottom-0 left-0 w-full bg-white border-t border-neutral-200 p-3 pb-6 sm:pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] z-20">
+              
+              {/* 新增物品用的標籤選擇 */}
+              <div className="flex gap-2 mb-3 px-1 overflow-x-auto hide-scrollbar">
+                {categories.filter(c => c.id !== 'all').map(cat => (
+                  <button
+                    key={`select-${cat.id}`}
+                    type="button"
+                    onClick={() => setSelectedTag(cat.id)}
+                    className={`text-xs px-3 py-1 rounded-full whitespace-nowrap transition-all ${
+                      selectedTag === cat.id 
+                        ? `${cat.color} text-white shadow-md scale-105` 
+                        : 'bg-neutral-100 text-neutral-500'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* 輸入框與按鈕 (裝甲防擠壓版) */}
+              <form onSubmit={addItem} className="flex gap-2 relative">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="輸入要買的東西..."
+                  className="flex-1 bg-neutral-100 border-transparent rounded-2xl px-4 py-3 text-base focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
+                />
+                <button 
+                  type="submit"
+                  disabled={!inputValue.trim()}
+                  className="bg-emerald-600 text-white p-3 rounded-2xl hover:bg-emerald-700 disabled:opacity-50 disabled:hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-600/30 shrink-0 aspect-square flex items-center justify-center"
+                >
+                  <Icons.Plus />
+                </button>
+              </form>
+            </div>
+            
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+
+  <!-- 隱藏捲動條的 CSS -->
+  <style>
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</body>
+</html>
