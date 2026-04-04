@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>智能採買</title>
   
+  <link id="manifest-link" rel="manifest" href="">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,6 +20,31 @@
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
+
+  <script>
+    // 【工程魔法】動態生成 PWA 必備的身分證與通訊兵，解鎖無徽章的「安裝」功能
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. 動態建立 Manifest (讓 Chrome 認定這是一個真正的 APP)
+      const manifest = {
+        name: "智能採買",
+        short_name: "智能採買",
+        start_url: window.location.pathname,
+        display: "standalone",
+        background_color: "#e5e5e5",
+        theme_color: "#059669",
+        icons: [{ src: "apple-touch-icon.png", sizes: "192x192 512x512 any", type: "image/png", purpose: "any maskable" }]
+      };
+      const manifestData = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+      document.getElementById('manifest-link').href = manifestData;
+
+      // 2. 動態註冊 Service Worker (Chrome 規定必須有通訊兵才能安裝)
+      if ('serviceWorker' in navigator) {
+        const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => self.clients.claim()); self.addEventListener('fetch', (e) => {});";
+        const swBlob = new Blob([swCode], {type: 'text/javascript'});
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(console.error);
+      }
+    });
+  </script>
 </head>
 <body class="bg-neutral-200 text-neutral-800 antialiased">
   <div id="root"></div>
