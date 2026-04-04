@@ -5,302 +5,652 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>智能採買</title>
   
-  <!-- 綁定專屬徽章 (對應我們剛才請產圖大樂做的 apple-touch-icon.png) -->
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="智能採買">
 
-  <!-- 載入 Tailwind CSS 戰術塗裝 -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- 載入 React 核心引擎 -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <!-- 載入 Babel 翻譯機 -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
 </head>
-<body class="bg-neutral-100 text-neutral-800 antialiased selection:bg-emerald-200">
+<body class="bg-neutral-200 text-neutral-800 antialiased">
   <div id="root"></div>
 
-  <!-- 應用程式邏輯 -->
   <script type="text/babel" data-type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-    // ==========================================
-    // ⚠️ 姊姊注意！請把下面這段 firebaseConfig 
-    // 替換成妳存在記事本裡的那串金鑰！
-    // 記得保留前後的雙引號 "" 喔！
-    // ==========================================
+    const { useState, useEffect } = React;
+
+    // 大樂已經幫姊姊把專屬金鑰直接銲接上去了，不用再修改！
     const firebaseConfig = {
-  apiKey: "AIzaSyC36SqZOaZR3iYfMMDg5NQlADKdwEaZ5bk",
-  authDomain: "smart-buy-dbaae.firebaseapp.com",
-  projectId: "smart-buy-dbaae",
-  storageBucket: "smart-buy-dbaae.firebasestorage.app",
-  messagingSenderId: "176643347488",
-  appId: "1:176643347488:web:182ef57838ae4358e4d845",
-  measurementId: "G-7E04LF7E9P"
-};
-    // ==========================================
-
-    // 啟動 Firebase 裝備
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    // SVG 圖示包 (確保穩定不破圖)
-    const Icons = {
-      ShoppingCart: () => <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>,
-      Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
-      Trash2: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
-      Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      apiKey: "AIzaSyC36SqZOaZR3iYfMMDg5NQlADKdwEaZ5bk",
+      authDomain: "smart-buy-dbaae.firebaseapp.com",
+      projectId: "smart-buy-dbaae",
+      storageBucket: "smart-buy-dbaae.firebasestorage.app",
+      messagingSenderId: "176643347488",
+      appId: "1:176643347488:web:182ef57838ae4358e4d845",
+      measurementId: "G-7E04LF7E9P"
     };
 
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // --- 圖示庫 ---
+    const SvgIcon = ({ children, size=24, className="" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        {children}
+      </svg>
+    );
+    const ShoppingCart = (p) => <SvgIcon {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></SvgIcon>;
+    const Plus = (p) => <SvgIcon {...p}><path d="M5 12h14"/><path d="M12 5v14"/></SvgIcon>;
+    const CheckCircle2 = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></SvgIcon>;
+    const Circle = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/></SvgIcon>;
+    const Trash2 = (p) => <SvgIcon {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></SvgIcon>;
+    const Tag = (p) => <SvgIcon {...p}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></SvgIcon>;
+    const Zap = (p) => <SvgIcon {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></SvgIcon>;
+    const User = (p) => <SvgIcon {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></SvgIcon>;
+    const Settings = (p) => <SvgIcon {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></SvgIcon>;
+    const ShoppingBag = (p) => <SvgIcon {...p}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></SvgIcon>;
+    const ChevronDown = (p) => <SvgIcon {...p}><path d="m6 9 6 6 6-6"/></SvgIcon>;
+    const ChevronUp = (p) => <SvgIcon {...p}><path d="m18 15-6-6-6 6"/></SvgIcon>;
+    const Clock = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></SvgIcon>;
+    const Radio = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5 5a10 10 0 0 0 0 14"/><path d="M19 5a10 10 0 0 1 0 14"/></SvgIcon>;
+    const History = (p) => <SvgIcon {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></SvgIcon>;
+    const LogOut = (p) => <SvgIcon {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></SvgIcon>;
+    const X = (p) => <SvgIcon {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></SvgIcon>;
+
+    const DEFAULT_QUICK_ITEMS = [
+      { name: '雞蛋', tag: '全聯' },
+      { name: '鮮乳', tag: '全聯' },
+      { name: '青菜', tag: '菜市場' }
+    ];
+    const DEFAULT_TAGS = ['無', '全聯', '菜市場', '好市多', '五金行'];
+
     const App = () => {
-      const [items, setItems] = React.useState([]);
-      const [inputValue, setInputValue] = React.useState('');
-      const [user, setUser] = React.useState(null);
-      const [isLoading, setIsLoading] = React.useState(true);
-      const [authError, setAuthError] = React.useState(false);
+      const [user, setUser] = useState(null);
+      const [items, setItems] = useState([]);
+      const [inputValue, setInputValue] = useState('');
+      
+      const [activeTag, setActiveTag] = useState('無');
+      const [filterTag, setFilterTag] = useState('全部'); 
+      const [isLoading, setIsLoading] = useState(true);
+      const [isShoppingMode, setIsShoppingMode] = useState(false);
+      
+      const [quickItems, setQuickItems] = useState(DEFAULT_QUICK_ITEMS);
+      const [customTags, setCustomTags] = useState(DEFAULT_TAGS);
+      
+      const [isQuickEditModalOpen, setIsQuickEditModalOpen] = useState(false);
+      const [isTagEditModalOpen, setIsTagEditModalOpen] = useState(false);
+      const [editingTagItem, setEditingTagItem] = useState(null);
 
-      // 預設戰術分類標籤
-      const categories = [
-        { id: 'all', name: '全部', color: 'bg-neutral-500' },
-        { id: 'pxmart', name: '全聯', color: 'bg-blue-600' },
-        { id: 'costco', name: '好市多', color: 'bg-red-600' },
-        { id: 'market', name: '菜市場', color: 'bg-orange-500' },
-        { id: 'other', name: '其他', color: 'bg-emerald-500' }
-      ];
-      const [activeCategory, setActiveCategory] = React.useState('all');
-      const [selectedTag, setSelectedTag] = React.useState('pxmart');
+      const [newQuickName, setNewQuickName] = useState('');
+      const [newQuickTag, setNewQuickTag] = useState('無');
+      const [newTagName, setNewTagName] = useState('');
 
-      // 啟動隱形警衛 (匿名登入)
-      React.useEffect(() => {
+      const [roomCode, setRoomCode] = useState(() => localStorage.getItem('shopping_room') || '');
+      const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
+      const [tempRoomCode, setTempRoomCode] = useState('');
+      
+      const [savedRooms, setSavedRooms] = useState(() => {
+        const saved = localStorage.getItem('shopping_saved_rooms');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-          if (currentUser) {
-            setUser(currentUser);
-            setAuthError(false);
-          } else {
-            signInAnonymously(auth).catch((error) => {
-              console.error("登入失敗:", error);
-              setAuthError(true);
-              setIsLoading(false);
-            });
-          }
+          if (currentUser) setUser(currentUser);
+          else signInAnonymously(auth).catch(e => console.error("登入失敗:", e));
         });
         return () => unsubscribe();
       }, []);
 
-      // 連線保險箱抓取資料
-      React.useEffect(() => {
+      useEffect(() => {
         if (!user) return;
-        
         setIsLoading(true);
-        // 路徑：users / 專屬ID / items
-        const itemsRef = collection(db, 'users', user.uid, 'items');
-        const q = query(itemsRef, orderBy('createdAt', 'desc'));
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          const fetchedItems = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
+        
+        const itemsCollectionPath = roomCode 
+          ? collection(db, 'public_rooms', roomCode, 'shopping_list')
+          : collection(db, 'users', user.uid, 'shopping_list');
+          
+        const unsubscribeItems = onSnapshot(itemsCollectionPath, (snapshot) => {
+          const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          fetchedItems.sort((a, b) => {
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            if (a.postponed !== b.postponed) return a.postponed ? 1 : -1;
+            return b.createdAt - a.createdAt;
+          });
           setItems(fetchedItems);
           setIsLoading(false);
         }, (error) => {
-          console.error("讀取資料失敗:", error);
+          console.error("讀取清單失敗:", error);
           setIsLoading(false);
         });
 
-        return () => unsubscribe();
-      }, [user]);
+        const settingsDocPath = roomCode
+          ? doc(db, 'public_rooms', roomCode, 'config')
+          : doc(db, 'users', user.uid, 'settings', 'config');
 
-      // 新增裝備 (防擠壓設計)
-      const addItem = async (e) => {
-        e.preventDefault();
-        if (!inputValue.trim() || !user) return;
+        const unsubscribeSettings = onSnapshot(settingsDocPath, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.quickItems) setQuickItems(data.quickItems);
+            if (data.customTags) setCustomTags(data.customTags);
+          } else {
+            setDoc(settingsDocPath, { quickItems: DEFAULT_QUICK_ITEMS, customTags: DEFAULT_TAGS });
+          }
+        });
+
+        return () => { unsubscribeItems(); unsubscribeSettings(); };
+      }, [user, roomCode]);
+
+      const activeTagsInList = Array.from(new Set(items.map(item => item.tag))).filter(t => t && t !== '無');
+      const displayFilterTags = ['全部', ...customTags.filter(tag => activeTagsInList.includes(tag))];
+
+      useEffect(() => {
+        if (filterTag !== '全部' && !activeTagsInList.includes(filterTag)) {
+          setFilterTag('全部');
+        }
+      }, [items, filterTag, activeTagsInList]);
+
+      const handleAddItem = async (e, quickItem = null) => {
+        if (e) e.preventDefault();
+        if (!user) return;
         
-        const newItem = {
-          name: inputValue.trim(),
-          category: selectedTag,
+        const textToAdd = quickItem ? quickItem.name : inputValue.trim();
+        const tagToAdd = quickItem ? quickItem.tag : activeTag;
+        if (!textToAdd) return;
+        
+        const itemsCollection = roomCode 
+          ? collection(db, 'public_rooms', roomCode, 'shopping_list')
+          : collection(db, 'users', user.uid, 'shopping_list');
+
+        await addDoc(itemsCollection, {
+          text: textToAdd,
           completed: false,
-          createdAt: serverTimestamp()
-        };
-        
-        setInputValue(''); // 先清空輸入框，保持手感
-        try {
-          await addDoc(collection(db, 'users', user.uid, 'items'), newItem);
-        } catch (error) {
-          console.error("新增失敗:", error);
+          postponed: false,
+          tag: tagToAdd,
+          createdAt: Date.now()
+        });
+        if (!quickItem) setInputValue('');
+      };
+
+      const getItemRef = (itemId) => {
+        return roomCode
+          ? doc(db, 'public_rooms', roomCode, 'shopping_list', itemId)
+          : doc(db, 'users', user.uid, 'shopping_list', itemId);
+      };
+
+      const getSettingsRef = () => {
+        return roomCode
+          ? doc(db, 'public_rooms', roomCode, 'config')
+          : doc(db, 'users', user.uid, 'settings', 'config');
+      }
+
+      const toggleItem = async (item) => {
+        if (!user) return;
+        await updateDoc(getItemRef(item.id), { completed: !item.completed, postponed: false });
+      };
+
+      const postponeItem = async (e, item) => {
+        e.stopPropagation();
+        if (!user) return;
+        await updateDoc(getItemRef(item.id), { postponed: !item.postponed, completed: false });
+      };
+
+      const deleteSingleItem = async (e, itemId) => {
+        e.stopPropagation();
+        if (!user) return;
+        await deleteDoc(getItemRef(itemId));
+      };
+
+      const changeItemTag = async (tag) => {
+        if (!user || !editingTagItem) return;
+        await updateDoc(getItemRef(editingTagItem.id), { tag: tag });
+        setEditingTagItem(null);
+      };
+
+      const clearCompleted = async () => {
+        if (!user) return;
+        const completedItems = items.filter(i => i.completed);
+        for (const item of completedItems) {
+          await deleteDoc(getItemRef(item.id));
         }
       };
 
-      // 切換完成狀態
-      const toggleItem = async (id, currentStatus) => {
-        if(!user) return;
-        const itemRef = doc(db, 'users', user.uid, 'items', id);
-        await updateDoc(itemRef, { completed: !currentStatus });
+      const saveQuickItemsToCloud = async (newItems) => {
+        if (!user) return;
+        await setDoc(getSettingsRef(), { quickItems: newItems }, { merge: true });
       };
 
-      // 刪除裝備
-      const deleteItem = async (id) => {
-        if(!user) return;
-        const itemRef = doc(db, 'users', user.uid, 'items', id);
-        await deleteDoc(itemRef);
+      const saveTagsToCloud = async (newTags) => {
+        if (!user) return;
+        await setDoc(getSettingsRef(), { customTags: newTags }, { merge: true });
       };
 
-      // 根據上方頁籤過濾顯示
-      const filteredItems = items.filter(item => 
-        activeCategory === 'all' ? true : item.category === activeCategory
-      );
+      const addCustomQuickItem = (e) => {
+        e.preventDefault();
+        if (!newQuickName.trim()) return;
+        const newItems = [...quickItems, { name: newQuickName.trim(), tag: newQuickTag }];
+        saveQuickItemsToCloud(newItems);
+        setNewQuickName('');
+      };
 
-      // 計算分類顏色
-      const getCategoryColor = (catId) => {
-        const cat = categories.find(c => c.id === catId);
-        return cat ? cat.color : 'bg-gray-500';
+      const removeQuickItem = (indexToRemove) => {
+        const newItems = quickItems.filter((_, idx) => idx !== indexToRemove);
+        saveQuickItemsToCloud(newItems);
       };
-      const getCategoryName = (catId) => {
-        const cat = categories.find(c => c.id === catId);
-        return cat ? cat.name : '未知';
+
+      const moveQuickItem = (index, direction) => {
+        const newItems = [...quickItems];
+        if (direction === -1 && index > 0) {
+          [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+        } else if (direction === 1 && index < newItems.length - 1) {
+          [newItems[index + 1], newItems[index]] = [newItems[index], newItems[index + 1]];
+        } else return;
+        saveQuickItemsToCloud(newItems);
       };
+
+      const addCustomTag = (e) => {
+        e.preventDefault();
+        const tag = newTagName.trim();
+        if (!tag || customTags.includes(tag)) return;
+        const newTags = [...customTags, tag];
+        saveTagsToCloud(newTags);
+        setNewTagName('');
+      };
+
+      const removeCustomTag = (tagToRemove) => {
+        if (tagToRemove === '無') return; 
+        const newTags = customTags.filter(t => t !== tagToRemove);
+        saveTagsToCloud(newTags);
+        if (activeTag === tagToRemove) setActiveTag('無');
+      };
+
+      const moveCustomTag = (index, direction) => {
+        if (index === 0) return; 
+        const newTags = [...customTags];
+        if (direction === -1 && index > 1) {
+          [newTags[index - 1], newTags[index]] = [newTags[index], newTags[index - 1]];
+        } else if (direction === 1 && index < newTags.length - 1) {
+          [newTags[index + 1], newTags[index]] = [newTags[index], newTags[index + 1]];
+        } else return;
+        saveTagsToCloud(newTags);
+      };
+
+      const handleJoinRoom = (e) => {
+        e.preventDefault();
+        const code = tempRoomCode.trim();
+        setRoomCode(code);
+        localStorage.setItem('shopping_room', code);
+        if (code && !savedRooms.includes(code)) {
+          const newSaved = [code, ...savedRooms];
+          setSavedRooms(newSaved);
+          localStorage.setItem('shopping_saved_rooms', JSON.stringify(newSaved));
+        }
+        setIsRoomModalOpen(false);
+        setTempRoomCode('');
+      };
+
+      const switchRoom = (code) => {
+        setRoomCode(code);
+        localStorage.setItem('shopping_room', code);
+        setIsRoomModalOpen(false);
+      };
+
+      const removeSavedRoom = (e, codeToRemove) => {
+        e.stopPropagation(); 
+        const newSaved = savedRooms.filter(code => code !== codeToRemove);
+        setSavedRooms(newSaved);
+        localStorage.setItem('shopping_saved_rooms', JSON.stringify(newSaved));
+        if (roomCode === codeToRemove) {
+          setRoomCode('');
+          localStorage.removeItem('shopping_room');
+        }
+      };
+
+      const displayItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
-        <div className="min-h-screen bg-neutral-200 flex justify-center font-sans">
+        <div className="min-h-screen bg-neutral-200 flex justify-center font-sans text-neutral-800">
           <div className="w-full max-w-md bg-white shadow-2xl flex flex-col h-screen sm:h-[90vh] sm:mt-8 sm:rounded-3xl overflow-hidden relative">
             
-            {/* 頂部標題列 */}
             <header className="bg-emerald-600 text-white p-3 sm:p-4 flex items-center justify-between shadow-sm z-20 shrink-0">
               <div className="flex items-center gap-2">
-                <Icons.ShoppingCart />
+                <ShoppingCart size={22} />
                 <h1 className="text-lg font-bold tracking-wider">智能採買</h1>
               </div>
               <div className="flex items-center gap-2">
-                {isLoading && !authError && <span className="text-xs text-emerald-200 animate-pulse">連線中...</span>}
-                {authError && <span className="text-xs text-red-200">金鑰設定有誤</span>}
+                {isLoading && <span className="text-xs text-emerald-200 animate-pulse">連線中...</span>}
+                <button 
+                  onClick={() => { setTempRoomCode(''); setIsRoomModalOpen(true); }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${
+                    roomCode ? 'bg-amber-400 text-amber-900 shadow-sm' : 'bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400'
+                  }`}
+                >
+                  {roomCode ? <Radio size={16} /> : <User size={16} />}
+                  {roomCode ? `頻道: ${roomCode}` : '未連線(暫存)'}
+                </button>
               </div>
             </header>
 
-            {/* 分類過濾頁籤 */}
-            <div className="flex overflow-x-auto hide-scrollbar bg-white border-b border-neutral-100 shadow-sm shrink-0 px-2 py-2">
-              {categories.map(cat => (
-                <button
-                  key={`filter-${cat.id}`}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`whitespace-nowrap px-4 py-1.5 mx-1 rounded-full text-sm font-medium transition-colors ${
-                    activeCategory === cat.id 
-                      ? 'bg-emerald-100 text-emerald-800' 
-                      : 'text-neutral-400 hover:bg-neutral-50'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+            <div className={`transition-all duration-300 ease-in-out origin-top overflow-hidden bg-emerald-50 shrink-0 shadow-sm ${
+              isShoppingMode ? 'max-h-0 opacity-0' : 'max-h-[350px] opacity-100 border-b border-emerald-100'
+            }`}>
+              <div className="p-3 flex flex-col gap-3">
+                <form onSubmit={(e) => handleAddItem(e)} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="輸入物品 (按 Enter 送出)"
+                    className="flex-1 px-3 py-2.5 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-base shadow-inner transition-all min-w-0"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={!inputValue.trim()}
+                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white px-4 py-2.5 rounded-xl shadow-md transition-colors flex items-center justify-center active:scale-95 shrink-0"
+                  >
+                    <Plus size={20} />
+                  </button>
+                </form>
+                
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide items-center">
+                  <Tag size={14} className="text-emerald-600 shrink-0 ml-1" />
+                  {customTags.map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setActiveTag(tag)}
+                      className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                        activeTag === tag ? 'bg-emerald-600 text-white shadow-md scale-105' : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                  <button 
+                    onClick={() => setIsTagEditModalOpen(true)}
+                    className="shrink-0 p-1.5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
+                  >
+                    <Settings size={14} />
+                  </button>
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto pt-2 pb-1 scrollbar-hide items-center border-t border-emerald-100/50">
+                  <button 
+                    onClick={() => setIsQuickEditModalOpen(true)}
+                    className="shrink-0 p-1.5 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors ml-1"
+                  >
+                    <Settings size={14} />
+                  </button>
+                  <Zap size={14} className="text-amber-500 shrink-0 fill-amber-500" />
+                  {quickItems.map((item, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleAddItem(null, item)}
+                      className="shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-90 transition-transform flex items-center gap-1"
+                    >
+                      <Plus size={12} />
+                      {item.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* 清單主體區塊 */}
-            <main className="flex-1 overflow-y-auto p-4 bg-neutral-50/50 pb-24">
-              {authError ? (
-                <div className="h-full flex flex-col items-center justify-center text-neutral-400 gap-3 text-center p-6">
-                  <p className="text-red-500 font-bold mb-2">無法連線到資料庫</p>
-                  <p className="text-sm">請確認您貼在 index.html 裡的 firebaseConfig 金鑰是否完整正確。</p>
-                </div>
-              ) : items.length === 0 && !isLoading ? (
-                <div className="h-full flex flex-col items-center justify-center text-neutral-400 gap-3">
-                  <Icons.ShoppingCart size={48} className="opacity-20" />
-                  <p>目前沒有待買物品喔</p>
-                </div>
-              ) : (
-                <ul className="space-y-3">
-                  {filteredItems.map(item => (
-                    <li 
-                      key={item.id} 
-                      className={`flex items-center justify-between p-3 rounded-2xl border ${
-                        item.completed ? 'bg-neutral-50 border-neutral-100' : 'bg-white border-neutral-200 shadow-sm'
-                      } transition-all active:scale-[0.98]`}
-                    >
-                      <div className="flex items-center gap-3 flex-1 overflow-hidden cursor-pointer" onClick={() => toggleItem(item.id, item.completed)}>
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                          item.completed ? 'bg-emerald-500 border-emerald-500' : 'border-neutral-300'
-                        }`}>
-                          {item.completed && <span className="text-white"><Icons.Check /></span>}
-                        </div>
-                        <div className="flex flex-col overflow-hidden">
-                          <span className={`truncate text-lg ${item.completed ? 'text-neutral-400 line-through' : 'text-neutral-700 font-medium'}`}>
-                            {item.name}
-                          </span>
-                          <span className={`text-[10px] w-fit px-1.5 py-0.5 rounded text-white ${getCategoryColor(item.category)} ${item.completed ? 'opacity-50' : ''}`}>
-                            {getCategoryName(item.category)}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <button 
-                        onClick={() => deleteItem(item.id)}
-                        className="p-2 text-neutral-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors ml-2 shrink-0"
-                      >
-                        <Icons.Trash2 />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </main>
+            <button 
+              onClick={() => setIsShoppingMode(!isShoppingMode)}
+              className={`shrink-0 w-full py-2 flex items-center justify-center gap-2 text-sm font-bold transition-colors border-b ${
+                isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 shadow-sm' : 'bg-neutral-50 text-neutral-500 border-neutral-100 hover:bg-neutral-100'
+              }`}
+            >
+              {isShoppingMode ? <><ChevronDown size={18} /> ➕ 展開備戰區</> : <><ShoppingBag size={18} /> 🛒 收起並開始採買</>}
+            </button>
 
-            {/* 底部固定輸入區 */}
-            <div className="absolute bottom-0 left-0 w-full bg-white border-t border-neutral-200 p-3 pb-6 sm:pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] z-20">
-              
-              {/* 新增物品用的標籤選擇 */}
-              <div className="flex gap-2 mb-3 px-1 overflow-x-auto hide-scrollbar">
-                {categories.filter(c => c.id !== 'all').map(cat => (
+            {displayFilterTags.length > 1 && (
+              <div className="bg-white border-b border-neutral-100 flex overflow-x-auto scrollbar-hide shrink-0 shadow-sm">
+                {displayFilterTags.map(tag => (
                   <button
-                    key={`select-${cat.id}`}
-                    type="button"
-                    onClick={() => setSelectedTag(cat.id)}
-                    className={`text-xs px-3 py-1 rounded-full whitespace-nowrap transition-all ${
-                      selectedTag === cat.id 
-                        ? `${cat.color} text-white shadow-md scale-105` 
-                        : 'bg-neutral-100 text-neutral-500'
+                    key={`filter-${tag}`}
+                    onClick={() => setFilterTag(tag)}
+                    className={`flex-1 min-w-[70px] py-2 text-sm font-bold transition-colors relative whitespace-nowrap px-2 ${
+                      filterTag === tag ? 'text-emerald-600' : 'text-neutral-400 hover:text-neutral-600 bg-neutral-50/50'
                     }`}
                   >
-                    {cat.name}
+                    {tag}
+                    {filterTag === tag && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600" />}
                   </button>
                 ))}
               </div>
+            )}
 
-              {/* 輸入框與按鈕 (裝甲防擠壓版) */}
-              <form onSubmit={addItem} className="flex gap-2 relative">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="輸入要買的東西..."
-                  className="flex-1 bg-neutral-100 border-transparent rounded-2xl px-4 py-3 text-base focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
-                />
-                <button 
-                  type="submit"
-                  disabled={!inputValue.trim()}
-                  className="bg-emerald-600 text-white p-3 rounded-2xl hover:bg-emerald-700 disabled:opacity-50 disabled:hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-600/30 shrink-0 aspect-square flex items-center justify-center"
-                >
-                  <Icons.Plus />
-                </button>
-              </form>
+            <div className="flex-1 overflow-y-auto p-3 bg-neutral-50/80 content-start relative">
+              {displayItems.length === 0 && !isLoading ? (
+                <div className="h-full flex flex-col items-center justify-center text-neutral-400 space-y-3">
+                  <ShoppingCart size={48} className="opacity-20" />
+                  <p className="text-base tracking-wide">
+                    {filterTag === '全部' ? '目前沒有採買任務！' : `目前沒有「${filterTag}」的任務！`}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 pb-4">
+                  {displayItems.map((item) => (
+                    <div 
+                      key={item.id}
+                      onClick={() => toggleItem(item)}
+                      className={`flex items-center justify-between py-2 px-3 rounded-xl cursor-pointer transition-all duration-200 shadow-sm border group ${
+                        item.completed ? 'bg-neutral-100 border-neutral-200 opacity-50' : item.postponed ? 'bg-amber-50/50 border-amber-200' : 'bg-white border-emerald-100 hover:border-emerald-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                        {item.completed ? <CheckCircle2 className="text-emerald-500 shrink-0" size={24} /> : item.postponed ? <Clock className="text-amber-400 shrink-0" size={24} /> : <Circle className="text-neutral-300 shrink-0" size={24} />}
+                        <div className="flex flex-col justify-center flex-1 min-w-0 py-1">
+                          <span className={`text-lg font-medium transition-all leading-tight truncate ${
+                            item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-700' : 'text-neutral-800'
+                          }`}>
+                            {item.text}
+                            {item.postponed && <span className="text-xs ml-2 text-amber-500 font-normal">(下次再買)</span>}
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditingTagItem(item); }}
+                            className={`text-[10px] px-2 py-0.5 rounded-md w-fit mt-1 font-bold tracking-wider active:scale-90 transition-transform ${
+                              item.tag === '無' || !item.tag ? 'bg-neutral-100 text-neutral-400 border border-dashed border-neutral-300 hover:bg-neutral-200' : item.completed ? 'bg-neutral-200 text-neutral-400' : item.postponed ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                            }`}
+                          >
+                            {item.tag && item.tag !== '無' ? item.tag : '+ 加標籤'}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center ml-2 shrink-0">
+                        {!item.completed && (
+                          <button
+                            onClick={(e) => postponeItem(e, item)}
+                            className={`p-2 rounded-lg transition-colors active:scale-90 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-300 hover:text-amber-500 hover:bg-amber-50'}`}
+                          >
+                            <Clock size={20} />
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => deleteSingleItem(e, item.id)}
+                          className="p-2 text-neutral-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors active:scale-90"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            
+
+            {displayItems.some(item => item.completed) && (
+              <div className="p-3 bg-white border-t border-neutral-100 flex justify-end shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+                <button
+                  onClick={clearCompleted}
+                  className="flex items-center gap-1.5 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors font-bold active:scale-95 text-sm"
+                >
+                  <Trash2 size={18} /> 清除畫面中已買
+                </button>
+              </div>
+            )}
+
+            {/* 修改標籤 Modal */}
+            {editingTagItem && (
+              <div className="absolute inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setEditingTagItem(null)}>
+                <div className="bg-white rounded-3xl w-full max-w-xs p-5 shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-3">
+                    <h3 className="text-base font-bold text-neutral-800 flex items-center gap-2"><Tag size={18} className="text-emerald-500"/>修改標籤</h3>
+                    <button onClick={() => setEditingTagItem(null)} className="text-neutral-400 p-1 bg-neutral-50 rounded-full hover:bg-neutral-100"><X size={20} /></button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {customTags.map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() => changeItemTag(tag)}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-transform active:scale-95 flex-grow text-center ${
+                          editingTagItem.tag === tag || (tag === '無' && !editingTagItem.tag) ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 標籤設定 Modal */}
+            {isTagEditModalOpen && (
+              <div className="absolute inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col max-h-[80vh]">
+                  <div className="flex justify-between items-center mb-4 shrink-0">
+                    <h2 className="text-lg font-bold flex items-center gap-2"><Tag className="text-emerald-500" size={20} />雲端標籤設定</h2>
+                    <button onClick={() => setIsTagEditModalOpen(false)} className="text-neutral-400 p-1"><X size={24} /></button>
+                  </div>
+                  <form onSubmit={addCustomTag} className="flex gap-2 mb-4 shrink-0 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                    <input type="text" value={newTagName} onChange={(e) => setNewTagName(e.target.value)} placeholder="輸入新標籤" className="flex-1 px-3 py-2 rounded-lg border border-emerald-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm min-w-0" />
+                    <button type="submit" disabled={!newTagName.trim()} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 shrink-0">新增</button>
+                  </form>
+                  <div className="overflow-y-auto flex-1 space-y-2">
+                    {customTags.map((tag, idx) => (
+                      <div key={idx} className="flex justify-between items-center bg-neutral-50 px-3 py-2 rounded-lg border border-neutral-100">
+                        <span className="font-bold text-neutral-700 text-sm">{tag}</span>
+                        {tag !== '無' && (
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => moveCustomTag(idx, -1)} disabled={idx === 1} className="p-1.5 text-neutral-400 hover:text-emerald-600 disabled:opacity-20"><ChevronUp size={18} /></button>
+                            <button onClick={() => moveCustomTag(idx, 1)} disabled={idx === customTags.length - 1} className="p-1.5 text-neutral-400 hover:text-emerald-600 disabled:opacity-20"><ChevronDown size={18} /></button>
+                            <div className="w-px h-4 bg-neutral-200 mx-1"></div>
+                            <button onClick={() => removeCustomTag(tag)} className="p-1.5 text-neutral-400 hover:text-red-500"><Trash2 size={16} /></button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 常買設定 Modal */}
+            {isQuickEditModalOpen && (
+              <div className="absolute inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col max-h-[80vh]">
+                  <div className="flex justify-between items-center mb-4 shrink-0">
+                    <h2 className="text-lg font-bold flex items-center gap-2"><Settings className="text-amber-500" size={20} />雲端常買庫設定</h2>
+                    <button onClick={() => setIsQuickEditModalOpen(false)} className="text-neutral-400 p-1"><X size={24} /></button>
+                  </div>
+                  <form onSubmit={addCustomQuickItem} className="flex flex-col gap-2 mb-4 shrink-0 bg-amber-50 p-3 rounded-xl border border-amber-100">
+                    <input type="text" value={newQuickName} onChange={(e) => setNewQuickName(e.target.value)} placeholder="輸入常買物品" className="px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-1 focus:ring-amber-500 text-sm min-w-0" />
+                    <div className="flex gap-2">
+                      <select value={newQuickTag} onChange={(e) => setNewQuickTag(e.target.value)} className="px-2 py-2 rounded-lg border border-amber-200 text-sm bg-white text-neutral-700 flex-1 min-w-0">
+                        {customTags.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <button type="submit" disabled={!newQuickName.trim()} className="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 shrink-0">新增</button>
+                    </div>
+                  </form>
+                  <div className="overflow-y-auto flex-1 space-y-2">
+                    {quickItems.length === 0 ? <p className="text-center text-neutral-400 text-sm py-4">目前沒有自訂項目</p> : (
+                      quickItems.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center bg-neutral-50 px-3 py-2 rounded-lg border border-neutral-100">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-neutral-700 text-sm">{item.name}</span>
+                            {item.tag !== '無' && <span className="text-[10px] text-amber-600 bg-amber-100 px-1 rounded w-fit">{item.tag}</span>}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => moveQuickItem(idx, -1)} disabled={idx === 0} className="p-1.5 text-neutral-400 hover:text-amber-600 disabled:opacity-20"><ChevronUp size={18} /></button>
+                            <button onClick={() => moveQuickItem(idx, 1)} disabled={idx === quickItems.length - 1} className="p-1.5 text-neutral-400 hover:text-amber-600 disabled:opacity-20"><ChevronDown size={18} /></button>
+                            <div className="w-px h-4 bg-neutral-200 mx-1"></div>
+                            <button onClick={() => removeQuickItem(idx)} className="p-1.5 text-neutral-400 hover:text-red-500"><Trash2 size={16} /></button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 頻道設定 Modal */}
+            {isRoomModalOpen && (
+              <div className="absolute inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col max-h-[85vh]">
+                  <div className="flex justify-between items-center mb-4 shrink-0">
+                    <h2 className="text-lg font-bold flex items-center gap-2 text-emerald-700"><Radio size={20} /> 頻道切換與設定</h2>
+                    <button onClick={() => setIsRoomModalOpen(false)} className="text-neutral-400 hover:bg-neutral-100 p-1 rounded-full"><X size={24} /></button>
+                  </div>
+                  
+                  <div className="overflow-y-auto pr-1 flex flex-col gap-5">
+                    {savedRooms.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-bold text-neutral-500 mb-2 flex items-center gap-1.5"><History size={16} /> 快速調頻 (已記憶)</h3>
+                        <div className="space-y-2">
+                          {savedRooms.map(room => (
+                            <div key={room} onClick={() => switchRoom(room)} className={`flex justify-between items-center p-3 rounded-xl cursor-pointer border ${roomCode === room ? 'bg-amber-50 border-amber-300' : 'bg-white border-neutral-200'}`}>
+                              <span className={`font-bold ${roomCode === room ? 'text-amber-700' : 'text-neutral-700'}`}>{room}</span>
+                              <button onClick={(e) => removeSavedRoom(e, room)} className="p-1.5 text-neutral-400 hover:text-red-500"><Trash2 size={18} /></button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className={savedRooms.length > 0 ? "border-t border-neutral-100 pt-4" : ""}>
+                        <h3 className="text-sm font-bold text-neutral-500 mb-2 flex items-center gap-1.5"><Plus size={16} /> 新增或進入頻道</h3>
+                        <form onSubmit={handleJoinRoom} className="flex gap-2">
+                          <input type="text" value={tempRoomCode} onChange={(e) => setTempRoomCode(e.target.value)} placeholder="輸入頻道代號" className="flex-1 px-4 py-2.5 rounded-xl border-2 border-emerald-100 focus:border-emerald-500 outline-none text-base font-bold min-w-0" />
+                          <button type="submit" disabled={!tempRoomCode.trim()} className="shrink-0 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold disabled:opacity-50">對頻</button>
+                        </form>
+                    </div>
+                    
+                    <p className="text-xs text-neutral-400 text-center leading-relaxed">輸入相同頻道代號，即可與家人共享清單。<br/>進入頻道後資料將永久保存在雲端。</p>
+
+                    {roomCode && (
+                      <div className="text-center pt-2">
+                        <button onClick={() => switchRoom('')} className="text-sm font-bold text-red-400 hover:text-red-600 flex items-center justify-center gap-1.5 w-full"><LogOut size={16} /> 登出目前頻道 (退回暫存區)</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       );
-    };
+    }
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
-
-  <!-- 隱藏捲動條的 CSS -->
-  <style>
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
 </body>
 </html>
