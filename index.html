@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>智能採買</title>
   
-  <link id="manifest-link" rel="manifest" href="">
+  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,46 +17,33 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&display=swap');
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .animate-slide-up { animation: slideUp 0.3s ease-out; }
+    input:focus { font-size: 16px !important; }
+    .font-serif-tc { font-family: 'Noto Serif TC', serif; }
   </style>
 
   <script>
-    // 【工程魔法】動態生成 PWA 必備的身分證與通訊兵，解鎖無徽章的「安裝」功能
-    window.addEventListener('DOMContentLoaded', () => {
-      // 1. 動態建立 Manifest (讓 Chrome 認定這是一個真正的 APP)
-      const manifest = {
-        name: "智能採買",
-        short_name: "智能採買",
-        start_url: window.location.pathname,
-        display: "standalone",
-        background_color: "#e5e5e5",
-        theme_color: "#059669",
-        icons: [{ src: "apple-touch-icon.png", sizes: "192x192 512x512 any", type: "image/png", purpose: "any maskable" }]
-      };
-      const manifestData = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
-      document.getElementById('manifest-link').href = manifestData;
-
-      // 2. 動態註冊 Service Worker (Chrome 規定必須有通訊兵才能安裝)
-      if ('serviceWorker' in navigator) {
-        const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => self.clients.claim()); self.addEventListener('fetch', (e) => {});";
-        const swBlob = new Blob([swCode], {type: 'text/javascript'});
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(console.error);
-      }
-    });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(console.error);
+      });
+    }
   </script>
 </head>
-<body class="bg-neutral-200 text-neutral-800 antialiased">
-  <div id="root"></div>
+<body class="bg-neutral-100 text-neutral-800 antialiased font-sans min-h-screen flex justify-center">
+  <div id="root" class="w-full flex justify-center"></div>
 
   <script type="text/babel" data-type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, query, orderBy, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
-    // 大樂已經幫姊姊把專屬金鑰直接銲接上去了，不用再修改！
     const firebaseConfig = {
       apiKey: "AIzaSyC36SqZOaZR3iYfMMDg5NQlADKdwEaZ5bk",
       authDomain: "smart-buy-dbaae.firebaseapp.com",
@@ -70,485 +57,430 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const appId = "smart-buy-final";
 
-    // --- 圖示庫 ---
-    const SvgIcon = ({ children, size=24, className="" }) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        {children}
-      </svg>
-    );
-    const ShoppingCart = (p) => <SvgIcon {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></SvgIcon>;
-    const Plus = (p) => <SvgIcon {...p}><path d="M5 12h14"/><path d="M12 5v14"/></SvgIcon>;
-    const CheckCircle2 = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></SvgIcon>;
-    const Circle = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/></SvgIcon>;
-    const Trash2 = (p) => <SvgIcon {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></SvgIcon>;
-    const Tag = (p) => <SvgIcon {...p}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></SvgIcon>;
-    const Zap = (p) => <SvgIcon {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></SvgIcon>;
-    const User = (p) => <SvgIcon {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></SvgIcon>;
-    const Settings = (p) => <SvgIcon {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></SvgIcon>;
-    const ShoppingBag = (p) => <SvgIcon {...p}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></SvgIcon>;
-    const ChevronDown = (p) => <SvgIcon {...p}><path d="m6 9 6 6 6-6"/></SvgIcon>;
-    const ChevronUp = (p) => <SvgIcon {...p}><path d="m18 15-6-6-6 6"/></SvgIcon>;
-    const Clock = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></SvgIcon>;
-    const Radio = (p) => <SvgIcon {...p}><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5 5a10 10 0 0 0 0 14"/><path d="M19 5a10 10 0 0 1 0 14"/></SvgIcon>;
-    const History = (p) => <SvgIcon {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></SvgIcon>;
-    const LogOut = (p) => <SvgIcon {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></SvgIcon>;
-    const X = (p) => <SvgIcon {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></SvgIcon>;
+    const Icons = {
+      Cart: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>,
+      Plus: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+      Trash: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>,
+      Check: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>,
+      Clock: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+      ChevronUp: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m18 15-6-6-6 6"/></svg>,
+      ChevronDown: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>,
+      History: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0-5v5h5"/><polyline points="12 7 12 12 16 14"/></svg>,
+      Dollar: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+      Share: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
+      User: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+      Zap: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+      Settings: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+      Tag: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+      X: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      ShoppingBag: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
+      Refresh: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+    };
 
-    const DEFAULT_QUICK_ITEMS = [
-      { name: '雞蛋', tag: '全聯' },
-      { name: '鮮乳', tag: '全聯' },
-      { name: '青菜', tag: '菜市場' }
-    ];
-    const DEFAULT_TAGS = ['無', '全聯', '菜市場', '好市多', '五金行'];
+    const DEFAULT_TAGS = ['無', '全聯', '菜市場', '好市多', '五金行', '烘焙'];
+    const DEFAULT_QUICK = [{n:'雞蛋',t:'全聯'}, {n:'鮮乳',t:'全聯'}, {n:'青菜',t:'菜市場'}];
 
     const App = () => {
       const [user, setUser] = useState(null);
       const [items, setItems] = useState([]);
-      const [inputValue, setInputValue] = useState('');
-      
-      const [activeTag, setActiveTag] = useState('無');
-      const [filterTag, setFilterTag] = useState('全部'); 
-      const [isLoading, setIsLoading] = useState(true);
-      const [isShoppingMode, setIsShoppingMode] = useState(false);
-      
-      const [quickItems, setQuickItems] = useState(DEFAULT_QUICK_ITEMS);
+      const [history, setHistory] = useState({});
       const [customTags, setCustomTags] = useState(DEFAULT_TAGS);
+      const [quickItems, setQuickItems] = useState(DEFAULT_QUICK);
       
-      const [isQuickEditModalOpen, setIsQuickEditModalOpen] = useState(false);
-      const [isTagEditModalOpen, setIsTagEditModalOpen] = useState(false);
-      const [editingTagItem, setEditingTagItem] = useState(null);
+      const [inputValue, setInputValue] = useState('');
+      const [qtyValue, setQtyValue] = useState('');
+      const [activeTag, setActiveTag] = useState('無');
+      const [filterTag, setFilterTag] = useState('全部');
+      const [isShoppingMode, setIsShoppingMode] = useState(false);
+      const [roomCode, setRoomCode] = useState('');
+      
+      const [isRoomOpen, setIsRoomOpen] = useState(false);
+      const [isTagOpen, setIsTagOpen] = useState(false);
+      const [isQuickOpen, setIsQuickOpen] = useState(false);
+      
+      const [editingLocationItem, setEditingLocationItem] = useState(null);
+      const [recordingPriceItem, setRecordingPriceItem] = useState(null);
 
+      const [msg, setMsg] = useState('');
+      const [newTagName, setNewTagName] = useState('');
       const [newQuickName, setNewQuickName] = useState('');
       const [newQuickTag, setNewQuickTag] = useState('無');
-      const [newTagName, setNewTagName] = useState('');
 
-      const [roomCode, setRoomCode] = useState(() => localStorage.getItem('shopping_room') || '');
-      const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-      const [tempRoomCode, setTempRoomCode] = useState('');
-      
+      const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+
+      // 多頻道記憶
       const [savedRooms, setSavedRooms] = useState(() => {
-        const saved = localStorage.getItem('shopping_saved_rooms');
-        return saved ? JSON.parse(saved) : [];
+        const saved = localStorage.getItem('smart_buy_saved_rooms');
+        if (!saved) return [];
+        const parsed = JSON.parse(saved);
+        return parsed.map(r => typeof r === 'string' ? { code: r, note: '' } : r);
       });
 
+      // 永久頻道黑名單 (用於檢查是否曾連線過)
+      const [allTimeRooms, setAllTimeRooms] = useState(() => {
+        const history = localStorage.getItem('smart_buy_room_history');
+        return history ? JSON.parse(history) : [];
+      });
+
+      const inputRef = useRef(null);
+
       useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-          if (currentUser) setUser(currentUser);
-          else signInAnonymously(auth).catch(e => console.error("登入失敗:", e));
+        const params = new URLSearchParams(window.location.search);
+        const urlRoom = params.get('room');
+        const savedRoom = localStorage.getItem('smart_buy_room') || '';
+        const finalRoom = urlRoom || savedRoom;
+        
+        if (finalRoom) {
+          setRoomCode(finalRoom);
+          localStorage.setItem('smart_buy_room', finalRoom);
+          if (urlRoom) window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        onAuthStateChanged(auth, u => {
+          if (u) setUser(u);
+          else signInAnonymously(auth).catch(console.error);
         });
-        return () => unsubscribe();
       }, []);
 
       useEffect(() => {
         if (!user) return;
-        setIsLoading(true);
-        
-        const itemsCollectionPath = roomCode 
-          ? collection(db, 'public_rooms', roomCode, 'shopping_list')
-          : collection(db, 'users', user.uid, 'shopping_list');
-          
-        const unsubscribeItems = onSnapshot(itemsCollectionPath, (snapshot) => {
-          const fetchedItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          fetchedItems.sort((a, b) => {
-            if (a.completed !== b.completed) return a.completed ? 1 : -1;
-            if (a.postponed !== b.postponed) return a.postponed ? 1 : -1;
-            return b.createdAt - a.createdAt;
-          });
-          setItems(fetchedItems);
-          setIsLoading(false);
-        }, (error) => {
-          console.error("讀取清單失敗:", error);
-          setIsLoading(false);
+        const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
+        const itemsCol = collection(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`);
+        const histCol = collection(db, 'artifacts', appId, 'public', 'data', `hist_${pathPrefix}`);
+        const configDoc = doc(db, 'artifacts', appId, 'public', 'data', `config_${pathPrefix}`, 'settings');
+
+        const unsubItems = onSnapshot(query(itemsCol, orderBy('createdAt', 'desc')), snap => {
+          setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         });
 
-        const settingsDocPath = roomCode
-          ? doc(db, 'public_rooms', roomCode, 'settings', 'config')
-          : doc(db, 'users', user.uid, 'settings', 'config');
+        const unsubHist = onSnapshot(histCol, snap => {
+          const h = {}; snap.docs.forEach(d => h[d.data().name] = d.data()); setHistory(h);
+        });
 
-        const unsubscribeSettings = onSnapshot(settingsDocPath, (docSnap) => {
+        const unsubConfig = onSnapshot(configDoc, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (data.quickItems) setQuickItems(data.quickItems);
-            if (data.customTags) setCustomTags(data.customTags);
+            if (data.tags) setCustomTags(data.tags);
+            if (data.quick) setQuickItems(data.quick.filter(q => q && (q.n || q.name)));
           } else {
-            setDoc(settingsDocPath, { quickItems: DEFAULT_QUICK_ITEMS, customTags: DEFAULT_TAGS });
+            setDoc(configDoc, { tags: DEFAULT_TAGS, quick: DEFAULT_QUICK });
           }
         });
 
-        return () => { unsubscribeItems(); unsubscribeSettings(); };
+        return () => { unsubItems(); unsubHist(); unsubConfig(); };
       }, [user, roomCode]);
 
-      const activeTagsInList = Array.from(new Set(items.map(item => item.tag))).filter(t => t && t !== '無');
-      const displayFilterTags = ['全部', ...customTags.filter(tag => activeTagsInList.includes(tag))];
+      const getConfigRef = () => {
+        const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
+        return doc(db, 'artifacts', appId, 'public', 'data', `config_${pathPrefix}`, 'settings');
+      };
 
-      useEffect(() => {
-        if (filterTag !== '全部' && !activeTagsInList.includes(filterTag)) {
-          setFilterTag('全部');
-        }
-      }, [items, filterTag, activeTagsInList]);
+      const getItemRef = (id) => {
+        const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
+        return doc(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`, id);
+      };
 
-      const handleAddItem = async (e, quickItem = null) => {
+      const handleAdd = async (e) => {
         if (e) e.preventDefault();
-        if (!user) return;
-        
-        const textToAdd = quickItem ? quickItem.name : inputValue.trim();
-        const tagToAdd = quickItem ? quickItem.tag : activeTag;
-        if (!textToAdd) return;
-        
-        const itemsCollection = roomCode 
-          ? collection(db, 'public_rooms', roomCode, 'shopping_list')
-          : collection(db, 'users', user.uid, 'shopping_list');
-
-        await addDoc(itemsCollection, {
-          text: textToAdd,
-          completed: false,
-          postponed: false,
-          tag: tagToAdd,
-          createdAt: Date.now()
+        if (!inputValue.trim() || !user) return;
+        const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
+        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`), {
+          name: inputValue.trim(), qty: qtyValue.trim(), tag: activeTag, completed: false, postponed: false, createdAt: Date.now()
         });
-        if (!quickItem) setInputValue('');
+        setInputValue(''); setQtyValue('');
       };
 
-      const getItemRef = (itemId) => {
-        return roomCode
-          ? doc(db, 'public_rooms', roomCode, 'shopping_list', itemId)
-          : doc(db, 'users', user.uid, 'shopping_list', itemId);
+      const handleQuickSelect = (qa) => {
+        setInputValue(qa.n || qa.name);
+        setActiveTag(qa.t || qa.tag);
+        inputRef.current?.focus();
       };
 
-      const getSettingsRef = () => {
-        return roomCode
-          ? doc(db, 'public_rooms', roomCode, 'settings', 'config')
-          : doc(db, 'users', user.uid, 'settings', 'config');
-      }
-
-      const toggleItem = async (item) => {
-        if (!user) return;
+      const handleComplete = async (item) => {
         await updateDoc(getItemRef(item.id), { completed: !item.completed, postponed: false });
       };
 
-      const postponeItem = async (e, item) => {
+      const handlePostpone = async (e, item) => {
         e.stopPropagation();
-        if (!user) return;
         await updateDoc(getItemRef(item.id), { postponed: !item.postponed, completed: false });
       };
 
-      const deleteSingleItem = async (e, itemId) => {
-        e.stopPropagation();
-        if (!user) return;
-        await deleteDoc(getItemRef(itemId));
-      };
-
-      const changeItemTag = async (tag) => {
-        if (!user || !editingTagItem) return;
-        await updateDoc(getItemRef(editingTagItem.id), { tag: tag });
-        setEditingTagItem(null);
+      const savePrice = async (itemName, price, itemTag) => {
+        if (!price) return;
+        const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
+        const histDoc = doc(db, 'artifacts', appId, 'public', 'data', `hist_${pathPrefix}`, itemName);
+        await setDoc(histDoc, { name: itemName, price, tag: itemTag, updatedAt: Date.now() });
       };
 
       const clearCompleted = async () => {
         if (!user) return;
-        const completedItems = items.filter(i => i.completed);
-        for (const item of completedItems) {
+        const toDelete = items.filter(i => i.completed);
+        for (const item of toDelete) {
           await deleteDoc(getItemRef(item.id));
         }
       };
 
-      const saveQuickItemsToCloud = async (newItems) => {
+      const resetAllItems = async () => {
         if (!user) return;
-        await setDoc(getSettingsRef(), { quickItems: newItems }, { merge: true });
+        setConfirmModal({
+          isOpen: true,
+          title: '陣地重整',
+          message: '這將清空目前清單中「所有」物品（包括尚未購買的），確定要執行嗎？',
+          onConfirm: async () => {
+            const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
+            const itemsCol = collection(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`);
+            const qSnap = await getDocs(itemsCol);
+            const batch = writeBatch(db);
+            qSnap.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
+            setMsg('清單已全面重整');
+            setTimeout(() => setMsg(''), 1500);
+          }
+        });
       };
 
-      const saveTagsToCloud = async (newTags) => {
-        if (!user) return;
-        await setDoc(getSettingsRef(), { customTags: newTags }, { merge: true });
+      const copyLink = () => {
+        const base = window.location.href.split('?')[0];
+        const url = `${base}?room=${roomCode}`;
+        const t = document.createElement("input"); t.value = url; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t);
+        setMsg('分享網址已複製！'); setTimeout(() => setMsg(''), 2000);
       };
 
-      const addCustomQuickItem = (e) => {
-        e.preventDefault();
-        if (!newQuickName.trim()) return;
-        const newItems = [...quickItems, { name: newQuickName.trim(), tag: newQuickTag }];
-        saveQuickItemsToCloud(newItems);
-        setNewQuickName('');
+      const moveTag = async (idx, dir) => {
+        if (idx === 0) return;
+        const newTags = [...customTags];
+        const target = idx + dir;
+        if (target < 1 || target >= newTags.length) return;
+        [newTags[idx], newTags[target]] = [newTags[target], newTags[idx]];
+        await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
       };
 
-      const removeQuickItem = (indexToRemove) => {
-        const newItems = quickItems.filter((_, idx) => idx !== indexToRemove);
-        saveQuickItemsToCloud(newItems);
+      const moveQuick = async (idx, dir) => {
+        const newQ = quickItems.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
+        const target = idx + dir;
+        if (target < 0 || target >= newQ.length) return;
+        [newQ[idx], newQ[target]] = [newQ[target], newQ[idx]];
+        await setDoc(getConfigRef(), { quick: newQ }, { merge: true });
       };
 
-      const moveQuickItem = (index, direction) => {
-        const newItems = [...quickItems];
-        if (direction === -1 && index > 0) {
-          [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
-        } else if (direction === 1 && index < newItems.length - 1) {
-          [newItems[index + 1], newItems[index]] = [newItems[index], newItems[index + 1]];
-        } else return;
-        saveQuickItemsToCloud(newItems);
-      };
-
-      const addCustomTag = (e) => {
-        e.preventDefault();
-        const tag = newTagName.trim();
-        if (!tag || customTags.includes(tag)) return;
-        const newTags = [...customTags, tag];
-        saveTagsToCloud(newTags);
+      const addTag = async () => {
+        if (!newTagName.trim()) return;
+        const newTags = [...customTags, newTagName.trim()];
+        await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
         setNewTagName('');
       };
-
-      const removeCustomTag = (tagToRemove) => {
-        if (tagToRemove === '無') return; 
-        const newTags = customTags.filter(t => t !== tagToRemove);
-        saveTagsToCloud(newTags);
-        if (activeTag === tagToRemove) setActiveTag('無');
+      const delTag = async (t) => {
+        if (t === '無') return;
+        const newTags = customTags.filter(tag => tag !== t);
+        await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
       };
 
-      const moveCustomTag = (index, direction) => {
-        if (index === 0) return; 
-        const newTags = [...customTags];
-        if (direction === -1 && index > 1) {
-          [newTags[index - 1], newTags[index]] = [newTags[index], newTags[index - 1]];
-        } else if (direction === 1 && index < newTags.length - 1) {
-          [newTags[index + 1], newTags[index]] = [newTags[index], newTags[index + 1]];
-        } else return;
-        saveTagsToCloud(newTags);
+      const addQuick = async () => {
+        if (!newQuickName.trim()) return;
+        const newQ = [{ n: newQuickName.trim(), t: newQuickTag }, ...quickItems.map(q => ({n: q.n || q.name, t: q.t || q.tag}))];
+        await setDoc(getConfigRef(), { quick: newQ }, { merge: true });
+        setNewQuickName('');
+      };
+      const delQuick = async (idx) => {
+        const newQ = quickItems.filter((_, i) => i !== idx).map(q => ({n: q.n || q.name, t: q.t || q.tag}));
+        await setDoc(getConfigRef(), { quick: newQ }, { merge: true });
       };
 
-      const handleJoinRoom = (e) => {
-        e.preventDefault();
-        const code = tempRoomCode.trim();
-        setRoomCode(code);
-        localStorage.setItem('shopping_room', code);
-        if (code && !savedRooms.includes(code)) {
-          const newSaved = [code, ...savedRooms];
-          setSavedRooms(newSaved);
-          localStorage.setItem('shopping_saved_rooms', JSON.stringify(newSaved));
-        }
-        setIsRoomModalOpen(false);
-        setTempRoomCode('');
-      };
-
-      const switchRoom = (code) => {
-        setRoomCode(code);
-        localStorage.setItem('shopping_room', code);
-        setIsRoomModalOpen(false);
-      };
-
-      const removeSavedRoom = (e, codeToRemove) => {
-        e.stopPropagation(); 
-        const newSaved = savedRooms.filter(code => code !== codeToRemove);
-        setSavedRooms(newSaved);
-        localStorage.setItem('shopping_saved_rooms', JSON.stringify(newSaved));
-        if (roomCode === codeToRemove) {
+      // 戰術調頻：加入靈魂記憶檢查
+      const handleTuneRoom = (v, note = '', force = false) => {
+        const code = v.trim();
+        if (!code) {
           setRoomCode('');
-          localStorage.removeItem('shopping_room');
+          localStorage.setItem('smart_buy_room', '');
+          setIsRoomOpen(false);
+          return;
+        }
+
+        const executeJoin = () => {
+          setRoomCode(code);
+          localStorage.setItem('smart_buy_room', code);
+          
+          // 更新顯示名單
+          const existingIdx = savedRooms.findIndex(r => r.code === code);
+          let newSaved;
+          if (existingIdx > -1) {
+            newSaved = [...savedRooms];
+            if (note) newSaved[existingIdx].note = note;
+          } else {
+            newSaved = [{ code, note }, ...savedRooms];
+          }
+          setSavedRooms(newSaved);
+          localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(newSaved));
+          
+          // 更新永久黑名單
+          if (!allTimeRooms.includes(code)) {
+            const newHistory = [...allTimeRooms, code];
+            setAllTimeRooms(newHistory);
+            localStorage.setItem('smart_buy_room_history', JSON.stringify(newHistory));
+          }
+
+          setIsRoomOpen(false);
+          setMsg(`頻道 ${code} 已連線`);
+          setTimeout(() => setMsg(''), 1500);
+          setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
+        };
+
+        // 安全雷達檢查：如果是手動輸入且曾在這台設備出現過
+        if (!force && allTimeRooms.includes(code) && code !== roomCode) {
+           setConfirmModal({
+             isOpen: true,
+             title: '偵測到舊頻道',
+             message: `代號 ${code} 之前已使用過，要切換並繼續連結雲端資料嗎？`,
+             onConfirm: executeJoin
+           });
+        } else {
+           executeJoin();
         }
       };
 
-      const displayItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
+      const handleForgetRoom = (e, code) => {
+        e.stopPropagation();
+        const newSaved = savedRooms.filter(r => r.code !== code);
+        setSavedRooms(newSaved);
+        localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(newSaved));
+        if (roomCode === code) {
+          setRoomCode('');
+          localStorage.setItem('smart_buy_room', '');
+        }
+      };
+
+      const activeTagsInList = Array.from(new Set(items.map(item => item.tag))).filter(t => t && t !== '無');
+      const displayFilterTags = ['全部', ...customTags.filter(tag => activeTagsInList.includes(tag))];
+      const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
-        <div className="min-h-screen bg-neutral-200 flex justify-center font-sans text-neutral-800">
-          <div className="w-full max-w-md bg-white shadow-2xl flex flex-col h-screen sm:h-[90vh] sm:mt-8 sm:rounded-3xl overflow-hidden relative">
+        <div className="min-h-screen bg-neutral-100 flex justify-center items-start pt-0 sm:pt-8 font-sans">
+          <div className="w-full max-w-md bg-white h-fit min-h-[500px] flex flex-col relative shadow-2xl overflow-hidden sm:rounded-3xl mb-8">
             
-            <header className="bg-emerald-600 text-white p-3 sm:p-4 flex items-center justify-between shadow-sm z-20 shrink-0">
-              <div className="flex items-center gap-2">
-                <ShoppingCart size={22} />
-                <h1 className="text-lg font-bold tracking-wider">智能採買</h1>
+            <header className="bg-emerald-700 text-white p-4 flex justify-between items-center shrink-0 shadow-lg z-20">
+              <div className="flex items-center gap-2 text-white font-bold">
+                <Icons.Cart />
+                <h1 className="text-2xl tracking-tight font-serif-tc">智能採買</h1>
               </div>
-              <div className="flex items-center gap-2">
-                {isLoading && <span className="text-xs text-emerald-200 animate-pulse">連線中...</span>}
-                <button 
-                  onClick={() => { setTempRoomCode(''); setIsRoomModalOpen(true); }}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${
-                    roomCode ? 'bg-amber-400 text-amber-900 shadow-sm' : 'bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400'
-                  }`}
-                >
-                  {roomCode ? <Radio size={16} /> : <User size={16} />}
-                  {roomCode ? `頻道: ${roomCode}` : '未連線(暫存)'}
-                </button>
+              <div className="flex gap-2">
+                {roomCode && <button onClick={copyLink} className="bg-white/20 p-2 rounded-lg active:scale-90 transition-all text-white"><Icons.Share /></button>}
+                <button onClick={() => setIsRoomOpen(true)} className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1.5 transition-all ${roomCode ? 'bg-amber-400 text-amber-900 shadow-inner' : 'bg-emerald-600 text-white border border-emerald-500'}`}>{roomCode ? `頻道 ${roomCode}` : <><Icons.User size={14}/> 進入頻道</>}</button>
               </div>
             </header>
 
-            <div className={`transition-all duration-300 ease-in-out origin-top overflow-hidden bg-emerald-50 shrink-0 shadow-sm ${
-              isShoppingMode ? 'max-h-0 opacity-0' : 'max-h-[350px] opacity-100 border-b border-emerald-100'
-            }`}>
-              <div className="p-3 flex flex-col gap-3">
-                <form onSubmit={(e) => handleAddItem(e)} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="輸入物品 (按 Enter 送出)"
-                    className="flex-1 px-3 py-2.5 rounded-xl border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-base shadow-inner transition-all min-w-0"
-                  />
-                  <button 
-                    type="submit"
-                    disabled={!inputValue.trim()}
-                    className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white px-4 py-2.5 rounded-xl shadow-md transition-colors flex items-center justify-center active:scale-95 shrink-0"
-                  >
-                    <Plus size={20} />
-                  </button>
+            <div className={`transition-all duration-300 ease-in-out origin-top overflow-hidden bg-emerald-50 shrink-0 shadow-sm ${isShoppingMode ? 'max-h-0 opacity-0' : 'max-h-[350px] opacity-100 border-b border-emerald-100'}`}>
+              <div className="p-4 space-y-3">
+                <form onSubmit={handleAdd} className="flex gap-2">
+                  <input ref={inputRef} type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="例如：雞蛋" className="flex-1 p-3 rounded-xl border-none shadow-inner focus:ring-2 focus:ring-emerald-600 outline-none text-lg bg-white" />
+                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-16 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white" />
+                  <button type="submit" className="bg-emerald-700 text-white px-5 rounded-xl shadow-lg active:scale-95 transition-transform shrink-0"><Icons.Plus /></button>
                 </form>
-                
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide items-center">
-                  <Tag size={14} className="text-emerald-600 shrink-0 ml-1" />
-                  {customTags.map(tag => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => setActiveTag(tag)}
-                      className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                        activeTag === tag ? 'bg-emerald-600 text-white shadow-md scale-105' : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                  <button 
-                    onClick={() => setIsTagEditModalOpen(true)}
-                    className="shrink-0 p-1.5 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
-                  >
-                    <Settings size={14} />
-                  </button>
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+                  <button type="button" onClick={() => setIsTagOpen(true)} className="p-1.5 rounded-full bg-emerald-100 text-emerald-700 shrink-0 active:rotate-45 transition-transform"><Icons.Settings size={14}/></button>
+                  {customTags.map(t => (<button key={t} type="button" onClick={() => setActiveTag(t)} className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeTag === t ? 'bg-emerald-700 text-white shadow-md' : 'bg-white text-emerald-700 border border-emerald-200'}`}>{t}</button>))}
                 </div>
-
-                <div className="flex gap-2 overflow-x-auto pt-2 pb-1 scrollbar-hide items-center border-t border-emerald-100/50">
-                  <button 
-                    onClick={() => setIsQuickEditModalOpen(true)}
-                    className="shrink-0 p-1.5 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors ml-1"
-                  >
-                    <Settings size={14} />
-                  </button>
-                  <Zap size={14} className="text-amber-500 shrink-0 fill-amber-500" />
-                  {quickItems.map((item, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleAddItem(null, item)}
-                      className="shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 active:scale-90 transition-transform flex items-center gap-1"
-                    >
-                      <Plus size={12} />
-                      {item.name}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pt-1 text-xs">
+                  <button type="button" onClick={() => setIsQuickOpen(true)} className="p-1.5 rounded-full bg-amber-100 text-amber-700 shrink-0 active:rotate-45 transition-transform"><Icons.Settings size={14}/></button>
+                  <span className="flex items-center gap-1 text-amber-600 font-bold whitespace-nowrap shrink-0"><Icons.Zap size={12}/> 一鍵補給:</span>
+                  {quickItems.map((qa, i) => (<button key={i} type="button" onClick={() => handleQuickSelect(qa)} className="whitespace-nowrap px-2.5 py-1 rounded bg-amber-50 border border-amber-200 text-amber-700 font-bold active:scale-90 transition-transform">+ {qa.n || qa.name}</button>))}
                 </div>
               </div>
             </div>
 
-            <button 
-              onClick={() => setIsShoppingMode(!isShoppingMode)}
-              className={`shrink-0 w-full py-2 flex items-center justify-center gap-2 text-sm font-bold transition-colors border-b ${
-                isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200 shadow-sm' : 'bg-neutral-50 text-neutral-500 border-neutral-100 hover:bg-neutral-100'
-              }`}
-            >
-              {isShoppingMode ? <><ChevronDown size={18} /> ➕ 展開備戰區</> : <><ShoppingBag size={18} /> 🛒 收起並開始採買</>}
-            </button>
+            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-2 flex items-center justify-center gap-2 text-sm font-bold transition-colors border-b ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200 shadow-sm' : 'bg-neutral-50 text-neutral-500 border-neutral-100'}`}>{isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開備戰區</> : <><Icons.ShoppingBag size={18} /> 🛒 收起並開始採買</>}</button>
 
             {displayFilterTags.length > 1 && (
               <div className="bg-white border-b border-neutral-100 flex overflow-x-auto scrollbar-hide shrink-0 shadow-sm">
                 {displayFilterTags.map(tag => (
-                  <button
-                    key={`filter-${tag}`}
-                    onClick={() => setFilterTag(tag)}
-                    className={`flex-1 min-w-[70px] py-2 text-sm font-bold transition-colors relative whitespace-nowrap px-2 ${
-                      filterTag === tag ? 'text-emerald-600' : 'text-neutral-400 hover:text-neutral-600 bg-neutral-50/50'
-                    }`}
-                  >
-                    {tag}
-                    {filterTag === tag && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600" />}
-                  </button>
+                  <button key={`filter-${tag}`} onClick={() => setFilterTag(tag)} className={`flex-1 min-w-[70px] py-2.5 text-sm font-bold transition-colors relative whitespace-nowrap px-2 ${filterTag === tag ? 'text-emerald-700 font-bold' : 'text-neutral-400 hover:text-neutral-600'}`}>{tag}{filterTag === tag && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-700" />}</button>
                 ))}
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto p-3 bg-neutral-50/80 content-start relative">
-              {displayItems.length === 0 && !isLoading ? (
-                <div className="h-full flex flex-col items-center justify-center text-neutral-400 space-y-3">
-                  <ShoppingCart size={48} className="opacity-20" />
-                  <p className="text-base tracking-wide">
-                    {filterTag === '全部' ? '目前沒有採買任務！' : `目前沒有「${filterTag}」的任務！`}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2 pb-4">
-                  {displayItems.map((item) => (
-                    <div 
-                      key={item.id}
-                      onClick={() => toggleItem(item)}
-                      className={`flex items-center justify-between py-2 px-3 rounded-xl cursor-pointer transition-all duration-200 shadow-sm border group ${
-                        item.completed ? 'bg-neutral-100 border-neutral-200 opacity-50' : item.postponed ? 'bg-amber-50/50 border-amber-200' : 'bg-white border-emerald-100 hover:border-emerald-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 flex-1 overflow-hidden">
-                        {item.completed ? <CheckCircle2 className="text-emerald-500 shrink-0" size={24} /> : item.postponed ? <Clock className="text-amber-400 shrink-0" size={24} /> : <Circle className="text-neutral-300 shrink-0" size={24} />}
-                        <div className="flex flex-col justify-center flex-1 min-w-0 py-1">
-                          <span className={`text-lg font-medium transition-all leading-tight truncate ${
-                            item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-700' : 'text-neutral-800'
-                          }`}>
-                            {item.text}
-                            {item.postponed && <span className="text-xs ml-2 text-amber-500 font-normal">(下次再買)</span>}
-                          </span>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setEditingTagItem(item); }}
-                            className={`text-[10px] px-2 py-0.5 rounded-md w-fit mt-1 font-bold tracking-wider active:scale-90 transition-transform ${
-                              item.tag === '無' || !item.tag ? 'bg-neutral-100 text-neutral-400 border border-dashed border-neutral-300 hover:bg-neutral-200' : item.completed ? 'bg-neutral-200 text-neutral-400' : item.postponed ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                            }`}
-                          >
-                            {item.tag && item.tag !== '無' ? item.tag : '+ 加標籤'}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex items-center ml-2 shrink-0">
+            <main className="p-4 space-y-3 bg-neutral-50/50">
+              {filteredItems.length === 0 ? (
+                <div className="py-20 flex flex-col items-center justify-center opacity-20 grayscale"><Icons.Cart size={64} /><p className="mt-4 font-bold tracking-widest text-lg text-neutral-400">目前沒有採買任務</p></div>
+              ) : filteredItems.map(item => (
+                <div key={item.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60 scale-[0.98]' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 cursor-pointer mt-1 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={18} />}</div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span onClick={() => handleComplete(item)} className={`text-lg font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
+                        {item.qty && <span className="bg-neutral-100 text-neutral-500 text-[11px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap">{item.qty}</span>}
                         {!item.completed && (
-                          <button
-                            onClick={(e) => postponeItem(e, item)}
-                            className={`p-2 rounded-lg transition-colors active:scale-90 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-300 hover:text-amber-500 hover:bg-amber-50'}`}
-                          >
-                            <Clock size={20} />
-                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setRecordingPriceItem(item); }} className="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-700 text-[10px] font-bold active:scale-90 transition-transform">記 $</button>
                         )}
-                        <button
-                          onClick={(e) => deleteSingleItem(e, item.id)}
-                          className="p-2 text-neutral-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors active:scale-90"
-                        >
-                          <X size={20} />
-                        </button>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1 mt-1">
+                        <button onClick={(e) => { e.stopPropagation(); setEditingLocationItem(item); }} className={`text-[11px] px-2 py-0.5 rounded font-bold w-fit active:scale-95 transition-transform ${item.completed ? 'bg-neutral-200 text-neutral-400' : 'bg-[#e6f4ea] text-[#1e8e3e] border border-emerald-100'}`}>{item.tag || '無'}</button>
+                        {history[item.name] && !item.completed && (
+                          <div className="flex items-center gap-1 text-[11px] text-amber-600 font-bold whitespace-nowrap overflow-hidden italic">
+                            <Icons.History size={11} />上次買：{history[item.name].price} 元 ({history[item.name].tag})
+                          </div>
+                        )}
                       </div>
                     </div>
-                  ))}
+                  </div>
+                  
+                  <div className="flex items-center ml-2 shrink-0">
+                    {!item.completed && (
+                      <button onClick={(e) => handlePostpone(e, item)} className={`p-2 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100 shadow-inner' : 'text-neutral-300 hover:text-amber-500'}`}><Icons.Clock size={20} /></button>
+                    )}
+                    <button onClick={() => deleteDoc(getItemRef(item.id))} className="text-neutral-300 hover:text-red-500 p-2 active:scale-75 transition-all"><Icons.Trash /></button>
+                  </div>
                 </div>
-              )}
-            </div>
+              ))}
 
-            {displayItems.some(item => item.completed) && (
-              <div className="p-3 bg-white border-t border-neutral-100 flex justify-end shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
-                <button
-                  onClick={clearCompleted}
-                  className="flex items-center gap-1.5 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors font-bold active:scale-95 text-sm"
-                >
-                  <Trash2 size={18} /> 清除畫面中已買
-                </button>
+              <div className="pt-4 flex flex-col gap-3 items-center">
+                {filteredItems.some(item => item.completed) && (
+                  <button onClick={clearCompleted} className="flex items-center gap-1.5 px-6 py-2.5 text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-full transition-all font-bold active:scale-95 shadow-sm text-sm"><Icons.Trash size={18} /> 清除畫面中已買</button>
+                )}
+                {items.length > 0 && (
+                  <button onClick={resetAllItems} className="flex items-center gap-1.5 px-4 py-2 text-neutral-400 hover:text-red-400 rounded-full transition-all font-bold active:scale-95 text-xs opacity-60"><Icons.Refresh /> 重設清單 (全刪)</button>
+                )}
+              </div>
+            </main>
+
+            {msg && <div className="absolute top-24 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-6 py-2 rounded-full text-sm font-bold shadow-2xl z-50 backdrop-blur-sm animate-bounce">{msg}</div>}
+
+            {confirmModal.isOpen && (
+              <div className="absolute inset-0 bg-black/60 z-[100] flex items-center justify-center p-6 backdrop-blur-sm">
+                <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-slide-up">
+                  <h3 className="text-lg font-bold mb-3 text-red-600 flex items-center gap-2">{confirmModal.title}</h3>
+                  <p className="text-sm text-neutral-600 mb-6 leading-relaxed font-bold">{confirmModal.message}</p>
+                  <div className="flex gap-3">
+                    <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="flex-1 py-3 text-neutral-400 font-bold bg-neutral-50 rounded-xl">取消</button>
+                    <button onClick={confirmModal.onConfirm} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 active:scale-95 transition-all text-white">確定</button>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* 修改標籤 Modal */}
-            {editingTagItem && (
-              <div className="absolute inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setEditingTagItem(null)}>
-                <div className="bg-white rounded-3xl w-full max-w-xs p-5 shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-3">
-                    <h3 className="text-base font-bold text-neutral-800 flex items-center gap-2"><Tag size={18} className="text-emerald-500"/>修改標籤</h3>
-                    <button onClick={() => setEditingTagItem(null)} className="text-neutral-400 p-1 bg-neutral-50 rounded-full hover:bg-neutral-100"><X size={20} /></button>
+            {editingLocationItem && (
+              <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setEditingLocationItem(null)}>
+                <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2">
+                    <h3 className="text-lg font-bold flex items-center gap-2 text-emerald-700"><Icons.Tag size={18}/>更換採買地點</h3>
+                    <button onClick={() => setEditingLocationItem(null)} className="text-neutral-300"><Icons.X /></button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {customTags.map(tag => (
-                      <button
-                        key={tag}
-                        onClick={() => changeItemTag(tag)}
-                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-transform active:scale-95 flex-grow text-center ${
-                          editingTagItem.tag === tag || (tag === '無' && !editingTagItem.tag) ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
-                        }`}
+                  <div className="grid grid-cols-2 gap-2">
+                    {customTags.map(t => (
+                      <button 
+                        key={t} 
+                        onClick={async () => { 
+                          await updateDoc(getItemRef(editingLocationItem.id), { tag: t }); 
+                          setEditingLocationItem(null); 
+                          setMsg('地點已更新！');
+                          setTimeout(() => setMsg(''), 1500);
+                        }} 
+                        className={`py-3 rounded-xl font-bold text-sm border transition-all active:scale-95 ${editingLocationItem.tag === t ? 'bg-emerald-600 text-white border-emerald-600 shadow-md' : 'bg-neutral-50 text-neutral-600 border-neutral-200'}`}
                       >
-                        {tag}
+                        {t}
                       </button>
                     ))}
                   </div>
@@ -556,30 +488,56 @@
               </div>
             )}
 
-            {/* 標籤設定 Modal */}
-            {isTagEditModalOpen && (
-              <div className="absolute inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col max-h-[80vh]">
-                  <div className="flex justify-between items-center mb-4 shrink-0">
-                    <h2 className="text-lg font-bold flex items-center gap-2"><Tag className="text-emerald-500" size={20} />雲端標籤設定</h2>
-                    <button onClick={() => setIsTagEditModalOpen(false)} className="text-neutral-400 p-1"><X size={24} /></button>
+            {recordingPriceItem && (
+              <div className="absolute inset-0 bg-black/60 z-[60] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => setRecordingPriceItem(null)}>
+                <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2">
+                    <h3 className="text-lg font-bold flex items-center gap-2 text-amber-700"><Icons.Dollar size={18}/>紀錄目前價錢</h3>
+                    <button onClick={() => setRecordingPriceItem(null)} className="text-neutral-300"><Icons.X /></button>
                   </div>
-                  <form onSubmit={addCustomTag} className="flex gap-2 mb-4 shrink-0 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                    <input type="text" value={newTagName} onChange={(e) => setNewTagName(e.target.value)} placeholder="輸入新標籤" className="flex-1 px-3 py-2 rounded-lg border border-emerald-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm min-w-0" />
-                    <button type="submit" disabled={!newTagName.trim()} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 shrink-0">新增</button>
-                  </form>
-                  <div className="overflow-y-auto flex-1 space-y-2">
-                    {customTags.map((tag, idx) => (
-                      <div key={idx} className="flex justify-between items-center bg-neutral-50 px-3 py-2 rounded-lg border border-neutral-100">
-                        <span className="font-bold text-neutral-700 text-sm">{tag}</span>
-                        {tag !== '無' && (
-                          <div className="flex items-center gap-1">
-                            <button onClick={() => moveCustomTag(idx, -1)} disabled={idx === 1} className="p-1.5 text-neutral-400 hover:text-emerald-600 disabled:opacity-20"><ChevronUp size={18} /></button>
-                            <button onClick={() => moveCustomTag(idx, 1)} disabled={idx === customTags.length - 1} className="p-1.5 text-neutral-400 hover:text-emerald-600 disabled:opacity-20"><ChevronDown size={18} /></button>
-                            <div className="w-px h-4 bg-neutral-200 mx-1"></div>
-                            <button onClick={() => removeCustomTag(tag)} className="p-1.5 text-neutral-400 hover:text-red-500"><Trash2 size={16} /></button>
-                          </div>
-                        )}
+                  <p className="text-sm text-neutral-800 mb-1 font-bold">品項：{recordingPriceItem.name}</p>
+                  
+                  <div className="text-xs text-amber-600 mb-4 font-bold bg-amber-50 p-2 rounded-lg border border-amber-100 inline-block">
+                    {history[recordingPriceItem.name] 
+                      ? `上次紀錄：$${history[recordingPriceItem.name].price} (${history[recordingPriceItem.name].tag})`
+                      : '目前尚無歷史紀錄'}
+                  </div>
+
+                  <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200">
+                    <label className="text-xs text-neutral-400 block mb-2 font-bold">請輸入本次看到的價格：</label>
+                    <div className="flex gap-2">
+                      <input type="number" id="quickP" autoFocus placeholder="填寫金額..." className="flex-1 p-2.5 rounded-lg border-2 border-emerald-100 outline-none focus:border-emerald-500 text-lg font-bold" />
+                      <button onClick={() => { 
+                        const val = document.getElementById('quickP').value; 
+                        savePrice(recordingPriceItem.name, val, recordingPriceItem.tag); 
+                        setRecordingPriceItem(null); 
+                        setMsg('情報已更新！'); 
+                        setTimeout(() => setMsg(''), 1500); 
+                      }} className="bg-emerald-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md text-white">紀錄</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isTagOpen && (
+              <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-6 backdrop-blur-sm">
+                <div className="bg-white w-full rounded-3xl p-6 shadow-2xl flex flex-col max-h-[80vh]">
+                  <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-emerald-700"><h2 className="text-lg flex items-center gap-2"><Icons.Tag size={20}/>雲端地點設定</h2><button onClick={() => setIsTagOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button></div>
+                  <div className="flex gap-2 mb-4 bg-emerald-50 p-3 rounded-xl shrink-0"><input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)} placeholder="新地點名稱" className="flex-1 px-3 py-2 rounded-lg border focus:ring-2 focus:ring-emerald-600 text-sm outline-none bg-white font-bold" /><button onClick={addTag} disabled={!newTagName.trim()} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 shrink-0">新增</button></div>
+                  <div className="overflow-y-auto space-y-2 pr-1 scrollbar-hide font-bold">
+                    {customTags.map((t, idx) => (
+                      <div key={t} className="flex justify-between items-center bg-neutral-50 p-3 rounded-xl border border-neutral-100 group">
+                        <span className="text-neutral-700">{t}</span>
+                        <div className="flex items-center gap-1">
+                          {t !== '無' && (
+                            <>
+                              <button onClick={() => moveTag(idx, -1)} disabled={idx <= 1} className="p-1 text-neutral-400 hover:text-emerald-600 disabled:opacity-10"><Icons.ChevronUp /></button>
+                              <button onClick={() => moveTag(idx, 1)} disabled={idx === customTags.length - 1} className="p-1 text-neutral-400 hover:text-emerald-600 disabled:opacity-10"><Icons.ChevronDown /></button>
+                              <button onClick={() => delTag(t)} className="text-red-400 hover:bg-red-50 p-1.5 rounded-lg active:scale-75 transition-all ml-1"><Icons.Trash size={18}/></button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -587,83 +545,66 @@
               </div>
             )}
 
-            {/* 常買設定 Modal */}
-            {isQuickEditModalOpen && (
-              <div className="absolute inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col max-h-[80vh]">
-                  <div className="flex justify-between items-center mb-4 shrink-0">
-                    <h2 className="text-lg font-bold flex items-center gap-2"><Settings className="text-amber-500" size={20} />雲端常買庫設定</h2>
-                    <button onClick={() => setIsQuickEditModalOpen(false)} className="text-neutral-400 p-1"><X size={24} /></button>
+            {isQuickOpen && (
+              <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-6 backdrop-blur-sm">
+                <div className="bg-white w-full rounded-3xl p-6 shadow-2xl flex flex-col max-h-[80vh]">
+                  <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-amber-700"><h2 className="text-lg flex items-center gap-2"><Icons.Zap size={20}/>雲端清單設定</h2><button onClick={() => setIsQuickOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button></div>
+                  <div className="space-y-2 mb-4 bg-amber-50 p-3 rounded-xl shrink-0">
+                    <input type="text" value={newQuickName} onChange={e => setNewQuickName(e.target.value)} placeholder="品名" className="w-full px-3 py-2 rounded-lg border text-sm outline-none mb-2 bg-white font-bold" />
+                    <div className="flex gap-2"><select value={newQuickTag} onChange={e => setNewQuickTag(e.target.value)} className="flex-1 bg-white border rounded-lg px-2 text-sm font-bold outline-none">{customTags.map(t => <option key={t} value={t}>{t}</option>)}</select><button onClick={addQuick} disabled={!newQuickName.trim()} className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50">新增</button></div>
                   </div>
-                  <form onSubmit={addCustomQuickItem} className="flex flex-col gap-2 mb-4 shrink-0 bg-amber-50 p-3 rounded-xl border border-amber-100">
-                    <input type="text" value={newQuickName} onChange={(e) => setNewQuickName(e.target.value)} placeholder="輸入常買物品" className="px-3 py-2 rounded-lg border border-amber-200 focus:outline-none focus:ring-1 focus:ring-amber-500 text-sm min-w-0" />
-                    <div className="flex gap-2">
-                      <select value={newQuickTag} onChange={(e) => setNewQuickTag(e.target.value)} className="px-2 py-2 rounded-lg border border-amber-200 text-sm bg-white text-neutral-700 flex-1 min-w-0">
-                        {customTags.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <button type="submit" disabled={!newQuickName.trim()} className="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 shrink-0">新增</button>
-                    </div>
-                  </form>
-                  <div className="overflow-y-auto flex-1 space-y-2">
-                    {quickItems.length === 0 ? <p className="text-center text-neutral-400 text-sm py-4">目前沒有自訂項目</p> : (
-                      quickItems.map((item, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-neutral-50 px-3 py-2 rounded-lg border border-neutral-100">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-neutral-700 text-sm">{item.name}</span>
-                            {item.tag !== '無' && <span className="text-[10px] text-amber-600 bg-amber-100 px-1 rounded w-fit">{item.tag}</span>}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button onClick={() => moveQuickItem(idx, -1)} disabled={idx === 0} className="p-1.5 text-neutral-400 hover:text-amber-600 disabled:opacity-20"><ChevronUp size={18} /></button>
-                            <button onClick={() => moveQuickItem(idx, 1)} disabled={idx === quickItems.length - 1} className="p-1.5 text-neutral-400 hover:text-amber-600 disabled:opacity-20"><ChevronDown size={18} /></button>
-                            <div className="w-px h-4 bg-neutral-200 mx-1"></div>
-                            <button onClick={() => removeQuickItem(idx)} className="p-1.5 text-neutral-400 hover:text-red-500"><Trash2 size={16} /></button>
-                          </div>
+                  <div className="overflow-y-auto space-y-2 pr-1 scrollbar-hide font-bold">
+                    {quickItems.map((q, i) => (
+                      <div key={i} className="flex justify-between items-center bg-neutral-50 p-3 rounded-xl border border-neutral-100 font-bold">
+                        <div><div className="font-bold text-sm text-neutral-700">{q.n || q.name}</div><div className="text-[10px] text-amber-600 font-bold">{q.t || q.tag}</div></div>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => moveQuick(i, -1)} disabled={i === 0} className="p-1 text-neutral-400 hover:text-amber-600 disabled:opacity-10"><Icons.ChevronUp /></button>
+                          <button onClick={() => moveQuick(i, 1)} disabled={i === quickItems.length - 1} className="p-1 text-neutral-400 hover:text-amber-600 disabled:opacity-10"><Icons.ChevronDown /></button>
+                          <button onClick={() => delQuick(i)} className="text-red-400 hover:bg-red-50 p-1.5 rounded-lg active:scale-75 transition-all ml-1"><Icons.Trash size={18}/></button>
                         </div>
-                      ))
-                    )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 頻道設定 Modal */}
-            {isRoomModalOpen && (
-              <div className="absolute inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl flex flex-col max-h-[85vh]">
-                  <div className="flex justify-between items-center mb-4 shrink-0">
-                    <h2 className="text-lg font-bold flex items-center gap-2 text-emerald-700"><Radio size={20} /> 頻道切換與設定</h2>
-                    <button onClick={() => setIsRoomModalOpen(false)} className="text-neutral-400 hover:bg-neutral-100 p-1 rounded-full"><X size={24} /></button>
-                  </div>
+            {isRoomOpen && (
+              <div className="absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-6 backdrop-blur-sm">
+                <div className="bg-white w-full rounded-3xl p-6 shadow-2xl animate-slide-up flex flex-col max-h-[85vh]">
+                  <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-emerald-800"><h2 className="text-xl flex items-center gap-2"><Icons.User size={20}/>共享頻道管理</h2><button onClick={() => setIsRoomOpen(false)} className="text-neutral-300"><Icons.X /></button></div>
                   
-                  <div className="overflow-y-auto pr-1 flex flex-col gap-5">
+                  <div className="overflow-y-auto space-y-6 pr-1 scrollbar-hide">
                     {savedRooms.length > 0 && (
                       <div>
-                        <h3 className="text-sm font-bold text-neutral-500 mb-2 flex items-center gap-1.5"><History size={16} /> 快速調頻 (已記憶)</h3>
+                        <h3 className="text-xs font-bold text-neutral-400 mb-3 flex items-center gap-1.5"><Icons.History size={14}/> 快速調頻 (記憶清單)</h3>
                         <div className="space-y-2">
                           {savedRooms.map(room => (
-                            <div key={room} onClick={() => switchRoom(room)} className={`flex justify-between items-center p-3 rounded-xl cursor-pointer border ${roomCode === room ? 'bg-amber-50 border-amber-300' : 'bg-white border-neutral-200'}`}>
-                              <span className={`font-bold ${roomCode === room ? 'text-amber-700' : 'text-neutral-700'}`}>{room}</span>
-                              <button onClick={(e) => removeSavedRoom(e, room)} className="p-1.5 text-neutral-400 hover:text-red-500"><Trash2 size={18} /></button>
+                            <div key={room.code} onClick={() => handleTuneRoom(room.code, room.note, true)} className={`flex justify-between items-center p-3 rounded-2xl border transition-all cursor-pointer ${roomCode === room.code ? 'bg-amber-50 border-amber-300 shadow-sm scale-[1.02]' : 'bg-neutral-50 border-neutral-100 hover:border-emerald-200'}`}>
+                              <div className="flex flex-col">
+                                <span className={`font-bold ${roomCode === room.code ? 'text-amber-700' : 'text-neutral-600'}`}>{room.code}</span>
+                                {room.note && <span className="text-[10px] text-neutral-400 font-bold">{room.note}</span>}
+                              </div>
+                              <button onClick={(e) => handleForgetRoom(e, room.code)} className="p-1 text-neutral-300 hover:text-red-500 active:scale-75 transition-all"><Icons.X /></button>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    <div className={savedRooms.length > 0 ? "border-t border-neutral-100 pt-4" : ""}>
-                        <h3 className="text-sm font-bold text-neutral-500 mb-2 flex items-center gap-1.5"><Plus size={16} /> 新增或進入頻道</h3>
-                        <form onSubmit={handleJoinRoom} className="flex gap-2">
-                          <input type="text" value={tempRoomCode} onChange={(e) => setTempRoomCode(e.target.value)} placeholder="輸入頻道代號" className="flex-1 px-4 py-2.5 rounded-xl border-2 border-emerald-100 focus:border-emerald-500 outline-none text-base font-bold min-w-0" />
-                          <button type="submit" disabled={!tempRoomCode.trim()} className="shrink-0 bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold disabled:opacity-50">對頻</button>
-                        </form>
+                    <div className={savedRooms.length > 0 ? "pt-4 border-t border-dashed border-neutral-200" : ""}>
+                      <h3 className="text-xs font-bold text-neutral-400 mb-3 flex items-center gap-1.5"><Icons.Plus size={14}/> 輸入新頻道代號與備註</h3>
+                      <div className="space-y-3 mb-4">
+                        <input type="text" id="rIn" placeholder="輸入代號 (如 888)..." className="w-full p-3 bg-neutral-100 rounded-xl outline-none border-2 border-emerald-100 focus:border-emerald-600 font-bold text-xl text-center tracking-widest text-emerald-800" />
+                        <div className="flex gap-2">
+                          <input type="text" id="rNote" placeholder="加個備註 (如：家裡用)" className="flex-1 p-3 bg-neutral-100 rounded-xl outline-none border-2 border-neutral-100 focus:border-emerald-500 font-bold text-sm" />
+                          <button onClick={() => handleTuneRoom(document.getElementById('rIn').value, document.getElementById('rNote').value)} className="bg-emerald-700 text-white px-5 rounded-xl font-bold shadow-lg active:scale-95 transition-all text-white">對頻</button>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <p className="text-xs text-neutral-400 text-center leading-relaxed">輸入相同頻道代號，即可與家人共享清單。<br/>進入頻道後資料將永久保存在雲端。</p>
 
                     {roomCode && (
-                      <div className="text-center pt-2">
-                        <button onClick={() => switchRoom('')} className="text-sm font-bold text-red-400 hover:text-red-600 flex items-center justify-center gap-1.5 w-full"><LogOut size={16} /> 登出目前頻道 (退回暫存區)</button>
-                      </div>
+                      <button onClick={() => handleTuneRoom('')} className="w-full py-3 text-sm text-red-400 font-bold border-t border-neutral-100 mt-2">退出目前的共享頻道</button>
                     )}
                   </div>
                 </div>
@@ -673,7 +614,7 @@
           </div>
         </div>
       );
-    }
+    };
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
