@@ -1,0 +1,17 @@
+
+{
+"name": "智能採買",
+"short_name": "智能採買",
+"start_url": "./index.html",
+"display": "standalone",
+"background_color": "#e5e5e5",
+"theme_color": "#059669",
+"icons": [
+{
+"src": "apple-touch-icon.png",
+"sizes": "192x192 512x512 any",
+"type": "image/png",
+"purpose": "any maskable"
+}
+]
+}
