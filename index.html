@@ -87,13 +87,14 @@
       Dollar: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
       Share: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
       User: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-      // 替換為完整、常見的實心齒輪圖示
-      Settings: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>,
+      Settings: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
       X: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
       ShoppingBag: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
       Refresh: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
       Download: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
       ChevronDown: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>,
+      MapPin: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>,
+      Package: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16.5 9.4 7.5 4.21"></path><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>,
       GripVertical: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
     };
 
@@ -116,7 +117,6 @@
       
       const [isRoomOpen, setIsRoomOpen] = useState(false);
       
-      // 動線分流狀態
       const [isTagAddOpen, setIsTagAddOpen] = useState(false);
       const [isTagManageOpen, setIsTagManageOpen] = useState(false);
       const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
@@ -134,19 +134,16 @@
       const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
       const [deferredPrompt, setDeferredPrompt] = useState(null);
 
-      // --- 主畫面長按拖曳排序狀態 (地點) ---
       const dragDidHappenTag = useRef(false);
       const touchTimerTag = useRef(null);
       const [hDragTagIdx, setHDragTagIdx] = useState(null);
       const [hDragOverTagIdx, setHDragOverTagIdx] = useState(null);
 
-      // --- 主畫面長按拖曳排序狀態 (品項) ---
       const dragDidHappenQuick = useRef(false);
       const touchTimerQuick = useRef(null);
       const [hDragQuickIdx, setHDragQuickIdx] = useState(null);
       const [hDragOverQuickIdx, setHDragOverQuickIdx] = useState(null);
 
-      // 視窗內垂直拖曳狀態
       const [draggedTagIdx, setDraggedTagIdx] = useState(null);
       const [dragOverTagIdx, setDragOverTagIdx] = useState(null);
       const [draggedQuickIdx, setDraggedQuickIdx] = useState(null);
@@ -300,149 +297,20 @@
         setMsg('分享網址已複製！'); setTimeout(() => setMsg(''), 2000);
       };
 
-      // 視窗內垂直拖曳邏輯
-      const handleDragStartTag = (e, idx) => {
-        setDraggedTagIdx(idx);
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", idx);
-      };
-      const handleDragOverTag = (e, idx) => {
-        e.preventDefault();
-        setDragOverTagIdx(idx);
-      };
-      const handleDragEndTag = async () => {
-        if (draggedTagIdx !== null && dragOverTagIdx !== null && draggedTagIdx !== dragOverTagIdx) {
-          const newTags = [...customTags];
-          const [movedItem] = newTags.splice(draggedTagIdx, 1);
-          newTags.splice(dragOverTagIdx, 0, movedItem);
-          setCustomTags(newTags);
-          await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
-        }
-        setDraggedTagIdx(null);
-        setDragOverTagIdx(null);
-      };
-      const handleTouchMoveTag = (e) => {
-        if (draggedTagIdx === null) return;
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropElem = target?.closest('[data-v-tag-index]');
-        if (dropElem) {
-          const hoverIdx = parseInt(dropElem.getAttribute('data-v-tag-index'), 10);
-          if (hoverIdx !== dragOverTagIdx) setDragOverTagIdx(hoverIdx);
-        }
+      const moveTag = async (idx, dir) => {
+        const newTags = [...customTags];
+        const target = idx + dir;
+        if (target < 0 || target >= newTags.length) return;
+        [newTags[idx], newTags[target]] = [newTags[target], newTags[idx]];
+        await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
       };
 
-      const handleDragStartQuick = (e, idx) => {
-        setDraggedQuickIdx(idx);
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", idx);
-      };
-      const handleDragOverQuick = (e, idx) => {
-        e.preventDefault();
-        setDragOverQuickIdx(idx);
-      };
-      const handleDragEndQuick = async () => {
-        if (draggedQuickIdx !== null && dragOverQuickIdx !== null && draggedQuickIdx !== dragOverQuickIdx) {
-          const newQ = [...quickItems];
-          const [movedItem] = newQ.splice(draggedQuickIdx, 1);
-          newQ.splice(dragOverQuickIdx, 0, movedItem);
-          setQuickItems(newQ);
-          const serialized = newQ.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
-          await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
-        }
-        setDraggedQuickIdx(null);
-        setDragOverQuickIdx(null);
-      };
-      const handleTouchMoveQuick = (e) => {
-        if (draggedQuickIdx === null) return;
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropElem = target?.closest('[data-v-quick-index]');
-        if (dropElem) {
-          const hoverIdx = parseInt(dropElem.getAttribute('data-v-quick-index'), 10);
-          if (hoverIdx !== dragOverQuickIdx) setDragOverQuickIdx(hoverIdx);
-        }
-      };
-
-      // --- 主畫面：地點標籤 水平長按拖曳邏輯 ---
-      const onTouchStartHTag = (idx, e) => {
-        dragDidHappenTag.current = false;
-        touchTimerTag.current = setTimeout(() => {
-          setHDragTagIdx(idx);
-          dragDidHappenTag.current = true;
-          if (navigator.vibrate) navigator.vibrate(50);
-        }, 400);
-      };
-      const onTouchMoveHTag = (e) => {
-        if (hDragTagIdx === null) {
-          clearTimeout(touchTimerTag.current);
-          return;
-        }
-        e.preventDefault(); // 拖曳時防止畫面水平滑動
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropElem = target?.closest('[data-h-tag-index]');
-        if (dropElem) {
-          const overIdx = parseInt(dropElem.getAttribute('data-h-tag-index'), 10);
-          if (overIdx !== hDragOverTagIdx && overIdx !== hDragTagIdx) {
-            setHDragOverTagIdx(overIdx);
-          }
-        }
-      };
-      const onTouchEndHTag = async () => {
-        clearTimeout(touchTimerTag.current);
-        if (hDragTagIdx !== null) {
-          if (hDragOverTagIdx !== null && hDragTagIdx !== hDragOverTagIdx) {
-            const newTags = [...customTags];
-            const [movedItem] = newTags.splice(hDragTagIdx, 1);
-            newTags.splice(hDragOverTagIdx, 0, movedItem);
-            setCustomTags(newTags);
-            await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
-          }
-          setHDragTagIdx(null);
-          setHDragOverTagIdx(null);
-        }
-      };
-
-      // --- 主畫面：常買品項 水平長按拖曳邏輯 ---
-      const onTouchStartHQuick = (idx, e) => {
-        dragDidHappenQuick.current = false;
-        touchTimerQuick.current = setTimeout(() => {
-          setHDragQuickIdx(idx);
-          dragDidHappenQuick.current = true;
-          if (navigator.vibrate) navigator.vibrate(50);
-        }, 400);
-      };
-      const onTouchMoveHQuick = (e) => {
-        if (hDragQuickIdx === null) {
-          clearTimeout(touchTimerQuick.current);
-          return;
-        }
-        e.preventDefault();
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropElem = target?.closest('[data-h-quick-index]');
-        if (dropElem) {
-          const overIdx = parseInt(dropElem.getAttribute('data-h-quick-index'), 10);
-          if (overIdx !== hDragOverQuickIdx && overIdx !== hDragQuickIdx) {
-            setHDragOverQuickIdx(overIdx);
-          }
-        }
-      };
-      const onTouchEndHQuick = async () => {
-        clearTimeout(touchTimerQuick.current);
-        if (hDragQuickIdx !== null) {
-          if (hDragOverQuickIdx !== null && hDragQuickIdx !== hDragOverQuickIdx) {
-            const newQ = [...quickItems];
-            const [movedItem] = newQ.splice(hDragQuickIdx, 1);
-            newQ.splice(hDragOverQuickIdx, 0, movedItem);
-            setQuickItems(newQ);
-            const serialized = newQ.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
-            await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
-          }
-          setHDragQuickIdx(null);
-          setHDragOverQuickIdx(null);
-        }
+      const moveQuick = async (idx, dir) => {
+        const newQ = quickItems.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
+        const target = idx + dir;
+        if (target < 0 || target >= newQ.length) return;
+        [newQ[idx], newQ[target]] = [newQ[target], newQ[idx]];
+        await setDoc(getConfigRef(), { quick: newQ }, { merge: true });
       };
 
       const addTag = async () => {
@@ -531,6 +399,148 @@
         if (outcome === 'accepted') setDeferredPrompt(null);
       };
 
+      const handleDragStartTag = (e, idx) => {
+        setDraggedTagIdx(idx);
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", idx);
+      };
+      const handleDragOverTag = (e, idx) => {
+        e.preventDefault();
+        setDragOverTagIdx(idx);
+      };
+      const handleDragEndTag = async () => {
+        if (draggedTagIdx !== null && dragOverTagIdx !== null && draggedTagIdx !== dragOverTagIdx) {
+          const newTags = [...customTags];
+          const [movedItem] = newTags.splice(draggedTagIdx, 1);
+          newTags.splice(dragOverTagIdx, 0, movedItem);
+          setCustomTags(newTags);
+          await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
+        }
+        setDraggedTagIdx(null);
+        setDragOverTagIdx(null);
+      };
+      const handleTouchMoveTag = (e) => {
+        if (draggedTagIdx === null) return;
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropElem = target?.closest('[data-v-tag-index]');
+        if (dropElem) {
+          const hoverIdx = parseInt(dropElem.getAttribute('data-v-tag-index'), 10);
+          if (hoverIdx !== dragOverTagIdx) setDragOverTagIdx(hoverIdx);
+        }
+      };
+
+      const handleDragStartQuick = (e, idx) => {
+        setDraggedQuickIdx(idx);
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", idx);
+      };
+      const handleDragOverQuick = (e, idx) => {
+        e.preventDefault();
+        setDragOverQuickIdx(idx);
+      };
+      const handleDragEndQuick = async () => {
+        if (draggedQuickIdx !== null && dragOverQuickIdx !== null && draggedQuickIdx !== dragOverQuickIdx) {
+          const newQ = [...quickItems];
+          const [movedItem] = newQ.splice(draggedQuickIdx, 1);
+          newQ.splice(dragOverQuickIdx, 0, movedItem);
+          setQuickItems(newQ);
+          const serialized = newQ.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
+          await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
+        }
+        setDraggedQuickIdx(null);
+        setDragOverQuickIdx(null);
+      };
+      const handleTouchMoveQuick = (e) => {
+        if (draggedQuickIdx === null) return;
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropElem = target?.closest('[data-v-quick-index]');
+        if (dropElem) {
+          const hoverIdx = parseInt(dropElem.getAttribute('data-v-quick-index'), 10);
+          if (hoverIdx !== dragOverQuickIdx) setDragOverQuickIdx(hoverIdx);
+        }
+      };
+
+      const onTouchStartHTag = (idx, e) => {
+        dragDidHappenTag.current = false;
+        touchTimerTag.current = setTimeout(() => {
+          setHDragTagIdx(idx);
+          dragDidHappenTag.current = true;
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, 400);
+      };
+      const onTouchMoveHTag = (e) => {
+        if (hDragTagIdx === null) {
+          clearTimeout(touchTimerTag.current);
+          return;
+        }
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropElem = target?.closest('[data-h-tag-index]');
+        if (dropElem) {
+          const overIdx = parseInt(dropElem.getAttribute('data-h-tag-index'), 10);
+          if (overIdx !== hDragOverTagIdx && overIdx !== hDragTagIdx) {
+            setHDragOverTagIdx(overIdx);
+          }
+        }
+      };
+      const onTouchEndHTag = async () => {
+        clearTimeout(touchTimerTag.current);
+        if (hDragTagIdx !== null) {
+          if (hDragOverTagIdx !== null && hDragTagIdx !== hDragOverTagIdx) {
+            const newTags = [...customTags];
+            const [movedItem] = newTags.splice(hDragTagIdx, 1);
+            newTags.splice(hDragOverTagIdx, 0, movedItem);
+            setCustomTags(newTags);
+            await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
+          }
+          setHDragTagIdx(null);
+          setHDragOverTagIdx(null);
+        }
+      };
+
+      const onTouchStartHQuick = (idx, e) => {
+        dragDidHappenQuick.current = false;
+        touchTimerQuick.current = setTimeout(() => {
+          setHDragQuickIdx(idx);
+          dragDidHappenQuick.current = true;
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, 400);
+      };
+      const onTouchMoveHQuick = (e) => {
+        if (hDragQuickIdx === null) {
+          clearTimeout(touchTimerQuick.current);
+          return;
+        }
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropElem = target?.closest('[data-h-quick-index]');
+        if (dropElem) {
+          const overIdx = parseInt(dropElem.getAttribute('data-h-quick-index'), 10);
+          if (overIdx !== hDragOverQuickIdx && overIdx !== hDragQuickIdx) {
+            setHDragOverQuickIdx(overIdx);
+          }
+        }
+      };
+      const onTouchEndHQuick = async () => {
+        clearTimeout(touchTimerQuick.current);
+        if (hDragQuickIdx !== null) {
+          if (hDragOverQuickIdx !== null && hDragQuickIdx !== hDragOverQuickIdx) {
+            const newQ = [...quickItems];
+            const [movedItem] = newQ.splice(hDragQuickIdx, 1);
+            newQ.splice(hDragOverQuickIdx, 0, movedItem);
+            setQuickItems(newQ);
+            const serialized = newQ.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
+            await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
+          }
+          setHDragQuickIdx(null);
+          setHDragOverQuickIdx(null);
+        }
+      };
+
       const activeTagsInList = Array.from(new Set(items.map(item => item.tag))).filter(t => t);
       const displayFilterTags = ['全部', ...['無', ...customTags].filter(tag => activeTagsInList.includes(tag))];
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
@@ -563,7 +573,6 @@
                   <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 transition-transform shrink-0"><Icons.Plus /></button>
                 </form>
                 
-                {/* 地點標籤欄：齒輪(管理) + 標籤(手勢拖曳) + Plus(快速新增) */}
                 <div 
                   className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 relative" 
                   style={{ touchAction: hDragTagIdx !== null ? 'none' : 'pan-x pan-y' }}
@@ -598,7 +607,6 @@
                   </button>
                 </div>
                 
-                {/* 常買品項欄：齒輪(管理) + 標籤(手勢拖曳) + Plus(快速新增) */}
                 <div 
                   className="flex items-center gap-2 overflow-x-auto scrollbar-hide pt-1 text-xs border-t border-emerald-100/50 pt-2 mt-1 relative"
                   style={{ touchAction: hDragQuickIdx !== null ? 'none' : 'pan-x pan-y' }}
@@ -625,7 +633,7 @@
                         ${hDragQuickIdx === null ? 'bg-amber-50 border border-amber-200 text-amber-700' : ''}
                       `}
                     >
-                      {qa.n || qa.name}
+                      + {qa.n || qa.name}
                     </button>
                   ))}
                   <button type="button" onClick={() => setIsQuickAddOpen(true)} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed active:scale-95 transition-transform flex items-center justify-center">
@@ -649,37 +657,42 @@
               {filteredItems.length === 0 ? (
                 <div className="py-20 flex flex-col items-center justify-center opacity-20 grayscale"><Icons.Cart size={64} /><p className="mt-4 font-bold tracking-widest text-lg text-neutral-400 font-serif-tc">目前沒有採買任務</p></div>
               ) : filteredItems.map(item => (
-                <div key={item.id} className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60 scale-[0.98]' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
+                <div key={item.id} className={`flex items-start gap-3 p-3 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60 scale-[0.98]' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
                   
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 cursor-pointer mt-1 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={18} />}</div>
+                  {/* 第一區塊：打勾按鈕 */}
+                  <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 mt-0.5 cursor-pointer ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={18} />}</div>
+                  
+                  {/* 第二區塊：右側所有情報與操作 (加入 flex-1 確保佔滿並擠壓內部) */}
+                  <div className="flex flex-col min-w-0 flex-1 gap-2 w-full">
                     
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2 w-full">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span onClick={() => handleComplete(item)} className={`text-lg font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
-                          
-                          {item.qty ? (
-                            <button onClick={(e) => { e.stopPropagation(); if(!item.completed) setEditingQtyItem(item); }} disabled={item.completed} className={`text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 transition-transform ${item.completed ? 'bg-transparent text-neutral-400' : 'bg-neutral-100 text-neutral-600 active:scale-90 hover:bg-neutral-200 shadow-sm'}`}>
-                              {item.qty}
-                            </button>
-                          ) : (
-                            !item.completed && (
-                              <button onClick={(e) => { e.stopPropagation(); setEditingQtyItem(item); }} className="text-[10px] px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap shrink-0 active:scale-90 transition-transform">
-                                +數量
-                              </button>
-                            )
-                          )}
-                        </div>
-
-                        {!item.completed && (
-                          <button onClick={(e) => { e.stopPropagation(); setRecordingPriceItem(item); }} className={`px-2.5 py-1 rounded-lg text-xs font-bold active:scale-90 transition-transform shrink-0 whitespace-nowrap ${item.currentPrice ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm' : 'bg-amber-100 text-amber-700 shadow-sm'}`}>
-                            {item.currentPrice ? `現價 $${item.currentPrice}` : '記 $'}
+                    {/* 第一列：品名、數量、記錢按鈕 */}
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      {/* 加入 flex-1 確保品名能佔滿並優雅 truncate，不會消失 */}
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span onClick={() => handleComplete(item)} className={`text-lg font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
+                        {item.qty ? (
+                          <button onClick={(e) => { e.stopPropagation(); if(!item.completed) setEditingQtyItem(item); }} disabled={item.completed} className={`text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 transition-transform ${item.completed ? 'bg-transparent text-neutral-400' : 'bg-neutral-100 text-neutral-600 active:scale-90 hover:bg-neutral-200 shadow-sm'}`}>
+                            {item.qty}
                           </button>
+                        ) : (
+                          !item.completed && (
+                            <button onClick={(e) => { e.stopPropagation(); setEditingQtyItem(item); }} className="text-[10px] px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap shrink-0 active:scale-90 transition-transform">
+                              +數量
+                            </button>
+                          )
                         )}
                       </div>
-                      
-                      <div className="flex items-center justify-between gap-2 mt-1.5 w-full">
+
+                      {!item.completed && (
+                        <button onClick={(e) => { e.stopPropagation(); setRecordingPriceItem(item); }} className={`px-2.5 py-1 rounded-lg text-xs font-bold active:scale-90 transition-transform shrink-0 whitespace-nowrap ${item.currentPrice ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm' : 'bg-amber-100 text-amber-700 shadow-sm'}`}>
+                          {item.currentPrice ? `現價 $${item.currentPrice}` : '記 $'}
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* 第二列：地點標籤、上次買、右側動作按鈕 */}
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
                         <button onClick={(e) => { e.stopPropagation(); setEditingLocationItem(item); }} className={`shrink-0 text-[10px] px-2 py-0.5 rounded font-bold active:scale-95 transition-transform ${item.completed ? 'bg-neutral-200 text-neutral-400' : 'bg-[#e6f4ea] text-[#1e8e3e] border border-emerald-100'}`}>
                           {item.tag || '無'}
                         </button>
@@ -689,17 +702,15 @@
                           </span>
                         )}
                       </div>
-
+                      <div className="flex items-center gap-1 shrink-0">
+                        {!item.completed && (
+                          <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100 shadow-inner' : 'text-neutral-300 hover:text-amber-500'}`}><Icons.Clock size={18} /></button>
+                        )}
+                        <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-1.5 text-neutral-300 hover:text-red-500 active:scale-75 transition-all"><Icons.Trash size={18} /></button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center ml-2 shrink-0">
-                    {!item.completed && (
-                      <button onClick={(e) => handlePostpone(e, item)} className={`p-2 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100 shadow-inner' : 'text-neutral-300 hover:text-amber-500'}`}><Icons.Clock size={20} /></button>
-                    )}
-                    <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 transition-all"><Icons.Trash size={20} /></button>
-                  </div>
 
+                  </div>
                 </div>
               ))}
 
@@ -733,7 +744,7 @@
               <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setEditingLocationItem(null)}>
                 <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2">
-                    <h3 className="text-lg font-bold flex items-center gap-2 text-emerald-700 font-serif-tc"><Icons.Settings size={18}/>更換採買地點</h3>
+                    <h3 className="text-lg font-bold flex items-center gap-2 text-emerald-700 font-serif-tc"><Icons.MapPin size={18}/>更換採買地點</h3>
                     <button onClick={() => setEditingLocationItem(null)} className="text-neutral-300"><Icons.X /></button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
