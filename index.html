@@ -87,7 +87,7 @@
       Dollar: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
       Share: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
       User: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-      Settings: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+      Settings: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>,
       X: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
       ShoppingBag: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
       Refresh: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
@@ -98,8 +98,9 @@
       GripVertical: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
     };
 
-    const DEFAULT_TAGS = ['全聯', '菜市場'];
-    const DEFAULT_QUICK = [{n:'雞蛋',t:'全聯'}, {n:'豆漿',t:'全聯'}];
+    // 極簡預設裝備 (無字已被殲滅)
+    const DEFAULT_TAGS = ['全聯'];
+    const DEFAULT_QUICK = [{n:'雞蛋',t:'全聯'}];
 
     const App = () => {
       const [user, setUser] = useState(null);
@@ -129,7 +130,7 @@
       const [msg, setMsg] = useState('');
       const [newTagName, setNewTagName] = useState('');
       const [newQuickName, setNewQuickName] = useState('');
-      const [newQuickTag, setNewQuickTag] = useState('無');
+      const [newQuickTag, setNewQuickTag] = useState('');
 
       const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
       const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -162,6 +163,16 @@
       });
 
       const inputRef = useRef(null);
+
+      useEffect(() => {
+        const preventScroll = (e) => {
+          if (hDragTagIdx !== null || hDragQuickIdx !== null) {
+            e.preventDefault();
+          }
+        };
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+        return () => document.removeEventListener('touchmove', preventScroll);
+      }, [hDragTagIdx, hDragQuickIdx]);
 
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -228,7 +239,7 @@
         if (e) e.preventDefault();
         if (!inputValue.trim() || !user) return;
         const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
-        const finalTag = activeTag || '無';
+        const finalTag = activeTag || '';
         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`), {
           name: inputValue.trim(), qty: qtyValue.trim(), tag: finalTag, completed: false, postponed: false, createdAt: Date.now()
         });
@@ -237,7 +248,7 @@
 
       const handleQuickSelect = (qa) => {
         setInputValue(qa.n || qa.name);
-        setActiveTag(qa.t || qa.tag || '無');
+        setActiveTag(qa.t || qa.tag || '');
         inputRef.current?.focus();
       };
 
@@ -320,7 +331,6 @@
         setNewTagName('');
       };
       const delTag = async (t) => {
-        if (t === '無') return;
         const newTags = customTags.filter(tag => tag !== t);
         await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
       };
@@ -542,7 +552,8 @@
       };
 
       const activeTagsInList = Array.from(new Set(items.map(item => item.tag))).filter(t => t);
-      const displayFilterTags = ['全部', ...['無', ...customTags].filter(tag => activeTagsInList.includes(tag))];
+      // 過濾上方動態過濾選單，不顯示無標籤的空字串
+      const displayFilterTags = ['全部', ...customTags.filter(tag => activeTagsInList.includes(tag))];
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
@@ -574,45 +585,11 @@
                 </form>
                 
                 <div 
-                  className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 relative" 
-                  style={{ touchAction: hDragTagIdx !== null ? 'none' : 'pan-x pan-y' }}
-                >
-                  <button type="button" onClick={() => setIsTagManageOpen(true)} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full hover:bg-emerald-200 transition-colors active:scale-95 shadow-sm">
-                    <Icons.Settings />
-                  </button>
-                  {customTags.map((t, idx) => (
-                    <button 
-                      key={t} 
-                      type="button" 
-                      data-h-tag-index={idx}
-                      onTouchStart={(e) => onTouchStartHTag(idx, e)}
-                      onTouchMove={onTouchMoveHTag}
-                      onTouchEnd={onTouchEndHTag}
-                      onTouchCancel={onTouchEndHTag}
-                      onClick={() => {
-                        if (dragDidHappenTag.current) { dragDidHappenTag.current = false; return; }
-                        setActiveTag(activeTag === t ? '' : t);
-                      }}
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all no-select
-                        ${hDragTagIdx === idx ? 'scale-110 opacity-80 shadow-xl bg-emerald-500 text-white z-50' : ''}
-                        ${hDragOverTagIdx === idx && hDragTagIdx !== idx ? 'border-2 border-dashed border-emerald-500 scale-105' : ''}
-                        ${hDragTagIdx === null && activeTag === t ? 'bg-emerald-700 text-white shadow-md' : hDragTagIdx === null ? 'bg-white text-emerald-700 border border-emerald-200' : ''}
-                      `}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                  <button type="button" onClick={() => setIsTagAddOpen(true)} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed active:scale-95 transition-transform flex items-center justify-center">
-                    <Icons.Plus size={14} />
-                  </button>
-                </div>
-                
-                <div 
-                  className="flex items-center gap-2 overflow-x-auto scrollbar-hide pt-1 text-xs border-t border-emerald-100/50 pt-2 mt-1 relative"
+                  className={`flex items-center gap-2 pb-1 relative ${hDragQuickIdx !== null ? 'overflow-hidden' : 'overflow-x-auto scrollbar-hide'}`}
                   style={{ touchAction: hDragQuickIdx !== null ? 'none' : 'pan-x pan-y' }}
                 >
                   <button type="button" onClick={() => setIsQuickManageOpen(true)} className="shrink-0 text-amber-600 flex items-center justify-center p-1.5 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors active:scale-95 shadow-sm">
-                    <Icons.Settings />
+                    <Icons.Settings size={18}/>
                   </button>
                   {quickItems.map((qa, i) => (
                     <button 
@@ -640,6 +617,41 @@
                     <Icons.Plus size={14} />
                   </button>
                 </div>
+
+                <div 
+                  className={`flex items-center gap-2 pt-2 border-t border-emerald-100/50 mt-1 relative ${hDragTagIdx !== null ? 'overflow-hidden' : 'overflow-x-auto scrollbar-hide'}`}
+                  style={{ touchAction: hDragTagIdx !== null ? 'none' : 'pan-x pan-y' }}
+                >
+                  <button type="button" onClick={() => setIsTagManageOpen(true)} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full hover:bg-emerald-200 transition-colors active:scale-95 shadow-sm">
+                    <Icons.Settings size={18}/>
+                  </button>
+                  {customTags.map((t, idx) => (
+                    <button 
+                      key={t} 
+                      type="button" 
+                      data-h-tag-index={idx}
+                      onTouchStart={(e) => onTouchStartHTag(idx, e)}
+                      onTouchMove={onTouchMoveHTag}
+                      onTouchEnd={onTouchEndHTag}
+                      onTouchCancel={onTouchEndHTag}
+                      onClick={() => {
+                        if (dragDidHappenTag.current) { dragDidHappenTag.current = false; return; }
+                        setActiveTag(activeTag === t ? '' : t);
+                      }}
+                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all no-select
+                        ${hDragTagIdx === idx ? 'scale-110 opacity-80 shadow-xl bg-emerald-500 text-white z-50' : ''}
+                        ${hDragOverTagIdx === idx && hDragTagIdx !== idx ? 'border-2 border-dashed border-emerald-500 scale-105' : ''}
+                        ${hDragTagIdx === null && activeTag === t ? 'bg-emerald-700 text-white shadow-md' : hDragTagIdx === null ? 'bg-white text-emerald-700 border border-emerald-200' : ''}
+                      `}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => setIsTagAddOpen(true)} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed active:scale-95 transition-transform flex items-center justify-center">
+                    <Icons.Plus size={14} />
+                  </button>
+                </div>
+
               </div>
             </div>
 
@@ -659,17 +671,25 @@
               ) : filteredItems.map(item => (
                 <div key={item.id} className={`flex items-start gap-3 p-3 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60 scale-[0.98]' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
                   
-                  {/* 第一區塊：打勾按鈕 */}
-                  <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 mt-0.5 cursor-pointer ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={18} />}</div>
+                  {/* 第一區塊：左側操作列 (階梯式配置 - 時鐘在打勾下) */}
+                  <div className="flex flex-col items-center gap-2 shrink-0 mt-0.5">
+                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>
+                      {item.completed && <Icons.Check size={18} />}
+                    </div>
+                    {!item.completed && (
+                      <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100 shadow-inner' : 'text-neutral-400 hover:text-amber-500 bg-neutral-50 hover:bg-amber-50'}`}>
+                        <Icons.Clock size={18} />
+                      </button>
+                    )}
+                  </div>
                   
-                  {/* 第二區塊：右側所有情報與操作 (加入 flex-1 確保佔滿並擠壓內部) */}
-                  <div className="flex flex-col min-w-0 flex-1 gap-2 w-full">
+                  {/* 第二區塊：情報與刪除 */}
+                  <div className="flex flex-col min-w-0 flex-1 gap-2 w-full py-0.5">
                     
-                    {/* 第一列：品名、數量、記錢按鈕 */}
                     <div className="flex items-center justify-between gap-2 w-full">
-                      {/* 加入 flex-1 確保品名能佔滿並優雅 truncate，不會消失 */}
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <span onClick={() => handleComplete(item)} className={`text-lg font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
+                        
                         {item.qty ? (
                           <button onClick={(e) => { e.stopPropagation(); if(!item.completed) setEditingQtyItem(item); }} disabled={item.completed} className={`text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 transition-transform ${item.completed ? 'bg-transparent text-neutral-400' : 'bg-neutral-100 text-neutral-600 active:scale-90 hover:bg-neutral-200 shadow-sm'}`}>
                             {item.qty}
@@ -690,24 +710,20 @@
                       )}
                     </div>
                     
-                    {/* 第二列：地點標籤、上次買、右側動作按鈕 */}
-                    <div className="flex items-center justify-between gap-2 w-full">
+                    <div className="flex items-center justify-between gap-2 mt-1 w-full">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setEditingLocationItem(item); }} className={`shrink-0 text-[10px] px-2 py-0.5 rounded font-bold active:scale-95 transition-transform ${item.completed ? 'bg-neutral-200 text-neutral-400' : 'bg-[#e6f4ea] text-[#1e8e3e] border border-emerald-100'}`}>
-                          {item.tag || '無'}
+                        <button onClick={(e) => { e.stopPropagation(); setEditingLocationItem(item); }} className={`shrink-0 text-[10px] px-2 py-0.5 rounded font-bold active:scale-95 transition-transform flex items-center gap-1 ${item.completed ? 'bg-neutral-200 text-neutral-400' : item.tag ? 'bg-[#e6f4ea] text-[#1e8e3e] border border-emerald-100' : 'bg-neutral-100 text-neutral-400 border border-dashed border-neutral-300'}`}>
+                          {item.tag ? item.tag : '+地點'}
                         </button>
                         {history[item.name] && !item.completed && (
-                          <span className="text-[10px] text-amber-600 font-bold truncate text-right whitespace-nowrap">
+                          <span className="text-[10px] text-amber-600 font-bold truncate whitespace-nowrap">
                             上次買：${history[item.name].price} ({history[item.name].tag})
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {!item.completed && (
-                          <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100 shadow-inner' : 'text-neutral-300 hover:text-amber-500'}`}><Icons.Clock size={18} /></button>
-                        )}
-                        <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-1.5 text-neutral-300 hover:text-red-500 active:scale-75 transition-all"><Icons.Trash size={18} /></button>
-                      </div>
+                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-1.5 text-neutral-300 hover:text-red-500 active:scale-75 transition-all shrink-0">
+                        <Icons.Trash size={18} />
+                      </button>
                     </div>
 
                   </div>
@@ -748,17 +764,19 @@
                     <button onClick={() => setEditingLocationItem(null)} className="text-neutral-300"><Icons.X /></button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {['無', ...customTags].map(t => (
-                      <button key={t} onClick={async () => { await updateDoc(getItemRef(editingLocationItem.id), { tag: t === '無' ? '' : t }); setEditingLocationItem(null); setMsg('地點已更新！'); setTimeout(() => setMsg(''), 1500); }} className={`py-3 rounded-xl font-bold text-sm border transition-all active:scale-95 ${editingLocationItem.tag === t || (t === '無' && !editingLocationItem.tag) ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-50 text-neutral-600'}`}>
+                    {customTags.map(t => (
+                      <button key={t} onClick={async () => { await updateDoc(getItemRef(editingLocationItem.id), { tag: t }); setEditingLocationItem(null); setMsg('地點已更新！'); setTimeout(() => setMsg(''), 1500); }} className={`py-3 rounded-xl font-bold text-sm border transition-all active:scale-95 ${editingLocationItem.tag === t ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-50 text-neutral-600 border-neutral-200'}`}>
                         {t}
                       </button>
                     ))}
+                    <button onClick={async () => { await updateDoc(getItemRef(editingLocationItem.id), { tag: '' }); setEditingLocationItem(null); setMsg('地點已清除！'); setTimeout(() => setMsg(''), 1500); }} className={`py-3 rounded-xl font-bold text-sm border transition-all active:scale-95 ${!editingLocationItem.tag ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-100 text-neutral-500 border-dashed border-neutral-300'}`}>
+                      清除地點
+                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 修改數量彈窗 */}
             {editingQtyItem && (
               <div className="fixed inset-0 bg-black/60 z-[110] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => setEditingQtyItem(null)}>
                 <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
@@ -781,7 +799,6 @@
               </div>
             )}
 
-            {/* 紀錄價錢彈窗 */}
             {recordingPriceItem && (
               <div className="fixed inset-0 bg-black/60 z-[110] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => setRecordingPriceItem(null)}>
                 <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
@@ -804,7 +821,6 @@
               </div>
             )}
 
-            {/* 新增地點專用彈窗 (單純新增) */}
             {isTagAddOpen && (
               <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsTagAddOpen(false)}>
                 <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
@@ -820,7 +836,6 @@
               </div>
             )}
 
-            {/* 管理地點彈窗 (垂直排序與刪除) */}
             {isTagManageOpen && (
               <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsTagManageOpen(false)}>
                 <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
@@ -856,7 +871,6 @@
               </div>
             )}
 
-            {/* 新增常買品項專用彈窗 (單純新增) */}
             {isQuickAddOpen && (
               <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsQuickAddOpen(false)}>
                 <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
@@ -868,7 +882,7 @@
                     <input type="text" value={newQuickName} onChange={e => setNewQuickName(e.target.value)} placeholder="輸入品項..." className="w-full px-3 py-2 rounded-lg border text-sm outline-none mb-2 bg-white font-bold" autoFocus />
                     <div className="flex gap-2">
                       <select value={newQuickTag} onChange={e => setNewQuickTag(e.target.value)} className="flex-1 bg-white border rounded-lg px-2 text-sm font-bold outline-none">
-                        <option value="無">無</option>
+                        <option value="">無地點</option>
                         {customTags.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
                       <button onClick={() => { addQuick(); setIsQuickAddOpen(false); }} disabled={!newQuickName.trim()} className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50">新增</button>
@@ -878,7 +892,6 @@
               </div>
             )}
 
-            {/* 管理常買品項彈窗 (垂直排序與刪除) */}
             {isQuickManageOpen && (
               <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsQuickManageOpen(false)}>
                 <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
@@ -906,7 +919,7 @@
                           <div className="cursor-move p-2 text-neutral-400 hover:text-amber-600 touch-none"><Icons.GripVertical /></div>
                           <div>
                             <div className="font-bold text-sm text-neutral-700">{q.n || q.name}</div>
-                            <div className="text-[10px] text-amber-600 font-bold">{q.t || q.tag}</div>
+                            {q.t && <div className="text-[10px] text-amber-600 font-bold">{q.t}</div>}
                           </div>
                         </div>
                         <button onClick={() => delQuick(i)} className="text-red-400 hover:bg-red-50 p-2 rounded-lg active:scale-75 transition-all"><Icons.Trash size={18}/></button>
