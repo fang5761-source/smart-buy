@@ -356,7 +356,7 @@
       };
 
       const handleForceUpdate = () => {
-        setMsg('正在為你重整並載入最新裝備...');
+        setMsg('正在為你重整並載入最新版本...');
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.getRegistrations().then(function(registrations) {
             for(let registration of registrations) {
