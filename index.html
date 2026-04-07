@@ -679,7 +679,7 @@
                           <div className="flex flex-col gap-3 mb-4 shrink-0 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
                             <p className="text-xs font-bold text-emerald-700">快速新增地點</p>
                             <div className="flex gap-2">
-                              <input type="text" id="mAddTag" placeholder="地點名稱 (如: 好市多)..." className="flex-1 p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white min-w-0" />
+                              <input type="text" id="mAddTag" placeholder="地點名稱 " className="flex-1 p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white min-w-0" />
                               <button onClick={() => { const v = document.getElementById('mAddTag').value; if(v){ handleAddNewTag(v, false); document.getElementById('mAddTag').value=''; } }} className="shrink-0 bg-emerald-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1"><Icons.Plus size={16}/>新增</button>
                             </div>
                           </div>
