@@ -87,7 +87,11 @@
       Dollar: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
       Share: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
       User: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-      Settings: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>,
+      Settings: ({size = 18}) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+        </svg>
+      ),
       X: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
       ShoppingBag: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>,
       Refresh: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
@@ -98,7 +102,7 @@
       GripVertical: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
     };
 
-    // 極簡預設裝備 (無字已被殲滅)
+    // 極簡預設裝備
     const DEFAULT_TAGS = ['全聯'];
     const DEFAULT_QUICK = [{n:'雞蛋',t:'全聯'}];
 
@@ -117,7 +121,6 @@
       const [roomCode, setRoomCode] = useState('');
       
       const [isRoomOpen, setIsRoomOpen] = useState(false);
-      
       const [isTagAddOpen, setIsTagAddOpen] = useState(false);
       const [isTagManageOpen, setIsTagManageOpen] = useState(false);
       const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
@@ -239,7 +242,7 @@
         if (e) e.preventDefault();
         if (!inputValue.trim() || !user) return;
         const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
-        const finalTag = activeTag || '';
+        const finalTag = activeTag || '無';
         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`), {
           name: inputValue.trim(), qty: qtyValue.trim(), tag: finalTag, completed: false, postponed: false, createdAt: Date.now()
         });
@@ -248,7 +251,7 @@
 
       const handleQuickSelect = (qa) => {
         setInputValue(qa.n || qa.name);
-        setActiveTag(qa.t || qa.tag || '');
+        setActiveTag(qa.t || qa.tag || '無');
         inputRef.current?.focus();
       };
 
@@ -331,13 +334,15 @@
         setNewTagName('');
       };
       const delTag = async (t) => {
+        if (t === '無') return;
         const newTags = customTags.filter(tag => tag !== t);
         await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
       };
 
       const addQuick = async () => {
         if (!newQuickName.trim()) return;
-        const newQ = [...quickItems.map(q => ({n: q.n || q.name, t: q.t || q.tag})), { n: newQuickName.trim(), t: newQuickTag }];
+        const newEntry = { n: newQuickName.trim(), t: newQuickTag || '無' };
+        const newQ = [...quickItems.map(q => ({n: q.n || q.name, t: q.t || q.tag})), newEntry];
         await setDoc(getConfigRef(), { quick: newQ }, { merge: true });
         setNewQuickName('');
       };
@@ -552,8 +557,7 @@
       };
 
       const activeTagsInList = Array.from(new Set(items.map(item => item.tag))).filter(t => t);
-      // 過濾上方動態過濾選單，不顯示無標籤的空字串
-      const displayFilterTags = ['全部', ...customTags.filter(tag => activeTagsInList.includes(tag))];
+      const displayFilterTags = ['全部', ...Array.from(new Set(['無', ...customTags])).filter(tag => activeTagsInList.includes(tag))];
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
@@ -604,7 +608,7 @@
                         if (dragDidHappenQuick.current) { dragDidHappenQuick.current = false; return; }
                         handleQuickSelect(qa);
                       }}
-                      className={`whitespace-nowrap px-3 py-1.5 rounded-full font-bold active:scale-90 transition-all no-select
+                      className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold active:scale-90 transition-all no-select
                         ${hDragQuickIdx === i ? 'scale-110 opacity-80 shadow-xl bg-amber-500 text-white z-50' : ''}
                         ${hDragOverQuickIdx === i && hDragQuickIdx !== i ? 'border-2 border-dashed border-amber-500 scale-105' : ''}
                         ${hDragQuickIdx === null ? 'bg-amber-50 border border-amber-200 text-amber-700' : ''}
@@ -671,7 +675,6 @@
               ) : filteredItems.map(item => (
                 <div key={item.id} className={`flex items-start gap-3 p-3 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60 scale-[0.98]' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
                   
-                  {/* 第一區塊：左側操作列 (階梯式配置 - 時鐘在打勾下) */}
                   <div className="flex flex-col items-center gap-2 shrink-0 mt-0.5">
                     <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>
                       {item.completed && <Icons.Check size={18} />}
@@ -683,7 +686,6 @@
                     )}
                   </div>
                   
-                  {/* 第二區塊：情報與刪除 */}
                   <div className="flex flex-col min-w-0 flex-1 gap-2 w-full py-0.5">
                     
                     <div className="flex items-center justify-between gap-2 w-full">
@@ -716,7 +718,7 @@
                           {item.tag ? item.tag : '+地點'}
                         </button>
                         {history[item.name] && !item.completed && (
-                          <span className="text-[10px] text-amber-600 font-bold truncate whitespace-nowrap">
+                          <span className="text-[10px] text-amber-600 font-bold truncate text-right whitespace-nowrap">
                             上次買：${history[item.name].price} ({history[item.name].tag})
                           </span>
                         )}
@@ -755,7 +757,6 @@
               </div>
             )}
 
-            {/* 更換地點彈窗 */}
             {editingLocationItem && (
               <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setEditingLocationItem(null)}>
                 <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
@@ -840,7 +841,7 @@
               <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsTagManageOpen(false)}>
                 <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-emerald-700 font-serif-tc">
-                    <h2 className="text-lg flex items-center gap-2"><Icons.Settings size={20}/>管理地點 (排序/刪除)</h2>
+                    <h2 className="text-lg flex items-center gap-2"><Icons.Settings size={18}/>管理地點 (排序/刪除)</h2>
                     <button onClick={() => setIsTagManageOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button>
                   </div>
                   <p className="text-xs text-neutral-400 mb-2 font-bold flex justify-center items-center gap-1"><Icons.GripVertical size={12} /> 拖曳左側圖示即可自由排序</p>
@@ -878,14 +879,14 @@
                     <h2 className="text-lg flex items-center gap-2"><Icons.Plus size={20}/>新增常買品項</h2>
                     <button onClick={() => setIsQuickAddOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button>
                   </div>
-                  <div className="space-y-2 bg-amber-50 p-3 rounded-xl shrink-0">
-                    <input type="text" value={newQuickName} onChange={e => setNewQuickName(e.target.value)} placeholder="輸入品項..." className="w-full px-3 py-2 rounded-lg border text-sm outline-none mb-2 bg-white font-bold" autoFocus />
+                  <div className="space-y-3 bg-amber-50 p-3 rounded-xl shrink-0">
+                    <input type="text" value={newQuickName} onChange={e => setNewQuickName(e.target.value)} placeholder="輸入品項 (如：雞蛋)..." className="w-full px-3 py-2 rounded-lg border text-sm outline-none bg-white font-bold" autoFocus />
                     <div className="flex gap-2">
                       <select value={newQuickTag} onChange={e => setNewQuickTag(e.target.value)} className="flex-1 bg-white border rounded-lg px-2 text-sm font-bold outline-none">
                         <option value="">無地點</option>
                         {customTags.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
-                      <button onClick={() => { addQuick(); setIsQuickAddOpen(false); }} disabled={!newQuickName.trim()} className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50">新增</button>
+                      <button onClick={async () => { await addQuick(); setIsQuickAddOpen(false); }} disabled={!newQuickName.trim()} className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50">新增</button>
                     </div>
                   </div>
                 </div>
@@ -896,7 +897,7 @@
               <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsQuickManageOpen(false)}>
                 <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-amber-700 font-serif-tc">
-                    <h2 className="text-lg flex items-center gap-2"><Icons.Settings size={20}/>管理常買品項 (排序/刪除)</h2>
+                    <h2 className="text-lg flex items-center gap-2"><Icons.Settings size={18}/>管理常買品項 (排序/刪除)</h2>
                     <button onClick={() => setIsQuickManageOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button>
                   </div>
                   <p className="text-xs text-neutral-400 mb-2 font-bold flex justify-center items-center gap-1"><Icons.GripVertical size={12} /> 拖曳左側圖示即可自由排序</p>
