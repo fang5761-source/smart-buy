@@ -316,7 +316,6 @@
         setMsg('已清除完成項目'); setTimeout(() => setMsg(''), 1000);
       };
 
-      // --- 原生分享功能 (Web Share API) ---
       const copyAppUrl = async () => {
         const url = `${window.location.origin}${window.location.pathname}`;
         if (navigator.share) {
@@ -326,12 +325,11 @@
               text: '這是我超愛用的智能採買 APP，推薦給你！',
               url: url
             });
-            return; // 成功呼叫原生分享介面
+            return; 
           } catch (err) {
             console.log('分享被取消或失敗', err);
           }
         }
-        // 若不支援原生分享，則回退到複製網址
         const tempIn = document.createElement('input');
         tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
         setMsg('APP 網址已複製！快去分享吧'); setTimeout(() => setMsg(''), 2000);
@@ -347,12 +345,11 @@
               text: `點擊連結加入我的採買頻道，一起同步購物清單！`,
               url: url
             });
-            return; // 成功呼叫原生分享介面
+            return; 
           } catch (err) {
             console.log('分享被取消或失敗', err);
           }
         }
-        // 若不支援原生分享，則回退到複製網址
         const tempIn = document.createElement('input');
         tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
         setMsg('對頻網址已複製！'); setTimeout(() => setMsg(''), 2000);
@@ -379,6 +376,7 @@
         }, 1500);
       };
 
+      // --- 水平拖曳：地點標籤 (重啟) ---
       const onTouchStartHTag = (e, idx) => {
         touchStartTag.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         isScrollingTag.current = false;
@@ -409,6 +407,7 @@
         }
       };
 
+      // --- 水平拖曳：常買品項 (重啟) ---
       const onTouchStartHQuick = (e, idx) => {
         touchStartQuick.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         isScrollingQuick.current = false;
@@ -439,6 +438,7 @@
         }
       };
 
+      // --- 垂直拖曳 ---
       const onVStart = (idx) => { setVDragIdx(idx); if (navigator.vibrate) navigator.vibrate(30); };
       const onVMove = (e, attr) => {
         if (vDragIdx === null) return;
@@ -470,7 +470,6 @@
         <div className="w-full h-full flex justify-center bg-neutral-100 font-sans">
           <div className="w-full max-w-md bg-white h-full flex flex-col relative shadow-2xl sm:border-x border-neutral-200 z-0">
             
-            {/* Header: 確保不管動態島多大多小，裡面的內容永遠會垂直置中！ */}
             <header className="bg-emerald-700 text-white shrink-0 shadow-lg z-20 pt-[max(env(safe-area-inset-top),0px)]">
               <div className="px-3 py-3 sm:py-4 flex justify-between items-center h-[64px] sm:h-[72px]">
                 <div className="flex items-center gap-2 font-bold">
@@ -507,7 +506,7 @@
                         if (dragDidHappenQuick.current || isScrollingQuick.current) { e.preventDefault(); return; }
                         handleQuickSelect(qa); 
                       }} 
-                      className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold active:scale-90 transition-all shadow-sm ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-80 bg-amber-500 text-white z-50' : hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-amber-500' : 'bg-amber-50 border border-amber-200 text-amber-700'}`}
+                      className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-80 bg-amber-500 text-white z-50' : hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-amber-500' : 'bg-amber-50 border border-amber-200 text-amber-700 active:scale-95'}`}
                     >
                       + {qa.n || qa.name}
                     </button>
@@ -527,7 +526,7 @@
                         if (dragDidHappenTag.current || isScrollingTag.current) { e.preventDefault(); return; }
                         setActiveTag(activeTag === t ? '' : t); 
                       }} 
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-80 bg-emerald-500 text-white z-50' : hDragOverIdx === idx && hDragType === 'tag' ? 'border-2 border-dashed border-emerald-500' : activeTag === t ? 'bg-emerald-700 text-white' : 'bg-white text-emerald-700 border border-emerald-200'}`}
+                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-80 bg-emerald-500 text-white z-50' : hDragOverIdx === idx && hDragType === 'tag' ? 'border-2 border-dashed border-emerald-500' : activeTag === t ? 'bg-emerald-700 text-white scale-105' : 'bg-white text-emerald-700 border border-emerald-200 active:scale-95'}`}
                     >
                       {t}
                     </button>
@@ -641,7 +640,7 @@
                               <div>
                                 <p className="font-bold text-emerald-700 mb-1 flex items-center gap-1">🪪 基地 ID (你的專屬門號)</p>
                                 <p>進入「頻道設定」，會看到一組英文亂碼，這是系統發給你的臨時身分。<strong>強烈建議點擊修改，改成你好記的專屬代碼(如 family 01)！</strong></p>
-                                <p className="text-xs text-neutral-500 mt-1.5 bg-neutral-100 p-2 rounded-lg">💡 <strong>防走失好處：</strong>未來換手機或不小心清除網頁紀錄時，只要把 ID 改回 family 01，你所有的頻道、標籤、清單就會瞬間連線回歸，資料絕對安全！</p>
+                                <p className="text-xs text-neutral-500 mt-1.5 bg-neutral-100 p-2 rounded-lg">💡 <strong>防走失好處：</strong>未來換手機或不小心清除網頁紀錄時，只要把 ID 改回 family 01，你所有的頻道、標籤、清單就會瞬間「連線回歸」，資料絕對安全！</p>
                               </div>
                               <div className="w-full h-px bg-neutral-200/60"></div>
                               <div>
