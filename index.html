@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>智能採買</title>
   
   <link rel="manifest" href="manifest.json">
@@ -25,8 +25,9 @@
     input:focus { font-size: 16px !important; }
     .font-serif-tc { font-family: 'Noto Serif TC', serif; }
     body { overflow-x: hidden; width: 100vw; background-color: #f5f5f5; -webkit-tap-highlight-color: transparent; }
-    /* 修正點擊問題，不要對全域套用 no-select */
     .drag-handle { cursor: move; touch-action: none; }
+    /* 處理 iOS 安全區域 */
+    .safe-top { padding-top: env(safe-area-inset-top, 16px); }
   </style>
 </head>
 <body class="bg-neutral-100 text-neutral-800 antialiased font-sans min-h-screen flex justify-center">
@@ -95,6 +96,7 @@
       const [filterTag, setFilterTag] = useState('全部');
       const [isShoppingMode, setIsShoppingMode] = useState(false);
       const [roomPath, setRoomPath] = useState(() => localStorage.getItem('smart_buy_room') || '');
+      
       const [modalState, setModalState] = useState({ type: null, data: null });
       const [msg, setMsg] = useState('');
       
@@ -106,6 +108,13 @@
 
       const [vDragIdx, setVDragIdx] = useState(null);
       const [vDragOverIdx, setVDragOverIdx] = useState(null);
+
+      // --- 主畫面拖曳狀態 ---
+      const [hDragType, setHDragType] = useState(null); 
+      const [hDragIdx, setHDragIdx] = useState(null);
+      const [hDragOverIdx, setHDragOverIdx] = useState(null);
+      const dragDidHappen = useRef(false);
+      const touchTimer = useRef(null);
 
       const [savedRooms, setSavedRooms] = useState(() => {
         const raw = localStorage.getItem('smart_buy_saved_rooms');
@@ -126,9 +135,10 @@
         return parts.length > 1 ? parts[1] : path;
       };
 
+      // Header 按鈕文字：移除「頻道」二字
       const headerRoomTitle = useMemo(() => {
         if (!roomPath) return '進入頻道';
-        return `頻道 ${getFriendlyName(roomPath)}`;
+        return getFriendlyName(roomPath);
       }, [roomPath, savedRooms]);
 
       const dynamicFilterTags = useMemo(() => {
@@ -202,10 +212,9 @@
       };
 
       const savePrice = async (itemName, price, itemTag, itemId) => {
-        if (!price) return;
         const prefix = roomPath ? `room_${roomPath}` : `user_${user.uid}`;
-        await setDoc(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `hist_${prefix}`, itemName), { name: itemName, price: price, tag: itemTag || '', updatedAt: Date.now() });
-        if (itemId) await updateDoc(getItemRef(itemId), { currentPrice: price });
+        await setDoc(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `hist_${prefix}`, itemName), { name: itemName, price: price || '', tag: itemTag || '', updatedAt: Date.now() });
+        if (itemId) await updateDoc(getItemRef(itemId), { currentPrice: price || '' });
       };
 
       const handleAddNewTag = async (tagName) => {
@@ -260,6 +269,51 @@
         setTimeout(() => setMsg(''), 1000);
       };
 
+      const clearCompleted = async () => {
+        if (!user) return;
+        const toDelete = items.filter(i => i.completed);
+        for (const item of toDelete) {
+          await deleteDoc(getItemRef(item.id));
+        }
+        setMsg('已清除完成項目'); setTimeout(() => setMsg(''), 1000);
+      };
+
+      // --- 水平拖曳校準 ---
+      const onHStart = (idx, type) => {
+        dragDidHappen.current = false;
+        touchTimer.current = setTimeout(() => {
+          setHDragIdx(idx); setHDragType(type); dragDidHappen.current = true;
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, 400);
+      };
+      const onHMove = (e, attr) => {
+        if (hDragIdx === null) { clearTimeout(touchTimer.current); return; }
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropElem = target?.closest(`[${attr}]`);
+        if (dropElem) {
+          const overIdx = parseInt(dropElem.getAttribute(attr), 10);
+          if (overIdx !== hDragOverIdx && overIdx !== hDragIdx) setHDragOverIdx(overIdx);
+        }
+      };
+      const onHEnd = async () => {
+        clearTimeout(touchTimer.current);
+        if (hDragIdx !== null) {
+          if (hDragOverIdx !== null && hDragIdx !== hDragOverIdx) {
+            if (hDragType === 'tag') {
+              const next = [...customTags]; const [moved] = next.splice(hDragIdx, 1); next.splice(hDragOverIdx, 0, moved);
+              setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
+            } else {
+              const next = [...quickItems]; const [moved] = next.splice(hDragIdx, 1); next.splice(hDragOverIdx, 0, moved);
+              setQuickItems(next); const serialized = next.map(q => ({n: q.n || q.name, t: q.t || q.tag || ''})); await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
+            }
+          }
+          setHDragIdx(null); setHDragOverIdx(null); setHDragType(null);
+        }
+      };
+
+      // --- 垂直拖曳校準 ---
       const onVStart = (idx) => { setVDragIdx(idx); if (navigator.vibrate) navigator.vibrate(30); };
       const onVMove = (e, attr) => {
         if (vDragIdx === null) return;
@@ -292,15 +346,17 @@
         setMsg('對頻網址已複製！'); setTimeout(() => setMsg(''), 2000);
       };
 
+      const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
+
       return (
-        <div className="min-h-screen bg-neutral-100 flex justify-center items-start sm:pt-8 font-sans w-full">
-          <div className="w-full max-w-md bg-white h-fit min-h-[100vh] sm:min-h-[500px] flex flex-col relative shadow-2xl overflow-hidden sm:rounded-3xl mb-8 border-x border-neutral-200 z-0">
+        <div className="min-h-screen bg-neutral-100 flex justify-center items-start font-sans w-full">
+          <div className="w-full max-w-md bg-white h-fit min-h-[100vh] sm:min-h-[500px] flex flex-col relative shadow-2xl overflow-hidden sm:rounded-3xl mb-8 border-x border-neutral-200">
             
-            <header className="bg-emerald-700 text-white px-3 py-4 flex justify-between items-center shrink-0 shadow-lg z-20">
+            <header className="bg-emerald-700 text-white px-3 py-4 flex justify-between items-center shrink-0 shadow-lg z-20 safe-top">
               <div className="flex items-center gap-2 font-bold"><Icons.Cart /><h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1></div>
               <div className="flex gap-2">
                 {roomPath && <button onClick={copyShareLink} className="p-2 bg-white/20 rounded-lg active:scale-90 transition-all"><Icons.Share size={18}/></button>}
-                <button onClick={() => { setModalInput(''); setModalNote(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' }); }} className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 ${roomPath ? 'bg-amber-400 text-amber-900 shadow-inner' : 'bg-emerald-600 text-white border border-emerald-500'}`}>{headerRoomTitle}</button>
+                <button onClick={() => { setModalInput(''); setModalNote(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' }); }} className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>{headerRoomTitle}</button>
               </div>
             </header>
 
@@ -311,49 +367,43 @@
                   <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-14 sm:w-16 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white font-bold" />
                   <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 shrink-0"><Icons.Plus /></button>
                 </form>
-                <div className="flex items-center gap-2 pb-1 overflow-x-auto scrollbar-hide">
+                
+                <div className={`flex items-center gap-2 pb-1 relative ${hDragType === 'quick' ? 'overflow-hidden' : 'overflow-x-auto scrollbar-hide'}`} onTouchMove={(e) => onHMove(e, 'data-h-quick-index')}>
                   <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full active:scale-95 shadow-sm"><Icons.Settings size={18}/></button>
-                  {quickItems.map((qa, i) => (<button key={i} onClick={() => handleQuickSelect(qa)} className="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 border border-amber-200 text-amber-700 active:scale-90 shadow-sm">+ {qa.n || qa.name}</button>))}
-                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed flex items-center justify-center"><Icons.Plus size={14} /></button>
+                  {quickItems.map((qa, i) => (<button key={i} data-h-quick-index={i} onTouchStart={() => onHStart(i, 'quick')} onTouchEnd={onHEnd} onClick={() => { if (!dragDidHappen.current) handleQuickSelect(qa); }} className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 border border-amber-200 text-amber-700 active:scale-90 shadow-sm transition-all ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-80 bg-amber-500 text-white z-50' : hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-amber-500' : ''}`}>+ {qa.n || qa.name}</button>))}
+                  <button type="button" onClick={() => setModalState({ type: 'addQuick' })} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={14} /></button>
                 </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-emerald-100/50 mt-1 overflow-x-auto scrollbar-hide">
+                
+                <div className={`flex items-center gap-2 pt-2 border-t border-emerald-100/50 mt-1 relative ${hDragType === 'tag' ? 'overflow-hidden' : 'overflow-x-auto scrollbar-hide'}`} onTouchMove={(e) => onHMove(e, 'data-h-tag-index')}>
                   <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full active:scale-95 shadow-sm"><Icons.Settings size={18}/></button>
-                  {customTags.map((t, idx) => (<button key={t} onClick={() => setActiveTag(activeTag === t ? '' : t)} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm ${activeTag === t ? 'bg-emerald-700 text-white' : 'bg-white text-emerald-700 border border-emerald-200'}`}>{t}</button>))}
-                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed flex items-center justify-center"><Icons.Plus size={14} /></button>
+                  {customTags.map((t, idx) => (<button key={t} data-h-tag-index={idx} onTouchStart={() => onHStart(idx, 'tag')} onTouchEnd={onHEnd} onClick={() => { if (!dragDidHappen.current) setActiveTag(activeTag === t ? '' : t); }} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-80 bg-emerald-500 text-white z-50' : hDragOverIdx === idx && hDragType === 'tag' ? 'border-2 border-dashed border-emerald-500' : activeTag === t ? 'bg-emerald-700 text-white' : 'bg-white text-emerald-700 border border-emerald-200'}`}>{t}</button>))}
+                  <button type="button" onClick={() => setModalState({ type: 'addTag' })} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={14} /></button>
                 </div>
               </div>
             </div>
 
-            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold border-b transition-colors z-10 ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>{isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開備戰區</> : <><Icons.Cart size={18} /> 🛒 收起並開始採買</>}</button>
+            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold border-b transition-colors ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>{isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開備戰區</> : <><Icons.Cart size={18} /> 🛒 收起並開始採買</>}</button>
 
             {dynamicFilterTags.length > 1 && (
-              <div className="bg-white border-b border-neutral-100 flex overflow-x-auto scrollbar-hide shrink-0 shadow-sm z-10">
+              <div className="bg-white border-b border-neutral-100 flex overflow-x-auto scrollbar-hide shrink-0 shadow-sm">
                 {dynamicFilterTags.map(tag => (<button key={`filter-${tag}`} onClick={() => setFilterTag(tag)} className={`flex-1 min-w-[70px] py-3 text-sm font-bold transition-colors relative whitespace-nowrap px-2 ${filterTag === tag ? 'text-emerald-700 font-bold' : 'text-neutral-400 bg-neutral-50/20'}`}>{tag}{filterTag === tag && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-700" />}</button>))}
               </div>
             )}
 
-            <main className="p-3 space-y-3 bg-neutral-50/50 flex-1 overflow-y-auto z-0">
-              {items.filter(item => filterTag === '全部' ? true : item.tag === filterTag).map(item => (
+            <main className="p-3 space-y-3 bg-neutral-50/50 flex-1 overflow-y-auto pb-20">
+              {filteredItems.map(item => (
                 <div key={item.id} className={`flex items-start gap-3 p-3 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
-                  {/* 左側戰術控制欄 */}
                   <div className="flex flex-col items-center gap-2 shrink-0 mt-0.5">
-                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>
-                      {item.completed && <Icons.Check size={18} />}
-                    </div>
-                    {!item.completed && (
-                      <div onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors cursor-pointer active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50'}`}>
-                        <Icons.Clock size={18} />
-                      </div>
-                    )}
+                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={18} />}</div>
+                    {!item.completed && <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50'}`}><Icons.Clock size={18} /></button>}
                   </div>
-                  {/* 情報區 */}
                   <div className="flex flex-col min-w-0 flex-1 gap-2 w-full py-0.5">
                     <div className="flex items-center justify-between gap-2 w-full">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <span onClick={() => handleComplete(item)} className={`text-lg font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
-                        {item.qty ? <button onClick={(e) => { e.stopPropagation(); setModalInput(item.qty); setModalState({ type: 'editQty', data: item }); }} disabled={item.completed} className={`text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 ${item.completed ? 'text-neutral-400' : 'bg-neutral-100 text-neutral-600 shadow-sm'}`}>{item.qty}</button> : !item.completed && <button onClick={(e) => { e.stopPropagation(); setModalInput(''); setModalState({ type: 'editQty', data: item }); }} className="text-[10px] px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap active:scale-90">+數量</button>}
+                        {item.qty ? <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editQty', data: item }); setModalInput(item.qty); }} disabled={item.completed} className={`text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 ${item.completed ? 'text-neutral-400' : 'bg-neutral-100 text-neutral-600 shadow-sm'}`}>{item.qty}</button> : !item.completed && <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editQty', data: item }); setModalInput(''); }} className="text-[10px] px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap active:scale-90">+數量</button>}
                       </div>
-                      {!item.completed && <button onClick={(e) => { e.stopPropagation(); setModalInput(item.currentPrice || ''); setModalState({ type: 'recordingPrice', data: item }); }} className={`px-2.5 py-1 rounded-lg text-xs font-bold active:scale-90 shrink-0 whitespace-nowrap ${item.currentPrice ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm' : 'bg-amber-100 text-amber-700 shadow-sm'}`}>{item.currentPrice ? `現價 $${item.currentPrice}` : '記 $'}</button>}
+                      {!item.completed && <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'recordingPrice', data: item }); setModalInput(item.currentPrice || ''); }} className={`px-2.5 py-1 rounded-lg text-xs font-bold active:scale-90 shrink-0 whitespace-nowrap shadow-sm ${item.currentPrice ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700'}`}>{item.currentPrice ? `現價 $${item.currentPrice}` : '記 $'}</button>}
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-1 w-full">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -365,11 +415,16 @@
                   </div>
                 </div>
               ))}
+              {/* 「清除已採買」按鈕重新安裝 */}
+              {items.some(i => i.completed) && (
+                <div className="pt-6 flex justify-center w-full">
+                  <button onClick={clearCompleted} className="flex items-center gap-1.5 px-6 py-3 text-red-500 bg-white border border-red-100 rounded-full font-bold active:scale-95 shadow-sm text-sm"><Icons.Trash size={18} /> 清除畫面中已買</button>
+                </div>
+              )}
             </main>
 
-            {/* 彈窗系統：頂層顯示 */}
             {modalState.type && (
-              <div className="fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => setModalState({ type: null, data: null })}>
+              <div className="fixed inset-0 bg-black/60 z-[120] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => setModalState({ type: null, data: null })}>
                 <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2 shrink-0">
                     <h3 className="text-lg font-bold text-emerald-700 font-serif-tc">
@@ -379,38 +434,35 @@
                   </div>
                   
                   <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide">
-                    {modalState.type === 'addTag' && <div className="space-y-4 py-2"><input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="例如：全聯" className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus /><button onClick={async () => { await handleAddNewTag(modalInput); }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95">新增</button></div>}
-                    {modalState.type === 'addQuick' && <div className="space-y-4 py-2"><input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="例如：雞蛋" className="w-full p-4 rounded-xl border-2 border-amber-100 outline-none text-xl font-bold text-center" autoFocus /><select value={modalSelect} onChange={e => setModalSelect(e.target.value)} className="w-full p-3 bg-neutral-50 rounded-xl border font-bold"><option value="">選擇預設地點 (選填)</option>{customTags.map(t => <option key={t} value={t}>{t}</option>)}</select><button onClick={async () => { await handleAddNewQuick(modalInput, modalSelect); }} className="w-full bg-amber-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95">新增</button></div>}
+                    {modalState.type === 'addTag' && <div className="space-y-4 py-2"><input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus /><button onClick={() => handleAddNewTag(modalInput)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95">新增</button></div>}
+                    {modalState.type === 'addQuick' && <div className="space-y-4 py-2"><input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="品項名稱..." className="w-full p-4 rounded-xl border-2 border-amber-100 outline-none text-xl font-bold text-center" autoFocus /><select value={modalSelect} onChange={e => setModalSelect(e.target.value)} className="w-full p-3 bg-neutral-50 rounded-xl border font-bold"><option value="">無預設地點</option>{customTags.map(t => <option key={t} value={t}>{t}</option>)}</select><button onClick={() => handleAddNewQuick(modalInput, modalSelect)} className="w-full bg-amber-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95">新增</button></div>}
                     {modalState.type === 'editingTag' && modalState.data && <div className="grid grid-cols-2 gap-2 py-2">{customTags.map(t => <button key={t} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t }); setModalState({ type: null }); }} className={`py-3 rounded-xl font-bold text-sm border ${modalState.data.tag === t ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-50 text-neutral-600'}`}>{t}</button>)}<button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: '' }); setModalState({ type: null }); }} className="col-span-2 py-3 bg-neutral-100 text-neutral-400 font-bold rounded-xl border-dashed border-2 active:scale-95">清除地點</button></div>}
-                    {modalState.type === 'editQty' && modalState.data && <div className="space-y-4 py-2"><input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="數量..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus /><div className="flex gap-2"><button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: '' }); setModalState({ type: null }); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold active:scale-95">清除</button><button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: modalInput }); setModalState({ type: null }); }} className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg active:scale-95">確定</button></div></div>}
+                    {modalState.type === 'editQty' && modalState.data && <div className="space-y-4 py-2"><input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="數量..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus /><div className="flex gap-2"><button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: '' }); setModalState({ type: null }); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold active:scale-95">清除</button><button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: modalInput }); setModalState({ type: null }); }} className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95">確定</button></div></div>}
                     {modalState.type === 'recordingPrice' && modalState.data && <div className="space-y-4 py-2"><div className="text-xs text-amber-600 font-bold bg-amber-50 p-2 rounded-lg italic text-center">{history[modalState.data.name] ? `上次買：$${history[modalState.data.name].price}` : '目前無紀錄'}</div><input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="金額..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus /><button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95">確定</button></div>}
                     
                     {modalState.type === 'room' && (
                       <div className="space-y-6 py-2">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
                           <div className="flex justify-between items-center mb-1">
-                            <p className="text-xs text-emerald-700 font-bold">基地識別碼 (我的ID)</p>
+                            <p className="text-xs text-emerald-700 font-bold tracking-tight">基地識別碼 (我的ID)</p>
                             <button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-500 flex items-center gap-1 text-[10px] bg-white px-2 py-0.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={10}/>修改</button>
                           </div>
                           {isEditingBaseId ? (
                             <div className="flex gap-2 mt-2">
-                              <input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="flex-1 p-2 bg-white rounded-lg border-2 border-emerald-200 outline-none font-bold text-center tracking-widest" autoFocus />
-                              <button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="bg-emerald-600 text-white p-2 rounded-lg shadow-md active:scale-95 text-xs font-bold">✔ 確定</button>
+                              <input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="flex-1 p-2 bg-white rounded-lg border-2 border-emerald-200 outline-none font-bold text-center tracking-widest text-emerald-800" autoFocus />
+                              <button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="bg-emerald-600 text-white px-3 rounded-lg shadow-md active:scale-95 flex items-center gap-1 text-xs font-bold"><Icons.CheckCircle size={14}/>確定</button>
                             </div>
                           ) : (
-                            <p className="text-xl font-bold tracking-[0.2em] text-emerald-800">{personalBaseId}</p>
+                            <p className="text-xl font-bold tracking-[0.2em] text-emerald-800 break-all">{personalBaseId}</p>
                           )}
                         </div>
                         {savedRooms.length > 0 && <div><h3 className="text-xs font-bold text-neutral-500 mb-3 flex items-center gap-1.5"><Icons.History size={14}/> 歷史通訊頻道</h3><div className="space-y-2">{savedRooms.map((room, idx) => (
                           <div key={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex justify-between items-center p-3 rounded-xl border cursor-pointer transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-300 shadow-sm' : 'bg-white border-neutral-200'}`}>
-                            <div className="flex flex-col">
-                              <span className={`font-bold ${roomPath === room.code ? 'text-amber-700' : 'text-neutral-700'}`}>{room.note || '未命名'}</span>
-                              <span className="text-[10px] text-neutral-400 font-mono italic">{room.code}</span>
-                            </div>
-                            <button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(n)); if(roomPath === room.code) setRoomPath(''); }} className="p-1.5 text-neutral-400 hover:text-red-500 active:scale-75"><Icons.Trash size={18}/></button>
+                            <div className="flex flex-col"><span className={`font-bold ${roomPath === room.code ? 'text-amber-700' : 'text-neutral-700'}`}>{room.note || '未命名'}</span><span className="text-[10px] text-neutral-400 font-mono italic">{room.code}</span></div>
+                            <button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(n)); if(roomPath === room.code) { setRoomPath(''); localStorage.removeItem('smart_buy_room'); } }} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75"><Icons.Trash size={18}/></button>
                           </div>
                         ))}</div></div>}
-                        <div className="pt-4 border-t border-dashed border-neutral-200"><h3 className="text-xs font-bold text-neutral-500 mb-3"><Icons.Plus size={14}/> 輸入新頻道與備註</h3><div className="space-y-3"><input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="代號 (如 888)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-xl text-center font-bold" /><input type="text" value={modalNote} onChange={e => setModalNote(e.target.value)} placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-neutral-100 text-sm font-bold" /><button onClick={() => handleTuneRoom(modalInput, modalNote)} className="w-full bg-emerald-700 text-white py-3 rounded-xl font-bold active:scale-95 shadow-lg">連線對頻</button></div></div>
+                        <div className="pt-4 border-t border-dashed border-neutral-200"><h3 className="text-xs font-bold text-neutral-500 mb-3"><Icons.Plus size={14}/> 輸入新頻道與備註</h3><div className="space-y-3"><input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="代號 (如 888)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-xl text-center font-bold tracking-widest text-emerald-800" /><input type="text" value={modalNote} onChange={e => setModalNote(e.target.value)} placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-neutral-100 text-sm font-bold" /><button onClick={() => handleTuneRoom(modalInput, modalNote)} className="w-full bg-emerald-700 text-white py-3 rounded-xl font-bold active:scale-95 shadow-lg">連線對頻</button></div></div>
                       </div>
                     )}
 
@@ -422,9 +474,7 @@
                           return (
                             <div key={idx} data-v-tag-index={modalState.type === 'manageTag' ? idx : undefined} data-v-quick-index={modalState.type === 'manageQuick' ? idx : undefined} className={`flex justify-between items-center bg-neutral-50 p-2 rounded-xl border transition-all ${vDragIdx === idx ? 'opacity-40 border-emerald-500 scale-95 shadow-inner' : 'border-neutral-100'}`}>
                               <div className="flex items-center gap-2 flex-1">
-                                <div className="p-3 text-neutral-400 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')} onTouchCancel={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')}>
-                                  <Icons.GripVertical />
-                                </div>
+                                <div className="p-3 text-neutral-300 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')} onTouchCancel={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')}><Icons.GripVertical /></div>
                                 <span className="font-bold text-neutral-700">{name}</span>
                               </div>
                               <button onClick={() => modalState.type === 'manageTag' ? delTag(item) : delQuick(idx)} className="text-red-400 p-3 active:scale-75"><Icons.Trash size={18}/></button>
