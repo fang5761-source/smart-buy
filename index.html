@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>智能採買</title>
   
-  <link id="manifest-link" rel="manifest" href="">
+  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,31 +24,9 @@
     .animate-slide-up { animation: slideUp 0.3s ease-out; }
     input:focus { font-size: 16px !important; }
     .font-serif-tc { font-family: 'Noto Serif TC', serif; }
-    body { overflow-x: hidden; width: 100vw; }
-    /* 防止拖曳時反白文字或觸發選單 */
+    body { overflow-x: hidden; width: 100vw; background-color: #f5f5f5; }
     .no-select { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
   </style>
-
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      const manifest = {
-        name: "智能採買",
-        short_name: "智能採買",
-        start_url: window.location.pathname,
-        display: "standalone",
-        background_color: "#f5f5f5",
-        theme_color: "#047857",
-        icons: [{ src: "apple-touch-icon.png", sizes: "192x192 512x512 any", type: "image/png", purpose: "any maskable" }]
-      };
-      document.getElementById('manifest-link').href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
-      
-      if ('serviceWorker' in navigator) {
-        const swCode = "self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => self.clients.claim()); self.addEventListener('fetch', (e) => {});";
-        const swBlob = new Blob([swCode], {type: 'text/javascript'});
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(console.error);
-      }
-    });
-  </script>
 </head>
 <body class="bg-neutral-100 text-neutral-800 antialiased font-sans min-h-screen flex justify-center">
   <div id="root" class="w-full flex justify-center"></div>
@@ -81,15 +59,12 @@
       Trash: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>,
       Check: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>,
       Clock: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-      ChevronUp: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m18 15-6-6-6 6"/></svg>,
-      ChevronDown: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>,
-      History: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0-5v5h5"/><polyline points="12 7 12 12 16 14"/></svg>,
       Dollar: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
       Share: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
       User: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
       Settings: ({size = 18}) => (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.21.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
         </svg>
       ),
       X: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
@@ -97,12 +72,9 @@
       Refresh: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>,
       Download: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
       ChevronDown: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>,
-      MapPin: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>,
-      Package: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16.5 9.4 7.5 4.21"></path><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>,
-      GripVertical: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
+      GripVertical: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
     };
 
-    // 極簡預設裝備
     const DEFAULT_TAGS = ['全聯'];
     const DEFAULT_QUICK = [{n:'雞蛋',t:'全聯'}];
 
@@ -112,7 +84,6 @@
       const [history, setHistory] = useState({});
       const [customTags, setCustomTags] = useState(DEFAULT_TAGS);
       const [quickItems, setQuickItems] = useState(DEFAULT_QUICK);
-      
       const [inputValue, setInputValue] = useState('');
       const [qtyValue, setQtyValue] = useState('');
       const [activeTag, setActiveTag] = useState('');
@@ -131,12 +102,7 @@
       const [editingQtyItem, setEditingQtyItem] = useState(null);
 
       const [msg, setMsg] = useState('');
-      const [newTagName, setNewTagName] = useState('');
-      const [newQuickName, setNewQuickName] = useState('');
-      const [newQuickTag, setNewQuickTag] = useState('');
-
       const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
-      const [deferredPrompt, setDeferredPrompt] = useState(null);
 
       const dragDidHappenTag = useRef(false);
       const touchTimerTag = useRef(null);
@@ -148,16 +114,12 @@
       const [hDragQuickIdx, setHDragQuickIdx] = useState(null);
       const [hDragOverQuickIdx, setHDragOverQuickIdx] = useState(null);
 
-      const [draggedTagIdx, setDraggedTagIdx] = useState(null);
-      const [dragOverTagIdx, setDragOverTagIdx] = useState(null);
-      const [draggedQuickIdx, setDraggedQuickIdx] = useState(null);
-      const [dragOverQuickIdx, setDragOverQuickIdx] = useState(null);
+      const [vDraggedIdx, setVDraggedIdx] = useState(null);
+      const [vDragOverIdx, setVDragOverIdx] = useState(null);
 
       const [savedRooms, setSavedRooms] = useState(() => {
         const saved = localStorage.getItem('smart_buy_saved_rooms');
-        if (!saved) return [];
-        const parsed = JSON.parse(saved);
-        return parsed.map(r => typeof r === 'string' ? { code: r, note: '' } : r);
+        return saved ? JSON.parse(saved).map(r => typeof r === 'string' ? { code: r, note: '' } : r) : [];
       });
 
       const [allTimeRooms, setAllTimeRooms] = useState(() => {
@@ -168,11 +130,7 @@
       const inputRef = useRef(null);
 
       useEffect(() => {
-        const preventScroll = (e) => {
-          if (hDragTagIdx !== null || hDragQuickIdx !== null) {
-            e.preventDefault();
-          }
-        };
+        const preventScroll = (e) => { if (hDragTagIdx !== null || hDragQuickIdx !== null) e.preventDefault(); };
         document.addEventListener('touchmove', preventScroll, { passive: false });
         return () => document.removeEventListener('touchmove', preventScroll);
       }, [hDragTagIdx, hDragQuickIdx]);
@@ -182,22 +140,12 @@
         const urlRoom = params.get('room');
         const savedRoom = localStorage.getItem('smart_buy_room') || '';
         const finalRoom = urlRoom || savedRoom;
-        
         if (finalRoom) {
           setRoomCode(finalRoom);
           localStorage.setItem('smart_buy_room', finalRoom);
           if (urlRoom) window.history.replaceState({}, document.title, window.location.pathname);
         }
-
-        onAuthStateChanged(auth, u => {
-          if (u) setUser(u);
-          else signInAnonymously(auth).catch(console.error);
-        });
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-          e.preventDefault();
-          setDeferredPrompt(e);
-        });
+        onAuthStateChanged(auth, u => { if (u) setUser(u); else signInAnonymously(auth).catch(console.error); });
       }, []);
 
       useEffect(() => {
@@ -210,11 +158,9 @@
         const unsubItems = onSnapshot(query(itemsCol, orderBy('createdAt', 'desc')), snap => {
           setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         });
-
         const unsubHist = onSnapshot(histCol, snap => {
           const h = {}; snap.docs.forEach(d => h[d.data().name] = d.data()); setHistory(h);
         });
-
         const unsubConfig = onSnapshot(configDoc, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
@@ -224,260 +170,69 @@
             setDoc(configDoc, { tags: DEFAULT_TAGS, quick: DEFAULT_QUICK });
           }
         });
-
         return () => { unsubItems(); unsubHist(); unsubConfig(); };
       }, [user, roomCode]);
 
-      const getConfigRef = () => {
-        const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
-        return doc(db, 'artifacts', appId, 'public', 'data', `config_${pathPrefix}`, 'settings');
-      };
-
-      const getItemRef = (id) => {
-        const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
-        return doc(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`, id);
-      };
+      const getConfigRef = () => doc(db, 'artifacts', appId, 'public', 'data', `config_${roomCode ? `room_${roomCode}` : `user_${user.uid}`}`, 'settings');
+      const getItemRef = (id) => doc(db, 'artifacts', appId, 'public', 'data', `list_${roomCode ? `room_${roomCode}` : `user_${user.uid}`}`, id);
 
       const handleAdd = async (e) => {
         if (e) e.preventDefault();
         if (!inputValue.trim() || !user) return;
-        const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
-        const finalTag = activeTag || '無';
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`), {
-          name: inputValue.trim(), qty: qtyValue.trim(), tag: finalTag, completed: false, postponed: false, createdAt: Date.now()
+        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `list_${roomCode ? `room_${roomCode}` : `user_${user.uid}`}`), {
+          name: inputValue.trim(), qty: qtyValue.trim(), tag: activeTag || '', completed: false, postponed: false, createdAt: Date.now()
         });
         setInputValue(''); setQtyValue('');
       };
 
       const handleQuickSelect = (qa) => {
         setInputValue(qa.n || qa.name);
-        setActiveTag(qa.t || qa.tag || '無');
+        setActiveTag(qa.t || qa.tag || '');
         inputRef.current?.focus();
       };
 
-      const handleComplete = async (item) => {
-        await updateDoc(getItemRef(item.id), { completed: !item.completed, postponed: false });
-      };
-
-      const handlePostpone = async (e, item) => {
-        e.stopPropagation();
-        await updateDoc(getItemRef(item.id), { postponed: !item.postponed, completed: false });
-      };
+      const handleComplete = async (item) => { await updateDoc(getItemRef(item.id), { completed: !item.completed, postponed: false }); };
+      const handlePostpone = async (e, item) => { e.stopPropagation(); await updateDoc(getItemRef(item.id), { postponed: !item.postponed, completed: false }); };
 
       const savePrice = async (itemName, price, itemTag, itemId) => {
         if (!price) return;
         const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
         const histDoc = doc(db, 'artifacts', appId, 'public', 'data', `hist_${pathPrefix}`, itemName);
-        
-        await setDoc(histDoc, { name: itemName, price, tag: itemTag, updatedAt: Date.now() });
-        if (itemId) {
-          const itemDoc = doc(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`, itemId);
-          await updateDoc(itemDoc, { currentPrice: price });
-        }
+        await setDoc(histDoc, { name: itemName, price, tag: itemTag || '', updatedAt: Date.now() });
+        if (itemId) await updateDoc(getItemRef(itemId), { currentPrice: price });
       };
 
       const clearCompleted = async () => {
         if (!user) return;
-        const toDelete = items.filter(i => i.completed);
-        for (const item of toDelete) {
-          await deleteDoc(getItemRef(item.id));
-        }
+        for (const item of items.filter(i => i.completed)) await deleteDoc(getItemRef(item.id));
       };
 
-      const resetAllItems = async () => {
-        if (!user) return;
-        setConfirmModal({
-          isOpen: true,
-          title: '陣地重整',
-          message: '這將清空目前清單中「所有」物品，確定要執行嗎？',
-          onConfirm: async () => {
-            const pathPrefix = roomCode ? `room_${roomCode}` : `user_${user.uid}`;
-            const itemsCol = collection(db, 'artifacts', appId, 'public', 'data', `list_${pathPrefix}`);
-            const qSnap = await getDocs(itemsCol);
-            const batch = writeBatch(db);
-            qSnap.docs.forEach(d => batch.delete(d.ref));
-            await batch.commit();
-            setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
-            setMsg('清單已全面重整');
-            setTimeout(() => setMsg(''), 1500);
-          }
-        });
-      };
-
-      const copyLink = () => {
-        const base = window.location.href.split('?')[0];
-        const url = `${base}?room=${roomCode}`;
-        const t = document.createElement("input"); t.value = url; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t);
-        setMsg('分享網址已複製！'); setTimeout(() => setMsg(''), 2000);
-      };
-
-      const moveTag = async (idx, dir) => {
-        const newTags = [...customTags];
-        const target = idx + dir;
-        if (target < 0 || target >= newTags.length) return;
-        [newTags[idx], newTags[target]] = [newTags[target], newTags[idx]];
+      // --- 核心修復：新增功能銲接 ---
+      const handleAddNewTag = async (tagName) => {
+        if (!tagName.trim()) return;
+        const newTags = [...customTags, tagName.trim()];
         await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
+        setMsg('地點新增成功'); setTimeout(() => setMsg(''), 1500);
       };
 
-      const moveQuick = async (idx, dir) => {
-        const newQ = quickItems.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
-        const target = idx + dir;
-        if (target < 0 || target >= newQ.length) return;
-        [newQ[idx], newQ[target]] = [newQ[target], newQ[idx]];
+      const handleAddNewQuick = async (name, tag) => {
+        if (!name.trim()) return;
+        const newQ = [...quickItems.map(q => ({n: q.n || q.name, t: q.t || q.tag || ''})), { n: name.trim(), t: tag || '' }];
         await setDoc(getConfigRef(), { quick: newQ }, { merge: true });
+        setMsg('品項新增成功'); setTimeout(() => setMsg(''), 1500);
       };
 
-      const addTag = async () => {
-        if (!newTagName.trim()) return;
-        const newTags = [...customTags, newTagName.trim()];
-        await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
-        setNewTagName('');
-      };
       const delTag = async (t) => {
-        if (t === '無') return;
         const newTags = customTags.filter(tag => tag !== t);
         await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
       };
 
-      const addQuick = async () => {
-        if (!newQuickName.trim()) return;
-        const newEntry = { n: newQuickName.trim(), t: newQuickTag || '無' };
-        const newQ = [...quickItems.map(q => ({n: q.n || q.name, t: q.t || q.tag})), newEntry];
-        await setDoc(getConfigRef(), { quick: newQ }, { merge: true });
-        setNewQuickName('');
-      };
       const delQuick = async (idx) => {
-        const newQ = quickItems.filter((_, i) => i !== idx).map(q => ({n: q.n || q.name, t: q.t || q.tag}));
+        const newQ = quickItems.filter((_, i) => i !== idx).map(q => ({n: q.n || q.name, t: q.t || q.tag || ''}));
         await setDoc(getConfigRef(), { quick: newQ }, { merge: true });
       };
 
-      const handleTuneRoom = (v, note = '', force = false) => {
-        const code = v.trim();
-        if (!code) {
-          setRoomCode('');
-          localStorage.setItem('smart_buy_room', '');
-          setIsRoomOpen(false);
-          return;
-        }
-
-        const executeJoin = () => {
-          setRoomCode(code);
-          localStorage.setItem('smart_buy_room', code);
-          const existingIdx = savedRooms.findIndex(r => r.code === code);
-          let newSaved;
-          if (existingIdx > -1) {
-            newSaved = [...savedRooms];
-            if (note) newSaved[existingIdx].note = note;
-          } else {
-            newSaved = [{ code, note }, ...savedRooms];
-          }
-          setSavedRooms(newSaved);
-          localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(newSaved));
-          if (!allTimeRooms.includes(code)) {
-            const newHistory = [...allTimeRooms, code];
-            setAllTimeRooms(newHistory);
-            localStorage.setItem('smart_buy_room_history', JSON.stringify(newHistory));
-          }
-          setIsRoomOpen(false);
-          setMsg(`頻道 ${code} 已連線`);
-          setTimeout(() => setMsg(''), 1500);
-          setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
-        };
-
-        if (!force && allTimeRooms.includes(code) && code !== roomCode) {
-           setConfirmModal({
-             isOpen: true,
-             title: '偵測到舊頻道',
-             message: `代號 ${code} 之前已使用過，要切換並繼續連線嗎？`,
-             onConfirm: executeJoin
-           });
-        } else {
-           executeJoin();
-        }
-      };
-
-      const handleForgetRoom = (e, code) => {
-        e.stopPropagation();
-        const newSaved = savedRooms.filter(r => r.code !== code);
-        setSavedRooms(newSaved);
-        localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(newSaved));
-        if (roomCode === code) {
-          setRoomCode('');
-          localStorage.setItem('smart_buy_room', '');
-        }
-      };
-
-      const handleInstallApp = async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') setDeferredPrompt(null);
-      };
-
-      const handleDragStartTag = (e, idx) => {
-        setDraggedTagIdx(idx);
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", idx);
-      };
-      const handleDragOverTag = (e, idx) => {
-        e.preventDefault();
-        setDragOverTagIdx(idx);
-      };
-      const handleDragEndTag = async () => {
-        if (draggedTagIdx !== null && dragOverTagIdx !== null && draggedTagIdx !== dragOverTagIdx) {
-          const newTags = [...customTags];
-          const [movedItem] = newTags.splice(draggedTagIdx, 1);
-          newTags.splice(dragOverTagIdx, 0, movedItem);
-          setCustomTags(newTags);
-          await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
-        }
-        setDraggedTagIdx(null);
-        setDragOverTagIdx(null);
-      };
-      const handleTouchMoveTag = (e) => {
-        if (draggedTagIdx === null) return;
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropElem = target?.closest('[data-v-tag-index]');
-        if (dropElem) {
-          const hoverIdx = parseInt(dropElem.getAttribute('data-v-tag-index'), 10);
-          if (hoverIdx !== dragOverTagIdx) setDragOverTagIdx(hoverIdx);
-        }
-      };
-
-      const handleDragStartQuick = (e, idx) => {
-        setDraggedQuickIdx(idx);
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", idx);
-      };
-      const handleDragOverQuick = (e, idx) => {
-        e.preventDefault();
-        setDragOverQuickIdx(idx);
-      };
-      const handleDragEndQuick = async () => {
-        if (draggedQuickIdx !== null && dragOverQuickIdx !== null && draggedQuickIdx !== dragOverQuickIdx) {
-          const newQ = [...quickItems];
-          const [movedItem] = newQ.splice(draggedQuickIdx, 1);
-          newQ.splice(dragOverQuickIdx, 0, movedItem);
-          setQuickItems(newQ);
-          const serialized = newQ.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
-          await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
-        }
-        setDraggedQuickIdx(null);
-        setDragOverQuickIdx(null);
-      };
-      const handleTouchMoveQuick = (e) => {
-        if (draggedQuickIdx === null) return;
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropElem = target?.closest('[data-v-quick-index]');
-        if (dropElem) {
-          const hoverIdx = parseInt(dropElem.getAttribute('data-v-quick-index'), 10);
-          if (hoverIdx !== dragOverQuickIdx) setDragOverQuickIdx(hoverIdx);
-        }
-      };
-
-      const onTouchStartHTag = (idx, e) => {
+      const onTouchStartHTag = (idx) => {
         dragDidHappenTag.current = false;
         touchTimerTag.current = setTimeout(() => {
           setHDragTagIdx(idx);
@@ -486,19 +241,14 @@
         }, 400);
       };
       const onTouchMoveHTag = (e) => {
-        if (hDragTagIdx === null) {
-          clearTimeout(touchTimerTag.current);
-          return;
-        }
+        if (hDragTagIdx === null) { clearTimeout(touchTimerTag.current); return; }
         e.preventDefault();
         const touch = e.touches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
         const dropElem = target?.closest('[data-h-tag-index]');
         if (dropElem) {
           const overIdx = parseInt(dropElem.getAttribute('data-h-tag-index'), 10);
-          if (overIdx !== hDragOverTagIdx && overIdx !== hDragTagIdx) {
-            setHDragOverTagIdx(overIdx);
-          }
+          if (overIdx !== hDragOverTagIdx && overIdx !== hDragTagIdx) setHDragOverTagIdx(overIdx);
         }
       };
       const onTouchEndHTag = async () => {
@@ -511,12 +261,11 @@
             setCustomTags(newTags);
             await setDoc(getConfigRef(), { tags: newTags }, { merge: true });
           }
-          setHDragTagIdx(null);
-          setHDragOverTagIdx(null);
+          setHDragTagIdx(null); setHDragOverTagIdx(null);
         }
       };
 
-      const onTouchStartHQuick = (idx, e) => {
+      const onTouchStartHQuick = (idx) => {
         dragDidHappenQuick.current = false;
         touchTimerQuick.current = setTimeout(() => {
           setHDragQuickIdx(idx);
@@ -525,19 +274,14 @@
         }, 400);
       };
       const onTouchMoveHQuick = (e) => {
-        if (hDragQuickIdx === null) {
-          clearTimeout(touchTimerQuick.current);
-          return;
-        }
+        if (hDragQuickIdx === null) { clearTimeout(touchTimerQuick.current); return; }
         e.preventDefault();
         const touch = e.touches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
         const dropElem = target?.closest('[data-h-quick-index]');
         if (dropElem) {
           const overIdx = parseInt(dropElem.getAttribute('data-h-quick-index'), 10);
-          if (overIdx !== hDragOverQuickIdx && overIdx !== hDragQuickIdx) {
-            setHDragOverQuickIdx(overIdx);
-          }
+          if (overIdx !== hDragOverQuickIdx && overIdx !== hDragQuickIdx) setHDragOverQuickIdx(overIdx);
         }
       };
       const onTouchEndHQuick = async () => {
@@ -548,16 +292,15 @@
             const [movedItem] = newQ.splice(hDragQuickIdx, 1);
             newQ.splice(hDragOverQuickIdx, 0, movedItem);
             setQuickItems(newQ);
-            const serialized = newQ.map(q => ({n: q.n || q.name, t: q.t || q.tag}));
+            const serialized = newQ.map(q => ({n: q.n || q.name, t: q.t || q.tag || ''}));
             await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
           }
-          setHDragQuickIdx(null);
-          setHDragOverQuickIdx(null);
+          setHDragQuickIdx(null); setHDragOverQuickIdx(null);
         }
       };
 
-      const activeTagsInList = Array.from(new Set(items.map(item => item.tag))).filter(t => t);
-      const displayFilterTags = ['全部', ...Array.from(new Set(['無', ...customTags])).filter(tag => activeTagsInList.includes(tag))];
+      const activeTagsInList = Array.from(new Set(items.map(item => item.tag))).filter(t => t && t !== '無');
+      const displayFilterTags = ['全部', ...customTags.filter(tag => activeTagsInList.includes(tag))];
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
@@ -565,368 +308,97 @@
           <div className="w-full max-w-md bg-white h-fit min-h-[100vh] sm:min-h-[500px] flex flex-col relative shadow-2xl overflow-hidden sm:rounded-3xl mb-8">
             
             <header className="bg-emerald-700 text-white px-3 py-4 flex justify-between items-center shrink-0 shadow-lg z-20">
-              <div className="flex items-center gap-2 text-white font-bold">
-                <Icons.Cart />
-                <h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1>
-                {deferredPrompt && (
-                  <button onClick={handleInstallApp} className="ml-1 p-1.5 bg-white/20 rounded-full active:scale-90 animate-pulse">
-                    <Icons.Download />
-                  </button>
-                )}
-              </div>
+              <div className="flex items-center gap-2 font-bold"><Icons.Cart /><h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1></div>
               <div className="flex gap-2 shrink-0">
-                {roomCode && <button onClick={copyLink} className="bg-white/20 p-2 rounded-lg active:scale-90 transition-all text-white"><Icons.Share /></button>}
+                {roomCode && <button onClick={copyLink} className="bg-white/20 p-2 rounded-lg active:scale-90 text-white"><Icons.Share /></button>}
                 <button onClick={() => setIsRoomOpen(true)} className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1 transition-all ${roomCode ? 'bg-amber-400 text-amber-900 shadow-inner' : 'bg-emerald-600 text-white border border-emerald-500'}`}>{roomCode ? `頻道 ${roomCode}` : <><Icons.User size={14}/> 進入頻道</>}</button>
               </div>
             </header>
 
-            <div className={`transition-all duration-300 ease-in-out origin-top overflow-hidden bg-emerald-50 shrink-0 shadow-sm ${isShoppingMode ? 'max-h-0 opacity-0' : 'max-h-[400px] opacity-100 border-b border-emerald-100'}`}>
+            <div className={`transition-all duration-300 ease-in-out origin-top overflow-hidden bg-emerald-50 shrink-0 shadow-sm ${isShoppingMode ? 'max-h-0 opacity-0' : 'max-h-[450px] opacity-100 border-b border-emerald-100'}`}>
               <div className="p-3 space-y-3">
                 <form onSubmit={handleAdd} className="flex gap-2 items-center">
                   <input ref={inputRef} type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="例如：雞蛋" className="flex-1 min-w-0 p-3 rounded-xl border-none shadow-inner focus:ring-2 focus:ring-emerald-600 outline-none text-lg bg-white" />
                   <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-14 sm:w-16 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white" />
-                  <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 transition-transform shrink-0"><Icons.Plus /></button>
+                  <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 shrink-0"><Icons.Plus /></button>
                 </form>
                 
-                <div 
-                  className={`flex items-center gap-2 pb-1 relative ${hDragQuickIdx !== null ? 'overflow-hidden' : 'overflow-x-auto scrollbar-hide'}`}
-                  style={{ touchAction: hDragQuickIdx !== null ? 'none' : 'pan-x pan-y' }}
-                >
-                  <button type="button" onClick={() => setIsQuickManageOpen(true)} className="shrink-0 text-amber-600 flex items-center justify-center p-1.5 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors active:scale-95 shadow-sm">
-                    <Icons.Settings size={18}/>
-                  </button>
-                  {quickItems.map((qa, i) => (
-                    <button 
-                      key={i} 
-                      type="button" 
-                      data-h-quick-index={i}
-                      onTouchStart={(e) => onTouchStartHQuick(i, e)}
-                      onTouchMove={onTouchMoveHQuick}
-                      onTouchEnd={onTouchEndHQuick}
-                      onTouchCancel={onTouchEndHQuick}
-                      onClick={() => {
-                        if (dragDidHappenQuick.current) { dragDidHappenQuick.current = false; return; }
-                        handleQuickSelect(qa);
-                      }}
-                      className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold active:scale-90 transition-all no-select
-                        ${hDragQuickIdx === i ? 'scale-110 opacity-80 shadow-xl bg-amber-500 text-white z-50' : ''}
-                        ${hDragOverQuickIdx === i && hDragQuickIdx !== i ? 'border-2 border-dashed border-amber-500 scale-105' : ''}
-                        ${hDragQuickIdx === null ? 'bg-amber-50 border border-amber-200 text-amber-700' : ''}
-                      `}
-                    >
-                      + {qa.n || qa.name}
-                    </button>
-                  ))}
-                  <button type="button" onClick={() => setIsQuickAddOpen(true)} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed active:scale-95 transition-transform flex items-center justify-center">
-                    <Icons.Plus size={14} />
-                  </button>
+                <div className={`flex items-center gap-2 pb-1 relative ${hDragQuickIdx !== null ? 'overflow-hidden' : 'overflow-x-auto scrollbar-hide'}`} style={{ touchAction: hDragQuickIdx !== null ? 'none' : 'pan-x pan-y' }}>
+                  <button type="button" onClick={() => setIsQuickManageOpen(true)} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full active:scale-95 shadow-sm"><Icons.Settings /></button>
+                  {quickItems.map((qa, i) => (<button key={i} type="button" data-h-quick-index={i} onTouchStart={() => onTouchStartHQuick(i)} onTouchMove={onTouchMoveHQuick} onTouchEnd={onTouchEndHQuick} onClick={() => { if (!dragDidHappenQuick.current) handleQuickSelect(qa); }} className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold active:scale-90 transition-all no-select ${hDragQuickIdx === i ? 'scale-110 opacity-80 shadow-xl bg-amber-500 text-white z-50' : hDragOverQuickIdx === i && hDragQuickIdx !== i ? 'border-2 border-dashed border-amber-500' : 'bg-amber-50 border border-amber-200 text-amber-700'}`}>+ {qa.n || qa.name}</button>))}
+                  <button type="button" onClick={() => setIsQuickAddOpen(true)} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed flex items-center justify-center"><Icons.Plus size={14} /></button>
                 </div>
 
-                <div 
-                  className={`flex items-center gap-2 pt-2 border-t border-emerald-100/50 mt-1 relative ${hDragTagIdx !== null ? 'overflow-hidden' : 'overflow-x-auto scrollbar-hide'}`}
-                  style={{ touchAction: hDragTagIdx !== null ? 'none' : 'pan-x pan-y' }}
-                >
-                  <button type="button" onClick={() => setIsTagManageOpen(true)} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full hover:bg-emerald-200 transition-colors active:scale-95 shadow-sm">
-                    <Icons.Settings size={18}/>
-                  </button>
-                  {customTags.map((t, idx) => (
-                    <button 
-                      key={t} 
-                      type="button" 
-                      data-h-tag-index={idx}
-                      onTouchStart={(e) => onTouchStartHTag(idx, e)}
-                      onTouchMove={onTouchMoveHTag}
-                      onTouchEnd={onTouchEndHTag}
-                      onTouchCancel={onTouchEndHTag}
-                      onClick={() => {
-                        if (dragDidHappenTag.current) { dragDidHappenTag.current = false; return; }
-                        setActiveTag(activeTag === t ? '' : t);
-                      }}
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all no-select
-                        ${hDragTagIdx === idx ? 'scale-110 opacity-80 shadow-xl bg-emerald-500 text-white z-50' : ''}
-                        ${hDragOverTagIdx === idx && hDragTagIdx !== idx ? 'border-2 border-dashed border-emerald-500 scale-105' : ''}
-                        ${hDragTagIdx === null && activeTag === t ? 'bg-emerald-700 text-white shadow-md' : hDragTagIdx === null ? 'bg-white text-emerald-700 border border-emerald-200' : ''}
-                      `}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                  <button type="button" onClick={() => setIsTagAddOpen(true)} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed active:scale-95 transition-transform flex items-center justify-center">
-                    <Icons.Plus size={14} />
-                  </button>
+                <div className={`flex items-center gap-2 pt-2 border-t border-emerald-100/50 mt-1 relative ${hDragTagIdx !== null ? 'overflow-hidden' : 'overflow-x-auto scrollbar-hide'}`} style={{ touchAction: hDragTagIdx !== null ? 'none' : 'pan-x pan-y' }}>
+                  <button type="button" onClick={() => setIsTagManageOpen(true)} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full active:scale-95 shadow-sm"><Icons.Settings /></button>
+                  {customTags.map((t, idx) => (<button key={t} type="button" data-h-tag-index={idx} onTouchStart={() => onTouchStartHTag(idx)} onTouchMove={onTouchMoveHTag} onTouchEnd={onTouchEndHTag} onClick={() => { if (!dragDidHappenTag.current) setActiveTag(activeTag === t ? '' : t); }} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all no-select ${hDragTagIdx === idx ? 'scale-110 opacity-80 shadow-xl bg-emerald-500 text-white z-50' : hDragOverTagIdx === idx && hDragTagIdx !== idx ? 'border-2 border-dashed border-emerald-500' : activeTag === t ? 'bg-emerald-700 text-white' : 'bg-white text-emerald-700 border border-emerald-200'}`}>{t}</button>))}
+                  <button type="button" onClick={() => setIsTagAddOpen(true)} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed flex items-center justify-center"><Icons.Plus size={14} /></button>
                 </div>
-
               </div>
             </div>
 
-            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold transition-colors border-b ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200 shadow-sm' : 'bg-neutral-50 text-neutral-500 border-neutral-100 hover:bg-neutral-100'}`}>{isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開備戰區</> : <><Icons.ShoppingBag size={18} /> 🛒 收起並開始採買</>}</button>
+            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold transition-colors border-b ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>{isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開備戰區</> : <><Icons.ShoppingBag size={18} /> 🛒 收起並開始採買</>}</button>
 
             {displayFilterTags.length > 1 && (
               <div className="bg-white border-b border-neutral-100 flex overflow-x-auto scrollbar-hide shrink-0 shadow-sm">
-                {displayFilterTags.map(tag => (
-                  <button key={`filter-${tag}`} onClick={() => setFilterTag(tag)} className={`flex-1 min-w-[70px] py-3 text-sm font-bold transition-colors relative whitespace-nowrap px-2 ${filterTag === tag ? 'text-emerald-700 font-bold' : 'text-neutral-400 hover:text-neutral-600 bg-neutral-50/20'}`}>{tag}{filterTag === tag && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-700" />}</button>
-                ))}
+                {displayFilterTags.map(tag => (<button key={`filter-${tag}`} onClick={() => setFilterTag(tag)} className={`flex-1 min-w-[70px] py-3 text-sm font-bold transition-colors relative whitespace-nowrap px-2 ${filterTag === tag ? 'text-emerald-700 font-bold' : 'text-neutral-400 bg-neutral-50/20'}`}>{tag}{filterTag === tag && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-700" />}</button>))}
               </div>
             )}
 
             <main className="p-3 space-y-3 bg-neutral-50/50 flex-1">
-              {filteredItems.length === 0 ? (
-                <div className="py-20 flex flex-col items-center justify-center opacity-20 grayscale"><Icons.Cart size={64} /><p className="mt-4 font-bold tracking-widest text-lg text-neutral-400 font-serif-tc">目前沒有採買任務</p></div>
-              ) : filteredItems.map(item => (
-                <div key={item.id} className={`flex items-start gap-3 p-3 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60 scale-[0.98]' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
-                  
+              {filteredItems.length === 0 ? (<div className="py-20 flex flex-col items-center justify-center opacity-20 grayscale"><Icons.Cart size={64} /><p className="mt-4 font-bold tracking-widest text-lg text-neutral-400 font-serif-tc">目前沒有採買任務</p></div>) : filteredItems.map(item => (
+                <div key={item.id} className={`flex items-start gap-3 p-3 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
                   <div className="flex flex-col items-center gap-2 shrink-0 mt-0.5">
-                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>
-                      {item.completed && <Icons.Check size={18} />}
-                    </div>
-                    {!item.completed && (
-                      <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100 shadow-inner' : 'text-neutral-400 hover:text-amber-500 bg-neutral-50 hover:bg-amber-50'}`}>
-                        <Icons.Clock size={18} />
-                      </button>
-                    )}
+                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={18} />}</div>
+                    {!item.completed && <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50'}`}><Icons.Clock size={18} /></button>}
                   </div>
-                  
                   <div className="flex flex-col min-w-0 flex-1 gap-2 w-full py-0.5">
-                    
                     <div className="flex items-center justify-between gap-2 w-full">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <span onClick={() => handleComplete(item)} className={`text-lg font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
-                        
-                        {item.qty ? (
-                          <button onClick={(e) => { e.stopPropagation(); if(!item.completed) setEditingQtyItem(item); }} disabled={item.completed} className={`text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 transition-transform ${item.completed ? 'bg-transparent text-neutral-400' : 'bg-neutral-100 text-neutral-600 active:scale-90 hover:bg-neutral-200 shadow-sm'}`}>
-                            {item.qty}
-                          </button>
-                        ) : (
-                          !item.completed && (
-                            <button onClick={(e) => { e.stopPropagation(); setEditingQtyItem(item); }} className="text-[10px] px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap shrink-0 active:scale-90 transition-transform">
-                              +數量
-                            </button>
-                          )
-                        )}
+                        {item.qty ? <button onClick={(e) => { e.stopPropagation(); if(!item.completed) setEditingQtyItem(item); }} disabled={item.completed} className={`text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 ${item.completed ? 'text-neutral-400' : 'bg-neutral-100 text-neutral-600 active:scale-90 shadow-sm'}`}>{item.qty}</button> : !item.completed && <button onClick={(e) => { e.stopPropagation(); setEditingQtyItem(item); }} className="text-[10px] px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap shrink-0 active:scale-90">+數量</button>}
                       </div>
-
-                      {!item.completed && (
-                        <button onClick={(e) => { e.stopPropagation(); setRecordingPriceItem(item); }} className={`px-2.5 py-1 rounded-lg text-xs font-bold active:scale-90 transition-transform shrink-0 whitespace-nowrap ${item.currentPrice ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm' : 'bg-amber-100 text-amber-700 shadow-sm'}`}>
-                          {item.currentPrice ? `現價 $${item.currentPrice}` : '記 $'}
-                        </button>
-                      )}
+                      {!item.completed && <button onClick={(e) => { e.stopPropagation(); setRecordingPriceItem(item); }} className={`px-2.5 py-1 rounded-lg text-xs font-bold active:scale-90 shrink-0 whitespace-nowrap ${item.currentPrice ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 shadow-sm'}`}>{item.currentPrice ? `現價 $${item.currentPrice}` : '記 $'}</button>}
                     </div>
-                    
                     <div className="flex items-center justify-between gap-2 mt-1 w-full">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setEditingLocationItem(item); }} className={`shrink-0 text-[10px] px-2 py-0.5 rounded font-bold active:scale-95 transition-transform flex items-center gap-1 ${item.completed ? 'bg-neutral-200 text-neutral-400' : item.tag ? 'bg-[#e6f4ea] text-[#1e8e3e] border border-emerald-100' : 'bg-neutral-100 text-neutral-400 border border-dashed border-neutral-300'}`}>
-                          {item.tag ? item.tag : '+地點'}
-                        </button>
-                        {history[item.name] && !item.completed && (
-                          <span className="text-[10px] text-amber-600 font-bold truncate text-right whitespace-nowrap">
-                            上次買：${history[item.name].price} ({history[item.name].tag})
-                          </span>
-                        )}
+                        <button onClick={(e) => { e.stopPropagation(); setEditingLocationItem(item); }} className={`shrink-0 text-[10px] px-2 py-0.5 rounded font-bold active:scale-95 transition-transform ${item.completed ? 'bg-neutral-200 text-neutral-400' : item.tag && item.tag !== '無' ? 'bg-[#e6f4ea] text-[#1e8e3e] border border-emerald-100' : 'bg-neutral-100 text-neutral-400 border border-dashed border-neutral-300'}`}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
+                        {history[item.name] && !item.completed && <span className="text-[10px] text-amber-600 font-bold truncate text-right whitespace-nowrap">上次買：${history[item.name].price} ({history[item.name].tag})</span>}
                       </div>
-                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-1.5 text-neutral-300 hover:text-red-500 active:scale-75 transition-all shrink-0">
-                        <Icons.Trash size={18} />
-                      </button>
+                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-1.5 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={18} /></button>
                     </div>
-
                   </div>
                 </div>
               ))}
-
               <div className="pt-6 flex flex-col gap-4 items-center mb-10">
-                {filteredItems.some(item => item.completed) && (
-                  <button onClick={clearCompleted} className="flex items-center gap-1.5 px-6 py-3 text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-full transition-all font-bold active:scale-95 shadow-sm text-sm"><Icons.Trash size={18} /> 清除畫面中已買</button>
-                )}
-                {items.length > 0 && (
-                  <button onClick={resetAllItems} className="flex items-center gap-1.5 px-4 py-2 text-neutral-400 hover:text-red-400 rounded-full transition-all font-bold active:scale-95 text-xs opacity-60"><Icons.Refresh /> 重設清單 (全刪)</button>
-                )}
+                {items.some(i => i.completed) && <button onClick={clearCompleted} className="flex items-center gap-1.5 px-6 py-3 text-red-500 bg-white border border-red-100 rounded-full font-bold active:scale-95 shadow-sm text-sm"><Icons.Trash size={18} /> 清除畫面中已買</button>}
+                {items.length > 0 && <button onClick={resetAllItems} className="flex items-center gap-1.5 px-4 py-2 text-neutral-400 hover:text-red-400 rounded-full font-bold active:scale-95 text-xs opacity-60"><Icons.Refresh /> 重設清單 (全刪)</button>}
               </div>
             </main>
 
             {msg && <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-6 py-2 rounded-full text-sm font-bold shadow-2xl z-[100] backdrop-blur-sm animate-bounce">{msg}</div>}
 
-            {confirmModal.isOpen && (
-              <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-6 backdrop-blur-sm">
-                <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-slide-up">
-                  <h3 className="text-lg font-bold mb-3 text-red-600 flex items-center gap-2">{confirmModal.title}</h3>
-                  <p className="text-sm text-neutral-600 mb-6 leading-relaxed font-bold">{confirmModal.message}</p>
-                  <div className="flex gap-3">
-                    <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="flex-1 py-3 text-neutral-400 font-bold bg-neutral-50 rounded-xl">取消</button>
-                    <button onClick={confirmModal.onConfirm} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-all text-white">確定</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {editingLocationItem && (
-              <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setEditingLocationItem(null)}>
-                <div className="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+            {/* 彈窗體系：垂直佈局優化 */}
+            {(editingLocationItem || editingQtyItem || recordingPriceItem || isTagAddOpen || isTagManageOpen || isQuickAddOpen || isQuickManageOpen) && (
+              <div className="fixed inset-0 bg-black/60 z-[110] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => { setEditingLocationItem(null); setEditingQtyItem(null); setRecordingPriceItem(null); setIsTagAddOpen(false); setIsTagManageOpen(false); setIsQuickAddOpen(false); setIsQuickManageOpen(false); }}>
+                <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up flex flex-col" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2">
-                    <h3 className="text-lg font-bold flex items-center gap-2 text-emerald-700 font-serif-tc"><Icons.MapPin size={18}/>更換採買地點</h3>
-                    <button onClick={() => setEditingLocationItem(null)} className="text-neutral-300"><Icons.X /></button>
+                    <h3 className="text-lg font-bold flex items-center gap-2 text-emerald-700 font-serif-tc">
+                      {isTagAddOpen && <><Icons.Plus size={18}/>新增地點</>}
+                      {isQuickAddOpen && <><Icons.Plus size={18}/>新增品項</>}
+                      {editingLocationItem && <><Icons.MapPin size={18}/>更換採買地點</>}
+                      {recordingPriceItem && <><Icons.Dollar size={18}/>紀錄現場價錢</>}
+                      {(isTagManageOpen || isQuickManageOpen) && <><Icons.Settings size={18}/>管理中心</>}
+                    </h3>
+                    <button onClick={() => { setEditingLocationItem(null); setEditingQtyItem(null); setRecordingPriceItem(null); setIsTagAddOpen(false); setIsTagManageOpen(false); setIsQuickAddOpen(false); setIsQuickManageOpen(false); }} className="text-neutral-300"><Icons.X /></button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {customTags.map(t => (
-                      <button key={t} onClick={async () => { await updateDoc(getItemRef(editingLocationItem.id), { tag: t }); setEditingLocationItem(null); setMsg('地點已更新！'); setTimeout(() => setMsg(''), 1500); }} className={`py-3 rounded-xl font-bold text-sm border transition-all active:scale-95 ${editingLocationItem.tag === t ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-50 text-neutral-600 border-neutral-200'}`}>
-                        {t}
-                      </button>
-                    ))}
-                    <button onClick={async () => { await updateDoc(getItemRef(editingLocationItem.id), { tag: '' }); setEditingLocationItem(null); setMsg('地點已清除！'); setTimeout(() => setMsg(''), 1500); }} className={`py-3 rounded-xl font-bold text-sm border transition-all active:scale-95 ${!editingLocationItem.tag ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-100 text-neutral-500 border-dashed border-neutral-300'}`}>
-                      清除地點
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            {editingQtyItem && (
-              <div className="fixed inset-0 bg-black/60 z-[110] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => setEditingQtyItem(null)}>
-                <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2">
-                    <h3 className="text-lg font-bold flex items-center gap-2 text-emerald-700 font-serif-tc"><Icons.Settings size={18}/>修改裝備數量</h3>
-                    <button onClick={() => setEditingQtyItem(null)} className="text-neutral-300"><Icons.X /></button>
-                  </div>
-                  <p className="text-sm text-neutral-800 mb-1 font-bold">品項：{editingQtyItem.name}</p>
-                  <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200 mt-4">
-                    <label className="text-xs text-neutral-400 block mb-3 font-bold">請輸入新的數量 (如：2盒、3斤)：</label>
-                    <div className="flex flex-col gap-3">
-                      <input type="text" id="editQtyIn" defaultValue={editingQtyItem.qty} autoFocus placeholder="填寫數量..." className="w-full p-3 rounded-xl border-2 border-emerald-100 outline-none focus:border-emerald-500 text-xl font-bold text-center" />
-                      <div className="flex gap-2">
-                        <button onClick={() => { updateDoc(getItemRef(editingQtyItem.id), { qty: '' }); setEditingQtyItem(null); setMsg('數量已清除！'); setTimeout(() => setMsg(''), 1500); }} className="flex-1 bg-neutral-200 text-neutral-600 p-3 rounded-xl font-bold active:scale-95 shadow-md">清除</button>
-                        <button onClick={() => { const val = document.getElementById('editQtyIn').value.trim(); updateDoc(getItemRef(editingQtyItem.id), { qty: val }); setEditingQtyItem(null); setMsg('數量已更新！'); setTimeout(() => setMsg(''), 1500); }} className="flex-[2] bg-emerald-600 text-white p-3 rounded-xl font-bold active:scale-95 shadow-md">確定更新</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {recordingPriceItem && (
-              <div className="fixed inset-0 bg-black/60 z-[110] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => setRecordingPriceItem(null)}>
-                <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2">
-                    <h3 className="text-lg font-bold flex items-center gap-2 text-amber-700 font-serif-tc"><Icons.Dollar size={18}/>紀錄現場價錢</h3>
-                    <button onClick={() => setRecordingPriceItem(null)} className="text-neutral-300"><Icons.X /></button>
-                  </div>
-                  <p className="text-sm text-neutral-800 mb-1 font-bold">品項：{recordingPriceItem.name}</p>
-                  <div className="text-xs text-amber-600 mb-4 font-bold bg-amber-50 p-2 rounded-lg border border-amber-100 inline-block italic">
-                    {history[recordingPriceItem.name] ? `上次買：$${history[recordingPriceItem.name].price} (${history[recordingPriceItem.name].tag})` : '目前尚無歷史紀錄'}
-                  </div>
-                  <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-200">
-                    <label className="text-xs text-neutral-400 block mb-3 font-bold">請輸入本次看到的價格：</label>
-                    <div className="flex flex-col gap-3">
-                      <input type="number" id="quickP" autoFocus placeholder="金額..." className="w-full p-3 rounded-xl border-2 border-emerald-100 outline-none focus:border-emerald-500 text-xl font-bold text-center" />
-                      <button onClick={() => { const val = document.getElementById('quickP').value; savePrice(recordingPriceItem.name, val, recordingPriceItem.tag, recordingPriceItem.id); setRecordingPriceItem(null); setMsg('現場價格已紀錄！'); setTimeout(() => setMsg(''), 1500); }} className="w-full bg-emerald-600 text-white p-3 rounded-xl font-bold active:scale-95 shadow-md text-white">確定紀錄</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isTagAddOpen && (
-              <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsTagAddOpen(false)}>
-                <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-emerald-700 font-serif-tc">
-                    <h2 className="text-lg flex items-center gap-2"><Icons.Plus size={20}/>新增地點</h2>
-                    <button onClick={() => setIsTagAddOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button>
-                  </div>
-                  <div className="flex gap-2 bg-emerald-50 p-3 rounded-xl shrink-0">
-                    <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)} placeholder="輸入新地點..." className="flex-1 px-3 py-2 rounded-lg border focus:ring-2 focus:ring-emerald-600 text-sm outline-none bg-white font-bold" autoFocus />
-                    <button onClick={() => { addTag(); setIsTagAddOpen(false); }} disabled={!newTagName.trim()} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 shrink-0">新增</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isTagManageOpen && (
-              <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsTagManageOpen(false)}>
-                <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-emerald-700 font-serif-tc">
-                    <h2 className="text-lg flex items-center gap-2"><Icons.Settings size={18}/>管理地點 (排序/刪除)</h2>
-                    <button onClick={() => setIsTagManageOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button>
-                  </div>
-                  <p className="text-xs text-neutral-400 mb-2 font-bold flex justify-center items-center gap-1"><Icons.GripVertical size={12} /> 拖曳左側圖示即可自由排序</p>
-                  <div className="overflow-y-auto space-y-2 pr-1 scrollbar-hide font-bold relative">
-                    {customTags.length === 0 && <div className="text-center text-neutral-400 py-4 text-sm">目前無自訂地點</div>}
-                    {customTags.map((t, idx) => (
-                      <div 
-                        key={t} 
-                        data-v-tag-index={idx}
-                        draggable
-                        onDragStart={(e) => handleDragStartTag(e, idx)}
-                        onDragOver={(e) => handleDragOverTag(e, idx)}
-                        onDragEnd={handleDragEndTag}
-                        onTouchStart={() => setDraggedTagIdx(idx)}
-                        onTouchMove={handleTouchMoveTag}
-                        onTouchEnd={handleDragEndTag}
-                        className={`flex justify-between items-center bg-neutral-50 p-2 rounded-xl border transition-all no-select ${dragOverTagIdx === idx ? 'border-emerald-500 bg-emerald-100 shadow-md -translate-y-1 scale-[1.02]' : 'border-neutral-100'}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="cursor-move p-2 text-neutral-400 hover:text-emerald-600 touch-none"><Icons.GripVertical /></div>
-                          <span className="text-neutral-700">{t}</span>
-                        </div>
-                        <button onClick={() => delTag(t)} className="text-red-400 hover:bg-red-50 p-2 rounded-lg active:scale-75 transition-all"><Icons.Trash size={18}/></button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isQuickAddOpen && (
-              <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsQuickAddOpen(false)}>
-                <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-amber-700 font-serif-tc">
-                    <h2 className="text-lg flex items-center gap-2"><Icons.Plus size={20}/>新增常買品項</h2>
-                    <button onClick={() => setIsQuickAddOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button>
-                  </div>
-                  <div className="space-y-3 bg-amber-50 p-3 rounded-xl shrink-0">
-                    <input type="text" value={newQuickName} onChange={e => setNewQuickName(e.target.value)} placeholder="輸入品項 (如：雞蛋)..." className="w-full px-3 py-2 rounded-lg border text-sm outline-none bg-white font-bold" autoFocus />
-                    <div className="flex gap-2">
-                      <select value={newQuickTag} onChange={e => setNewQuickTag(e.target.value)} className="flex-1 bg-white border rounded-lg px-2 text-sm font-bold outline-none">
-                        <option value="">無地點</option>
-                        {customTags.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                      <button onClick={async () => { await addQuick(); setIsQuickAddOpen(false); }} disabled={!newQuickName.trim()} className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50">新增</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isQuickManageOpen && (
-              <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsQuickManageOpen(false)}>
-                <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-amber-700 font-serif-tc">
-                    <h2 className="text-lg flex items-center gap-2"><Icons.Settings size={18}/>管理常買品項 (排序/刪除)</h2>
-                    <button onClick={() => setIsQuickManageOpen(false)} className="text-neutral-400 p-1"><Icons.X /></button>
-                  </div>
-                  <p className="text-xs text-neutral-400 mb-2 font-bold flex justify-center items-center gap-1"><Icons.GripVertical size={12} /> 拖曳左側圖示即可自由排序</p>
-                  <div className="overflow-y-auto space-y-2 pr-1 scrollbar-hide font-bold relative">
-                    {quickItems.length === 0 && <div className="text-center text-neutral-400 py-4 text-sm">目前無常買品項</div>}
-                    {quickItems.map((q, i) => (
-                      <div 
-                        key={i} 
-                        data-v-quick-index={i}
-                        draggable
-                        onDragStart={(e) => handleDragStartQuick(e, i)}
-                        onDragOver={(e) => handleDragOverQuick(e, i)}
-                        onDragEnd={handleDragEndQuick}
-                        onTouchStart={() => setDraggedQuickIdx(i)}
-                        onTouchMove={handleTouchMoveQuick}
-                        onTouchEnd={handleDragEndQuick}
-                        className={`flex justify-between items-center bg-neutral-50 p-2 rounded-xl border transition-all no-select ${dragOverQuickIdx === i ? 'border-amber-400 bg-amber-50 shadow-md -translate-y-1 scale-[1.02]' : 'border-neutral-100'}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="cursor-move p-2 text-neutral-400 hover:text-amber-600 touch-none"><Icons.GripVertical /></div>
-                          <div>
-                            <div className="font-bold text-sm text-neutral-700">{q.n || q.name}</div>
-                            {q.t && <div className="text-[10px] text-amber-600 font-bold">{q.t}</div>}
-                          </div>
-                        </div>
-                        <button onClick={() => delQuick(i)} className="text-red-400 hover:bg-red-50 p-2 rounded-lg active:scale-75 transition-all"><Icons.Trash size={18}/></button>
-                      </div>
-                    ))}
-                  </div>
+                  {isTagAddOpen && <div className="space-y-4"><input type="text" id="nTagIn" placeholder="輸入新地點..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus /><button onClick={() => { const v = document.getElementById('nTagIn').value; if(v){ handleAddNewTag(v); setIsTagAddOpen(false); } }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg">新增地點</button></div>}
+                  {isQuickAddOpen && <div className="space-y-4"><input type="text" id="nQuickIn" placeholder="品項名稱..." className="w-full p-4 rounded-xl border-2 border-amber-100 outline-none text-xl font-bold text-center" autoFocus /><select id="nQuickTag" className="w-full p-3 bg-neutral-50 rounded-xl border border-neutral-200 font-bold"><option value="">無地點</option>{customTags.map(t => <option key={t} value={t}>{t}</option>)}</select><button onClick={() => { const n = document.getElementById('nQuickIn').value; const t = document.getElementById('nQuickTag').value; if(n){ handleAddNewQuick(n, t); setIsQuickAddOpen(false); } }} className="w-full bg-amber-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg">新增品項</button></div>}
+                  {editingLocationItem && <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-[50vh]">{Array.from(new Set(customTags)).map(t => <button key={t} onClick={async () => { await updateDoc(getItemRef(editingLocationItem.id), { tag: t }); setEditingLocationItem(null); }} className={`py-3 rounded-xl font-bold text-sm border ${editingLocationItem.tag === t ? 'bg-emerald-600 text-white' : 'bg-neutral-50 text-neutral-600'}`}>{t}</button>)}<button onClick={async () => { await updateDoc(getItemRef(editingLocationItem.id), { tag: '' }); setEditingLocationItem(null); }} className="col-span-2 py-3 bg-neutral-100 text-neutral-400 font-bold rounded-xl border-dashed border-2">清除地點</button></div>}
+                  {editingQtyItem && <div className="space-y-4"><input type="text" id="editQtyIn" defaultValue={editingQtyItem.qty} autoFocus className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" /><div className="flex gap-2"><button onClick={() => { updateDoc(getItemRef(editingQtyItem.id), { qty: '' }); setEditingQtyItem(null); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold">清除</button><button onClick={() => { const v = document.getElementById('editQtyIn').value; updateDoc(getItemRef(editingQtyItem.id), { qty: v }); setEditingQtyItem(null); }} className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold">確定更新</button></div></div>}
+                  {recordingPriceItem && <div className="space-y-4"><div className="text-xs text-amber-600 font-bold bg-amber-50 p-2 rounded-lg italic">{history[recordingPriceItem.name] ? `上次買：$${history[recordingPriceItem.name].price} (${history[recordingPriceItem.name].tag})` : '目前無紀錄'}</div><input type="number" id="quickP" autoFocus placeholder="金額..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" /><button onClick={() => { const v = document.getElementById('quickP').value; savePrice(recordingPriceItem.name, v, recordingPriceItem.tag, recordingPriceItem.id); setRecordingPriceItem(null); }} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg">確定紀錄</button></div>}
+                  {(isTagManageOpen || isQuickManageOpen) && <div className="overflow-y-auto max-h-[60vh] space-y-2"><p className="text-xs text-neutral-400 mb-2 font-bold flex justify-center items-center gap-1"><Icons.GripVertical size={12}/> 拖曳可自由排序</p>{(isTagManageOpen ? customTags : quickItems).map((item, idx) => (<div key={idx} className="flex justify-between items-center bg-neutral-50 p-2 rounded-xl border border-neutral-100 group"><div className="flex items-center gap-2"><Icons.GripVertical className="text-neutral-300"/><span className="font-bold text-neutral-700">{isTagManageOpen ? item : item.n}</span></div><button onClick={() => isTagManageOpen ? delTag(item) : delQuick(idx)} className="text-red-400 p-2"><Icons.Trash size={18}/></button></div>))}</div>}
                 </div>
               </div>
             )}
@@ -935,44 +407,14 @@
               <div className="fixed inset-0 bg-black/60 z-[150] flex items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl animate-slide-up flex flex-col max-h-[85vh]">
                   <div className="flex justify-between items-center mb-4 shrink-0 font-bold text-emerald-800 font-serif-tc"><h2 className="text-lg flex items-center gap-2"><Icons.User size={20}/>共享頻道管理</h2><button onClick={() => setIsRoomOpen(false)} className="text-neutral-300"><Icons.X /></button></div>
-                  
                   <div className="overflow-y-auto space-y-6 pr-1 scrollbar-hide font-bold">
-                    {savedRooms.length > 0 && (
-                      <div>
-                        <h3 className="text-xs font-bold text-neutral-400 mb-3 flex items-center gap-1.5"><Icons.History size={14}/> 快速調頻 (記憶清單)</h3>
-                        <div className="space-y-2">
-                          {savedRooms.map(room => (
-                            <div key={room.code} onClick={() => handleTuneRoom(room.code, room.note, true)} className={`flex justify-between items-center p-3 rounded-2xl border transition-all cursor-pointer ${roomCode === room.code ? 'bg-amber-50 border-amber-300 shadow-sm scale-[1.02]' : 'bg-neutral-50 border-neutral-100'}`}>
-                              <div className="flex flex-col">
-                                <span className={`font-bold ${roomCode === room.code ? 'text-amber-700' : 'text-neutral-600'}`}>{room.code}</span>
-                                {room.note && <span className="text-[10px] text-neutral-400 font-bold italic">{room.note}</span>}
-                              </div>
-                              <button onClick={(e) => handleForgetRoom(e, room.code)} className="p-1 text-neutral-300 hover:text-red-500 active:scale-75 transition-all"><Icons.X /></button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className={savedRooms.length > 0 ? "pt-4 border-t border-dashed border-neutral-200" : ""}>
-                      <h3 className="text-xs font-bold text-neutral-400 mb-3 flex items-center gap-1.5"><Icons.Plus size={14}/> 輸入新頻道代號與備註</h3>
-                      <div className="space-y-3 mb-4">
-                        <input type="text" id="rIn" placeholder="代號 (如 888)..." className="w-full p-3 bg-neutral-100 rounded-xl outline-none border-2 border-emerald-100 focus:border-emerald-600 font-bold text-xl text-center tracking-widest text-emerald-800" />
-                        <div className="flex gap-2">
-                          <input type="text" id="rNote" placeholder="加個備註 (如：家裡用)" className="flex-1 min-w-0 p-3 bg-neutral-100 rounded-xl outline-none border-2 border-neutral-100 focus:border-emerald-500 font-bold text-sm" />
-                          <button onClick={() => handleTuneRoom(document.getElementById('rIn').value, document.getElementById('rNote').value)} className="bg-emerald-700 text-white px-5 rounded-xl font-bold shadow-lg active:scale-95 transition-all text-white shrink-0">對頻</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {roomCode && (
-                      <button onClick={() => handleTuneRoom('')} className="w-full py-3 text-sm text-red-400 font-bold border-t border-neutral-100 mt-2">退出目前的共享頻道</button>
-                    )}
+                    {savedRooms.length > 0 && <div><h3 className="text-xs font-bold text-neutral-500 mb-3 flex items-center gap-1.5"><Icons.History size={14}/> 快速調頻 (記憶清單)</h3><div className="space-y-2">{savedRooms.map(room => (<div key={room.code} onClick={() => handleTuneRoom(room.code, room.note, true)} className={`flex justify-between items-center p-3 rounded-2xl border transition-all cursor-pointer ${roomCode === room.code ? 'bg-amber-50 border-amber-300 shadow-sm scale-[1.02]' : 'bg-white border-neutral-200'}`}><div className="flex flex-col"><span className={`font-bold ${roomCode === room.code ? 'text-amber-700' : 'text-neutral-700'}`}>{room.code}</span>{room.note && <span className="text-[10px] text-neutral-400 font-bold italic">{room.note}</span>}</div><button onClick={(e) => handleForgetRoom(e, room.code)} className="p-1 text-neutral-300 hover:text-red-500 active:scale-75 transition-all"><Icons.X /></button></div>))}</div></div>}
+                    <div className={savedRooms.length > 0 ? "pt-4 border-t border-dashed border-neutral-200" : ""}><h3 className="text-xs font-bold text-neutral-500 mb-3 flex items-center gap-1.5"><Icons.Plus size={14}/> 輸入新頻道代號與備註</h3><div className="space-y-3 mb-4"><input type="text" id="rIn" placeholder="代號 (如 888)..." className="w-full p-3 bg-neutral-100 rounded-xl outline-none border-2 border-emerald-100 focus:border-emerald-600 font-bold text-xl text-center tracking-widest text-emerald-800" /><div className="flex gap-2"><input type="text" id="rNote" placeholder="加個備註 (如：家裡用)" className="flex-1 min-w-0 p-3 bg-neutral-100 rounded-xl outline-none border-2 border-neutral-100 focus:border-emerald-500 font-bold text-sm" /><button onClick={() => handleTuneRoom(document.getElementById('rIn').value, document.getElementById('rNote').value)} className="bg-emerald-700 text-white px-5 rounded-xl font-bold shadow-lg active:scale-95 transition-all text-white shrink-0">對頻</button></div></div></div>
+                    {roomCode && <button onClick={() => handleTuneRoom('')} className="w-full py-3 text-sm text-red-400 font-bold border-t border-neutral-100 mt-2 text-center">退出目前的共享頻道</button>}
                   </div>
                 </div>
               </div>
             )}
-
           </div>
         </div>
       );
