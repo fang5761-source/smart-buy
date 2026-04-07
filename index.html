@@ -316,22 +316,48 @@
         setMsg('已清除完成項目'); setTimeout(() => setMsg(''), 1000);
       };
 
-      const copyAppUrl = () => {
+      // --- 原生分享功能 (Web Share API) ---
+      const copyAppUrl = async () => {
         const url = `${window.location.origin}${window.location.pathname}`;
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: '智能採買',
+              text: '這是我超愛用的智能採買 APP，推薦給你！',
+              url: url
+            });
+            return; // 成功呼叫原生分享介面
+          } catch (err) {
+            console.log('分享被取消或失敗', err);
+          }
+        }
+        // 若不支援原生分享，則回退到複製網址
         const tempIn = document.createElement('input');
         tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
         setMsg('APP 網址已複製！快去分享吧'); setTimeout(() => setMsg(''), 2000);
       };
 
-      const copyShareLink = () => {
+      const copyShareLink = async () => {
         if (!roomPath) return;
         const url = `${window.location.origin}${window.location.pathname}?room=${roomPath}`;
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: '智能採買 - 頻道分享',
+              text: `點擊連結加入我的採買頻道，一起同步購物清單！`,
+              url: url
+            });
+            return; // 成功呼叫原生分享介面
+          } catch (err) {
+            console.log('分享被取消或失敗', err);
+          }
+        }
+        // 若不支援原生分享，則回退到複製網址
         const tempIn = document.createElement('input');
         tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
         setMsg('對頻網址已複製！'); setTimeout(() => setMsg(''), 2000);
       };
 
-      // 檢查更新與清除快取
       const handleForceUpdate = () => {
         setMsg('正在為你重整並載入最新裝備...');
         if ('serviceWorker' in navigator) {
@@ -353,7 +379,6 @@
         }, 1500);
       };
 
-      // --- 拖曳功能 ---
       const onTouchStartHTag = (e, idx) => {
         touchStartTag.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         isScrollingTag.current = false;
@@ -445,17 +470,20 @@
         <div className="w-full h-full flex justify-center bg-neutral-100 font-sans">
           <div className="w-full max-w-md bg-white h-full flex flex-col relative shadow-2xl sm:border-x border-neutral-200 z-0">
             
-            <header className="bg-emerald-700 text-white px-3 pb-4 flex justify-between items-center shrink-0 shadow-lg z-20 pt-[env(safe-area-inset-top,1rem)]">
-              <div className="flex items-center gap-2 font-bold">
-                <Icons.Cart />
-                <h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1>
-                <button onClick={() => setModalState({ type: 'about' })} className="p-1.5 bg-emerald-600/60 rounded-full text-emerald-100 hover:bg-emerald-500 hover:text-white active:scale-90 transition-all ml-1 shadow-inner border border-emerald-500/50">
-                  <Icons.Info size={16} />
-                </button>
-              </div>
-              <div className="flex gap-2">
-                {roomPath && <button onClick={copyShareLink} className="p-2 bg-white/20 rounded-lg active:scale-90 transition-all"><Icons.Share size={18}/></button>}
-                <button onClick={() => { setModalInput(''); setModalNote(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' }); }} className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>{headerRoomTitle}</button>
+            {/* Header: 確保不管動態島多大多小，裡面的內容永遠會垂直置中！ */}
+            <header className="bg-emerald-700 text-white shrink-0 shadow-lg z-20 pt-[max(env(safe-area-inset-top),0px)]">
+              <div className="px-3 py-3 sm:py-4 flex justify-between items-center h-[64px] sm:h-[72px]">
+                <div className="flex items-center gap-2 font-bold">
+                  <Icons.Cart />
+                  <h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1>
+                  <button onClick={() => setModalState({ type: 'about' })} className="p-1.5 bg-emerald-600/60 rounded-full text-emerald-100 hover:bg-emerald-500 hover:text-white active:scale-90 transition-all ml-1 shadow-inner border border-emerald-500/50">
+                    <Icons.Info size={16} />
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  {roomPath && <button onClick={copyShareLink} className="p-2 bg-white/20 rounded-lg active:scale-90 transition-all"><Icons.Share size={18}/></button>}
+                  <button onClick={() => { setModalInput(''); setModalNote(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' }); }} className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>{headerRoomTitle}</button>
+                </div>
               </div>
             </header>
 
@@ -563,23 +591,23 @@
                   </div>
                   
                   <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide">
-                    {/* (1) 關於與設定面板 */}
+                    {/* 關於與設定面板 */}
                     {modalState.type === 'about' && (
                       <div className="space-y-4 py-2">
                         {/* 版本資訊 */}
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative">
                           <h4 className="font-bold text-emerald-800 text-lg tracking-widest font-serif-tc">智能採買</h4>
                           <p className="text-xs text-emerald-600 mt-1 font-bold">版本 v1.0.0 (旗艦版)</p>
-                          <p className="text-[10px] text-emerald-500/70 mt-2 font-bold">Developed with ❤️ by 吳佩芳(朵朵)/Gemini</p>
+                          <p className="text-[10px] text-emerald-500/70 mt-2 font-bold">Developed with ❤️ by 朵朵</p>
                           
                           <button onClick={handleForceUpdate} className="mt-4 bg-emerald-200/50 hover:bg-emerald-200 text-emerald-700 text-[10px] px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto active:scale-95 transition-all border border-emerald-300/50">
                             <Icons.Refresh size={12} /> 檢查並載入新版本
                           </button>
                         </div>
 
-                        {/* 分享乾淨的 APP 網址 */}
+                        {/* 分享 APP (原生 Web Share API) */}
                         <button onClick={copyAppUrl} className="w-full bg-white border-2 border-emerald-500 text-emerald-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">
-                          <Icons.Share size={18} /> 分享此 APP (乾淨網址)
+                          <Icons.Share size={18} /> 分享此 APP
                         </button>
 
                         {/* 加入主畫面教學 */}
@@ -629,8 +657,12 @@
                         <button onClick={() => {
                           setMsg('謝謝你的心意！未來會在這裡加上專屬贊助連結喔 ☕'); 
                           setTimeout(() => setMsg(''), 3000);
-                        }} className="w-full bg-[#FFDD00] text-amber-900 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm mt-4">
-                          <Icons.Coffee size={18} /> 喜歡這APP嗎?歡迎請我喝杯咖啡
+                        }} className="w-full bg-[#FFDD00] text-amber-900 py-2.5 px-4 rounded-xl active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm mt-4">
+                          <div className="flex items-center gap-2 font-bold text-base">
+                            <Icons.Coffee size={18} /> 
+                            <span>喜歡這 APP 嗎？</span>
+                          </div>
+                          <span className="text-sm font-bold opacity-80">歡迎請我喝杯咖啡</span>
                         </button>
                       </div>
                     )}
