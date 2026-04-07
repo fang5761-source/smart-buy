@@ -105,7 +105,8 @@
       Info: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
       Smartphone: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
       BookOpen: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
-      Coffee: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+      Coffee: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>,
+      Refresh: ({size = 18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
     };
 
     const DEFAULT_TAGS = ['全聯', '其它'];
@@ -128,7 +129,7 @@
       
       const [modalState, setModalState] = useState({ type: null, data: null });
       const [msg, setMsg] = useState('');
-      const [expandedSection, setExpandedSection] = useState(''); // 控制關於頁面的手風琴展開
+      const [expandedSection, setExpandedSection] = useState(''); 
       
       const [modalInput, setModalInput] = useState('');
       const [modalNote, setModalNote] = useState('');
@@ -316,7 +317,6 @@
       };
 
       const copyAppUrl = () => {
-        // 分享乾淨的 APP 網址 (去除頻道代碼)
         const url = `${window.location.origin}${window.location.pathname}`;
         const tempIn = document.createElement('input');
         tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
@@ -329,6 +329,28 @@
         const tempIn = document.createElement('input');
         tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
         setMsg('對頻網址已複製！'); setTimeout(() => setMsg(''), 2000);
+      };
+
+      // 檢查更新與清除快取
+      const handleForceUpdate = () => {
+        setMsg('正在為你重整並載入最新裝備...');
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+              registration.unregister();
+            }
+          });
+        }
+        if ('caches' in window) {
+          caches.keys().then((keyList) => {
+            return Promise.all(keyList.map((key) => {
+              return caches.delete(key);
+            }));
+          });
+        }
+        setTimeout(() => {
+          window.location.reload(true);
+        }, 1500);
       };
 
       // --- 拖曳功能 ---
@@ -545,10 +567,14 @@
                     {modalState.type === 'about' && (
                       <div className="space-y-4 py-2">
                         {/* 版本資訊 */}
-                        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center">
+                        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative">
                           <h4 className="font-bold text-emerald-800 text-lg tracking-widest font-serif-tc">智能採買</h4>
                           <p className="text-xs text-emerald-600 mt-1 font-bold">版本 v1.0.0 (旗艦版)</p>
                           <p className="text-[10px] text-emerald-500/70 mt-2 font-bold">Developed with ❤️ by 吳佩芳(朵朵)/Gemini</p>
+                          
+                          <button onClick={handleForceUpdate} className="mt-4 bg-emerald-200/50 hover:bg-emerald-200 text-emerald-700 text-[10px] px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto active:scale-95 transition-all border border-emerald-300/50">
+                            <Icons.Refresh size={12} /> 檢查並載入新版本
+                          </button>
                         </div>
 
                         {/* 分享乾淨的 APP 網址 */}
