@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+  <!-- 
+    [SECURITY WARNING - TACTICAL PROTECTION ENABLED]
+    AUTHOR: DODO / SYSTEM CODE: SMART-BUY-PRO-V1
+    ENCRYPTION: FIREBASE AUTHENTICATION PROTOCOL ACTIVE
+    UNAUTHORIZED ACCESS OR MODIFICATION OF THIS FILE IS MONITORED.
+    (C) 2026 DODO TACTICAL LABS. ALL RIGHTS RESERVED.
+    [安全監控：本程式已啟用 Firebase 身分驗證與雲端規則防護，非法讀取將被系統自動攔截]
+  -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -800,9 +808,9 @@
                         ) : (
                           <div className="flex flex-col gap-3 mb-4 shrink-0 bg-amber-50 p-3 rounded-xl border border-amber-100">
                             <p className="text-xs font-bold text-amber-700">快速新增品項</p>
-                            <input type="text" id="mAddQuick" placeholder="品項名稱 (如: 衛生紙)..." className="w-full p-3 rounded-lg border border-amber-200 outline-none text-base font-bold bg-white" />
+                            <input type="text" id="mAddQuick" placeholder="品項名稱 (如: 衛生紙)..." className="w-full p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white" />
                             <div className="flex gap-2">
-                              <select id="mAddQuickTag" className="flex-1 min-w-0 p-3 bg-white rounded-lg border border-amber-200 font-bold text-base outline-none text-neutral-700">
+                              <select id="mAddQuickTag" className="flex-1 min-w-0 p-3 bg-white rounded-lg border border-emerald-200 font-bold text-base outline-none text-neutral-700">
                                 <option value="">選擇地點 (選填)</option>
                                 {customTags.map(t => <option key={t} value={t}>{t}</option>)}
                               </select>
@@ -917,7 +925,7 @@
                           </h3>
                           <div className="space-y-3">
                             <input type="text" id="mRoomCode" placeholder="代號 (如 888)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-xl text-center font-bold tracking-widest text-emerald-800" />
-                            <input type="text" id="mRoomNote" placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-neutral-100 text-sm font-bold" />
+                            <input type="text" id="mRoomNote" placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold" />
                             <button onClick={() => { handleTuneRoom(document.getElementById('mRoomCode').value, document.getElementById('mRoomNote').value); }} className="w-full bg-emerald-700 text-white py-3 rounded-xl font-bold active:scale-95 shadow-lg">
                               對頻連線
                             </button>
