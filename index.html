@@ -679,7 +679,8 @@
                     {/* ====== 找回的裝備 1：單點新增標籤 ====== */}
                     {modalState.type === 'addTag' && (
                       <div className="space-y-4 py-2">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
+                        {/* 拆除 autoFocus 避免蘋果系統強制彈出鍵盤撞到動態島 */}
+                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" />
                         <button onClick={() => handleAddNewTag(modalInput, true)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">確認新增</button>
                       </div>
                     )}
@@ -687,7 +688,7 @@
                     {/* ====== 找回的裝備 2：單點新增快速品項 ====== */}
                     {modalState.type === 'addQuick' && (
                       <div className="space-y-4 py-2">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入品項名稱 (如: 衛生紙)..." className="w-full p-4 rounded-xl border-2 border-amber-100 outline-none text-xl font-bold text-center" autoFocus />
+                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入品項名稱 (如: 衛生紙)..." className="w-full p-4 rounded-xl border-2 border-amber-100 outline-none text-xl font-bold text-center" />
                         <select value={modalSelect} onChange={e => setModalSelect(e.target.value)} className="w-full p-3 bg-neutral-50 rounded-xl border border-neutral-200 font-bold text-neutral-700 outline-none">
                           <option value="">無預設地點</option>
                           {customTags.map(t => <option key={t} value={t}>{t}</option>)}
@@ -699,7 +700,7 @@
                     {/* ====== 找回的裝備 3：修改數量 ====== */}
                     {modalState.type === 'editQty' && modalState.data && (
                       <div className="space-y-4 py-2">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入數量與單位..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
+                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入數量與單位..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" />
                         <div className="flex gap-2">
                           <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: '' }); setModalState({ type: null }); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold active:scale-95 transition-transform">
                             清除
@@ -717,7 +718,7 @@
                         <div className="text-xs text-amber-600 font-bold bg-amber-50 p-2 rounded-lg italic text-center">
                           {history[modalState.data.name] ? `上次買：$${history[modalState.data.name].price}` : '目前尚無比價紀錄'}
                         </div>
-                        <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入購買金額..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
+                        <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入購買金額..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" />
                         <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">
                           確定紀錄
                         </button>
@@ -829,7 +830,7 @@
                           </div>
                           {isEditingBaseId ? (
                             <div className="flex flex-col gap-2 mt-2">
-                              <input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-200 outline-none font-bold text-center tracking-widest text-emerald-800" autoFocus />
+                              <input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-200 outline-none font-bold text-center tracking-widest text-emerald-800" />
                               <button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl shadow-md active:scale-95 flex items-center justify-center gap-1 text-sm font-bold">
                                 <Icons.CheckCircle size={16} /> 確定修改並鎖定
                               </button>
