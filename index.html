@@ -663,8 +663,8 @@
             </main>
 
             {modalState.type && (
-              <div className="fixed inset-0 bg-black/60 z-[120] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
-                <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="fixed inset-0 bg-black/60 z-[120] flex items-center justify-center p-4 pt-20 backdrop-blur-sm" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
+                <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2 shrink-0">
                     <h3 className="text-lg font-bold text-emerald-700 font-serif-tc">
                       {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '通訊頻道管理' : modalState.type === 'about' ? '關於與設定' : modalState.type === 'donate' ? '請朵朵喝咖啡' : modalState.type === 'addTag' || modalState.type === 'manageTag' ? '地點設定中心' : '品項設定中心'}
@@ -673,8 +673,8 @@
                       <Icons.X />
                     </button>
                   </div>
-                  {/* 加大 pb-20 確保底部按鈕不被手機邊緣裁切 */}
-                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-20">
+                  {/* 恢復為 pb-6，因為改為全懸浮卡片後不再需要超大底部防護 */}
+                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-6">
                     
                     {/* ====== 找回的裝備 1：單點新增標籤 ====== */}
                     {modalState.type === 'addTag' && (
