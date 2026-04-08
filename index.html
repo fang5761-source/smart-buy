@@ -163,7 +163,20 @@
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const urlRoom = params.get('room');
-        if (urlRoom) {
+        const syncDataRaw = params.get('sync');
+
+        // 第一優先：處理跨機同步訊號
+        if (syncDataRaw) {
+          try {
+            const decoded = JSON.parse(decodeURIComponent(atob(syncDataRaw)));
+            setModalState({ type: 'syncDevice', data: decoded });
+          } catch (e) {
+            console.error("同步訊號解析失敗", e);
+          }
+          // 移除立即清除網址的設定，讓分享連結能順利跳轉到預設瀏覽器
+        } 
+        // 第二優先：處理一般分享的房間連結
+        else if (urlRoom) {
           setRoomPath(urlRoom);
           localStorage.setItem('smart_buy_room', urlRoom);
           setSavedRooms(prev => {
@@ -172,8 +185,9 @@
             localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(next));
             return next;
           });
-          window.history.replaceState({}, document.title, window.location.pathname);
+          // 移除立即清除網址的設定，讓分享連結能順利跳轉到預設瀏覽器
         }
+
         onAuthStateChanged(auth, u => {
           if (u) setUser(u);
           else signInAnonymously(auth).catch(console.error);
@@ -181,6 +195,17 @@
         localStorage.setItem('smart_buy_base_id', personalBaseId);
       }, [personalBaseId]);
       
+      // 新增火力：讓網址列永遠保持與目前的頻道同步（持續發射信標）
+      useEffect(() => {
+        const url = new URL(window.location);
+        if (roomPath) {
+          url.searchParams.set('room', roomPath);
+        } else {
+          url.searchParams.delete('room');
+        }
+        window.history.replaceState({}, '', url);
+      }, [roomPath]);
+
       useEffect(() => {
         if (!user) return;
         const prefix = roomPath ? `room_${roomPath}` : `user_${user.uid}`;
@@ -355,6 +380,33 @@
         document.execCommand('copy');
         document.body.removeChild(tempIn);
         setMsg('對頻網址已複製！');
+        setTimeout(() => setMsg(''), 2000);
+      };
+
+      // 產生專屬「本機跨裝置同步網址」
+      const copySyncLink = async () => {
+        const syncData = {
+          base: personalBaseId,
+          rooms: savedRooms
+        };
+        const encoded = btoa(encodeURIComponent(JSON.stringify(syncData)));
+        const url = `${window.location.origin}${window.location.pathname}?sync=${encoded}`;
+
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: '智能採買 - 裝備同步', text: '點擊此連結，將妳的基地 ID 與頻道紀錄同步到新手機！', url: url });
+            return;
+          } catch (err) {
+            console.log('分享被取消或失敗', err);
+          }
+        }
+        const tempIn = document.createElement('input');
+        tempIn.value = url;
+        document.body.appendChild(tempIn);
+        tempIn.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempIn);
+        setMsg('同步網址已複製！請傳到新手機開啟');
         setTimeout(() => setMsg(''), 2000);
       };
       
@@ -667,7 +719,7 @@
                 <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-6 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2 shrink-0">
                     <h3 className="text-lg font-bold text-emerald-700 font-serif-tc">
-                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '通訊頻道管理' : modalState.type === 'about' ? '關於與設定' : modalState.type === 'donate' ? '請朵朵喝咖啡' : modalState.type === 'addTag' || modalState.type === 'manageTag' ? '地點設定中心' : '品項設定中心'}
+                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '通訊頻道管理' : modalState.type === 'about' ? '關於與設定' : modalState.type === 'donate' ? '請朵朵喝咖啡' : modalState.type === 'addTag' || modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'syncDevice' ? '裝備跨機同步' : '品項設定中心'}
                     </h3>
                     <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-1 hover:bg-neutral-100 rounded-full transition-colors">
                       <Icons.X />
@@ -676,6 +728,60 @@
                   {/* 內部留出 pb-24 滑動空間，讓最下方的按鈕能完全浮上來 */}
                   <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-24">
                     
+                    {/* ====== 新增裝備：跨機同步確認面板 ====== */}
+                    {modalState.type === 'syncDevice' && modalState.data && (
+                      <div className="space-y-4 py-2 text-center">
+                        <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100">
+                          <p className="text-base text-blue-800 font-bold mb-3 flex items-center justify-center gap-2">
+                            <Icons.Smartphone size={20} /> 接收到裝備同步訊號！
+                          </p>
+                          <p className="text-sm text-blue-600 mb-5 leading-relaxed text-left">
+                            系統將會把這支手機的基地 ID 變更為：<br/>
+                            <span className="inline-block mt-2 font-mono text-lg tracking-wider text-blue-900 bg-white px-3 py-1.5 rounded-lg shadow-sm font-bold border border-blue-200">{modalState.data.base}</span>
+                            <br/><br/>
+                            並且自動為您匯入 <strong className="text-xl mx-1">{modalState.data.rooms?.length || 0}</strong> 個歷史頻道紀錄。
+                          </p>
+                          <div className="flex gap-2 mt-6">
+                            <button onClick={() => {
+                                setModalState({ type: null });
+                                setMsg('已取消同步');
+                                setTimeout(() => setMsg(''), 1000);
+                            }} className="flex-1 bg-white text-blue-500 py-3 rounded-xl font-bold border border-blue-200 active:scale-95 shadow-sm transition-transform">
+                              取消
+                            </button>
+                            <button onClick={() => {
+                                const { base, rooms } = modalState.data;
+                                if (base) {
+                                    setPersonalBaseId(base);
+                                    setBaseIdEditValue(base);
+                                    localStorage.setItem('smart_buy_base_id', base);
+                                }
+                                if (rooms && Array.isArray(rooms)) {
+                                    let merged = [...savedRooms];
+                                    rooms.forEach(r => {
+                                        if (!merged.some(m => m.code === r.code)) {
+                                            merged.push(r);
+                                        }
+                                    });
+                                    setSavedRooms(merged);
+                                    localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(merged));
+                                }
+                                setModalState({ type: null });
+                                setMsg('裝備同步成功！');
+                                setTimeout(() => setMsg(''), 2000);
+                                
+                                // 同步完成後，清除網址列的 sync 參數，恢復乾淨狀態
+                                const url = new URL(window.location);
+                                url.searchParams.delete('sync');
+                                window.history.replaceState({}, '', url);
+                            }} className="flex-[2] bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">
+                              確認同步
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* ====== 找回的裝備 1：單點新增標籤 ====== */}
                     {modalState.type === 'addTag' && (
                       <div className="space-y-4 py-2">
@@ -847,7 +953,13 @@
                               </button>
                             </div>
                           ) : (
-                            <p className="text-xl font-bold tracking-[0.2em] text-emerald-800 break-all">{personalBaseId}</p>
+                            <>
+                              <p className="text-xl font-bold tracking-[0.2em] text-emerald-800 break-all">{personalBaseId}</p>
+                              {/* 新增的跨機同步產出按鈕 */}
+                              <button onClick={copySyncLink} className="w-full mt-3 bg-white border border-emerald-200 text-emerald-600 py-2 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1 hover:bg-emerald-50">
+                                <Icons.Smartphone size={14} /> 產出本機同步網址 (換機/多機用)
+                              </button>
+                            </>
                           )}
                         </div>
                         {savedRooms.length > 0 && (
