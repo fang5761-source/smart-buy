@@ -667,7 +667,7 @@
                 <div className="bg-white w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2 shrink-0">
                     <h3 className="text-lg font-bold text-emerald-700 font-serif-tc">
-                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '通訊頻道管理' : modalState.type === 'about' ? '關於與設定' : modalState.type === 'donate' ? '請朵朵喝咖啡' : '雲端設定中心'}
+                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '通訊頻道管理' : modalState.type === 'about' ? '關於與設定' : modalState.type === 'donate' ? '請朵朵喝咖啡' : modalState.type === 'addTag' || modalState.type === 'manageTag' ? '地點設定中心' : '品項設定中心'}
                     </h3>
                     <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-1 hover:bg-neutral-100 rounded-full transition-colors">
                       <Icons.X />
@@ -675,6 +675,55 @@
                   </div>
                   {/* 加大 pb-20 確保底部按鈕不被手機邊緣裁切 */}
                   <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-20">
+                    
+                    {/* ====== 找回的裝備 1：單點新增標籤 ====== */}
+                    {modalState.type === 'addTag' && (
+                      <div className="space-y-4 py-2">
+                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
+                        <button onClick={() => handleAddNewTag(modalInput, true)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">確認新增</button>
+                      </div>
+                    )}
+
+                    {/* ====== 找回的裝備 2：單點新增快速品項 ====== */}
+                    {modalState.type === 'addQuick' && (
+                      <div className="space-y-4 py-2">
+                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入品項名稱 (如: 衛生紙)..." className="w-full p-4 rounded-xl border-2 border-amber-100 outline-none text-xl font-bold text-center" autoFocus />
+                        <select value={modalSelect} onChange={e => setModalSelect(e.target.value)} className="w-full p-3 bg-neutral-50 rounded-xl border border-neutral-200 font-bold text-neutral-700 outline-none">
+                          <option value="">無預設地點</option>
+                          {customTags.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <button onClick={() => handleAddNewQuick(modalInput, modalSelect, true)} className="w-full bg-amber-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">確認新增</button>
+                      </div>
+                    )}
+
+                    {/* ====== 找回的裝備 3：修改數量 ====== */}
+                    {modalState.type === 'editQty' && modalState.data && (
+                      <div className="space-y-4 py-2">
+                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入數量與單位..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
+                        <div className="flex gap-2">
+                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: '' }); setModalState({ type: null }); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold active:scale-95 transition-transform">
+                            清除
+                          </button>
+                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: modalInput }); setModalState({ type: null }); }} className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">
+                            確定更新
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ====== 找回的裝備 4：紀錄現價 ====== */}
+                    {modalState.type === 'recordingPrice' && modalState.data && (
+                      <div className="space-y-4 py-2">
+                        <div className="text-xs text-amber-600 font-bold bg-amber-50 p-2 rounded-lg italic text-center">
+                          {history[modalState.data.name] ? `上次買：$${history[modalState.data.name].price}` : '目前尚無比價紀錄'}
+                        </div>
+                        <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入購買金額..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
+                        <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">
+                          確定紀錄
+                        </button>
+                      </div>
+                    )}
+
                     {modalState.type === 'about' && (
                       <div className="space-y-4 py-2">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative">
@@ -747,7 +796,6 @@
                           <p className="text-[10px] text-amber-600 font-bold mb-3">
                             支援各家銀行 APP、全支付、街口等掃碼
                           </p>
-                          {/* 縮小 QR Code 尺寸從 w-48 變為 w-36 */}
                           <div className="bg-white p-2 rounded-xl shadow-sm inline-block border border-amber-200">
                             <img src="donate-qr.JPG" alt="贊助條碼" className="w-36 h-36 object-contain rounded-lg" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x200?text=Donate+QR'; }} />
                           </div>
@@ -835,6 +883,34 @@
                     )}
                     {(modalState.type === 'manageTag' || modalState.type === 'manageQuick') && (
                       <div className="flex flex-col h-full">
+                        
+                        {/* ====== 找回的裝備 5：齒輪內的連發新增框 ====== */}
+                        {modalState.type === 'manageTag' ? (
+                          <div className="flex flex-col gap-3 mb-4 shrink-0 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                            <p className="text-xs font-bold text-emerald-700">快速新增地點</p>
+                            <div className="flex gap-2">
+                              <input type="text" id="mAddTag" placeholder="地點名稱 (如: 好市多)..." className="flex-1 p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white min-w-0" />
+                              <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, false); document.getElementById('mAddTag').value = ''; } }} className="shrink-0 bg-emerald-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1 transition-transform">
+                                <Icons.Plus size={16} />新增
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-3 mb-4 shrink-0 bg-amber-50 p-3 rounded-xl border border-amber-100">
+                            <p className="text-xs font-bold text-amber-700">快速新增品項</p>
+                            <input type="text" id="mAddQuick" placeholder="品項名稱 (如: 衛生紙)..." className="w-full p-3 rounded-lg border border-amber-200 outline-none text-base font-bold bg-white" />
+                            <div className="flex gap-2">
+                              <select id="mAddQuickTag" className="flex-1 min-w-0 p-3 bg-white rounded-lg border border-amber-200 font-bold text-base outline-none text-neutral-700">
+                                <option value="">無預設地點</option>
+                                {customTags.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1 transition-transform">
+                                <Icons.Plus size={16} />新增
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="overflow-y-auto space-y-2 py-2 flex-1 scrollbar-hide" onTouchMove={(e) => onVMove(e, modalState.type === 'manageTag' ? 'data-v-tag-index' : 'data-v-quick-index')}>
                           {(modalState.type === 'manageTag' ? customTags : quickItems).map((item, idx) => {
                             const name = modalState.type === 'manageTag' ? item : (item.n || item.name);
