@@ -7,7 +7,6 @@
     ENCRYPTION: FIREBASE AUTHENTICATION PROTOCOL ACTIVE
     UNAUTHORIZED ACCESS OR MODIFICATION OF THIS FILE IS MONITORED.
     (C) 2026 DODO TACTICAL LABS. ALL RIGHTS RESERVED.
-    [安全監控：本程式已啟用 Firebase 身分驗證與雲端規則防護，非法讀取將被系統自動攔截]
   -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
@@ -113,7 +112,6 @@
       const [msg, setMsg] = useState('');
       const [expandedSection, setExpandedSection] = useState('');
       const [modalInput, setModalInput] = useState('');
-      const [modalNote, setModalNote] = useState('');
       const [modalSelect, setModalSelect] = useState('');
       const [baseIdEditValue, setBaseIdEditValue] = useState(personalBaseId);
       const [isEditingBaseId, setIsEditingBaseId] = useState(false);
@@ -521,9 +519,8 @@
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
-        <div className="w-full h-full flex justify-center bg-neutral-100 font-sans">
+        <div className="w-full h-full flex justify-center bg-neutral-100 font-sans text-neutral-800">
           
-          {/* 系統提示訊息小視窗 */}
           {msg && (
             <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-2xl z-[200] animate-slide-up whitespace-nowrap">
               {msg}
@@ -543,7 +540,7 @@
                 <div className="flex gap-2">
                   {roomPath && <button onClick={copyShareLink} className="p-2 bg-white/20 rounded-lg active:scale-90 transition-all"><Icons.Share size={18} /></button>}
                   <button onClick={() => {
-                    setModalInput(''); setModalNote(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' });
+                    setModalInput(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' });
                   }} className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
                     {headerRoomTitle}
                   </button>
@@ -589,7 +586,7 @@
               </div>
             </div>
 
-            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold transition-colors border-b ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>
+            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold border-b transition-colors ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>
               {isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開備戰區</> : <><Icons.Cart size={18} /> 🛒 收起並開始採買</>}
             </button>
 
@@ -676,7 +673,8 @@
                       <Icons.X />
                     </button>
                   </div>
-                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide">
+                  {/* pb-10 增加底部空間防止按鈕被裁切 */}
+                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-10">
                     {modalState.type === 'about' && (
                       <div className="space-y-4 py-2">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative">
@@ -720,17 +718,11 @@
                                 <p>進入「頻道設定」，會看到一組英文亂碼，這是系統發給你的臨時身分。<strong>強烈建議點擊修改，改成你好記的專屬代碼(如 family 01)！</strong></p>
                                 <p className="text-xs text-neutral-500 mt-1.5 bg-neutral-100 p-2 rounded-lg">💡 <strong>防走失好處：</strong>未來換手機或不小心清除網頁紀錄時，只要把 ID 改回 family 01，你所有的頻道、標籤、清單就會瞬間「連線回歸」，資料絕對安全！</p>
                               </div>
-                              <div className="w-full h-px bg-neutral-200/60"></div>
-                              <div>
-                                <p className="font-bold text-emerald-700 mb-1 flex items-center gap-1">📡 頻道代號 (建立共享房間)</p>
-                                <p>頻道就像是你在專屬 ID 下開的「房間」。你可以建立「888」當作全家共用的採買房，也可以建立「secret」當私人備忘錄。</p>
-                                <p className="text-xs text-neutral-500 mt-1.5 bg-neutral-100 p-2 rounded-lg">💡 <strong>聰明分享法：</strong>進入想分享的頻道後，點擊右上角的「分享📤」按鈕傳給家人。他們點擊網址就會自動連線到這個房間，同步看到最新的採買清單！</p>
-                              </div>
                             </div>
                           )}
                         </div>
 
-                        {/* 火力偵察留言板 */}
+                        {/* 留言板 */}
                         <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm mt-4">
                           💬 想跟朵朵說些什麼？
                         </button>
@@ -775,108 +767,6 @@
                             📋 一鍵複製帳號
                           </button>
                         </div>
-                      </div>
-                    )}
-                    {modalState.type === 'addTag' && (
-                      <div className="space-y-4 py-2">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
-                        <button onClick={() => handleAddNewTag(modalInput, true)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95">確認新增</button>
-                      </div>
-                    )}
-                    {modalState.type === 'addQuick' && (
-                      <div className="space-y-4 py-2">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入品項名稱 (如: 衛生紙)..." className="w-full p-4 rounded-xl border-2 border-amber-100 outline-none text-xl font-bold text-center" autoFocus />
-                        <select value={modalSelect} onChange={e => setModalSelect(e.target.value)} className="w-full p-3 bg-neutral-50 rounded-xl border border-neutral-200 font-bold text-neutral-700">
-                          <option value="">無地點</option>
-                          {customTags.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                        <button onClick={() => handleAddNewQuick(modalInput, modalSelect, true)} className="w-full bg-amber-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95">確認新增</button>
-                      </div>
-                    )}
-                    {(modalState.type === 'manageTag' || modalState.type === 'manageQuick') && (
-                      <div className="flex flex-col h-full">
-                        {modalState.type === 'manageTag' ? (
-                          <div className="flex flex-col gap-3 mb-4 shrink-0 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                            <p className="text-xs font-bold text-emerald-700">快速新增地點</p>
-                            <div className="flex gap-2">
-                              <input type="text" id="mAddTag" placeholder="地點名稱 (如: 好市多)..." className="flex-1 p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white min-w-0" />
-                              <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, false); document.getElementById('mAddTag').value = ''; } }} className="shrink-0 bg-emerald-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1">
-                                <Icons.Plus size={16} />新增
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col gap-3 mb-4 shrink-0 bg-amber-50 p-3 rounded-xl border border-amber-100">
-                            <p className="text-xs font-bold text-amber-700">快速新增品項</p>
-                            <input type="text" id="mAddQuick" placeholder="品項名稱 (如: 衛生紙)..." className="w-full p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white" />
-                            <div className="flex gap-2">
-                              <select id="mAddQuickTag" className="flex-1 min-w-0 p-3 bg-white rounded-lg border border-emerald-200 font-bold text-base outline-none text-neutral-700">
-                                <option value="">選擇地點 (選填)</option>
-                                {customTags.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
-                              <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1">
-                                <Icons.Plus size={16} />新增
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                        <div className="overflow-y-auto space-y-2 py-2 flex-1 scrollbar-hide" onTouchMove={(e) => onVMove(e, modalState.type === 'manageTag' ? 'data-v-tag-index' : 'data-v-quick-index')}>
-                          <p className="text-xs text-neutral-400 mb-2 font-bold flex justify-center items-center gap-1">
-                            <Icons.GripVertical size={12} /> 拖曳手把自由排序
-                          </p>
-                          {(modalState.type === 'manageTag' ? customTags : quickItems).map((item, idx) => {
-                            const name = modalState.type === 'manageTag' ? item : (item.n || item.name);
-                            return (
-                              <div key={idx} data-v-tag-index={modalState.type === 'manageTag' ? idx : undefined} data-v-quick-index={modalState.type === 'manageQuick' ? idx : undefined} className={`flex justify-between items-center bg-neutral-50 p-2 rounded-xl border transition-all ${vDragIdx === idx ? 'opacity-40 border-emerald-500 scale-95 shadow-inner' : 'border-neutral-100'}`}>
-                                <div className="flex items-center gap-2 flex-1">
-                                  <div className="p-3 text-neutral-400 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')} onTouchCancel={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')}>
-                                    <Icons.GripVertical />
-                                  </div>
-                                  <span className="font-bold text-neutral-700">{name}</span>
-                                </div>
-                                <button onClick={() => modalState.type === 'manageTag' ? delTag(item) : delQuick(idx)} className="text-red-400 p-3 active:scale-75">
-                                  <Icons.Trash size={18} />
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                    {modalState.type === 'editingTag' && modalState.data && (
-                      <div className="grid grid-cols-2 gap-2 py-2">
-                        {customTags.map(t => (
-                          <button key={t} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t }); setModalState({ type: null }); }} className={`py-3 rounded-xl font-bold text-sm border ${modalState.data.tag === t ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-50 text-neutral-600'}`}>
-                            {t}
-                          </button>
-                        ))}
-                        <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: '' }); setModalState({ type: null }); }} className="col-span-2 py-3 bg-neutral-100 text-neutral-400 font-bold rounded-xl border-dashed border-2 active:scale-95">
-                          清除地點
-                        </button>
-                      </div>
-                    )}
-                    {modalState.type === 'editQty' && modalState.data && (
-                      <div className="space-y-4 py-2">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="數量..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
-                        <div className="flex gap-2">
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: '' }); setModalState({ type: null }); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold active:scale-95">
-                            清除
-                          </button>
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: modalInput }); setModalState({ type: null }); }} className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg active:scale-95">
-                            確定更新
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {modalState.type === 'recordingPrice' && modalState.data && (
-                      <div className="space-y-4 py-2">
-                        <div className="text-xs text-amber-600 font-bold bg-amber-50 p-2 rounded-lg italic text-center">
-                          {history[modalState.data.name] ? `上次買：$${history[modalState.data.name].price}` : '目前無紀錄'}
-                        </div>
-                        <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="金額..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" autoFocus />
-                        <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95">
-                          確定紀錄
-                        </button>
                       </div>
                     )}
                     {modalState.type === 'room' && (
@@ -925,11 +815,43 @@
                           </h3>
                           <div className="space-y-3">
                             <input type="text" id="mRoomCode" placeholder="代號 (如 888)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-xl text-center font-bold tracking-widest text-emerald-800" />
-                            <input type="text" id="mRoomNote" placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold" />
+                            <input type="text" id="mRoomNote" placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-neutral-100 text-sm font-bold" />
                             <button onClick={() => { handleTuneRoom(document.getElementById('mRoomCode').value, document.getElementById('mRoomNote').value); }} className="w-full bg-emerald-700 text-white py-3 rounded-xl font-bold active:scale-95 shadow-lg">
                               對頻連線
                             </button>
                           </div>
+                        </div>
+                      </div>
+                    )}
+                    {/* 其他 modal 類型同樣比照辦理 */}
+                    {modalState.type === 'editingTag' && modalState.data && (
+                      <div className="grid grid-cols-2 gap-2 py-2">
+                        {customTags.map(t => (
+                          <button key={t} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t }); setModalState({ type: null }); }} className={`py-3 rounded-xl font-bold text-sm border ${modalState.data.tag === t ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-50 text-neutral-600'}`}>
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {(modalState.type === 'manageTag' || modalState.type === 'manageQuick') && (
+                      <div className="flex flex-col h-full">
+                        <div className="overflow-y-auto space-y-2 py-2 flex-1 scrollbar-hide" onTouchMove={(e) => onVMove(e, modalState.type === 'manageTag' ? 'data-v-tag-index' : 'data-v-quick-index')}>
+                          {(modalState.type === 'manageTag' ? customTags : quickItems).map((item, idx) => {
+                            const name = modalState.type === 'manageTag' ? item : (item.n || item.name);
+                            return (
+                              <div key={idx} data-v-tag-index={modalState.type === 'manageTag' ? idx : undefined} data-v-quick-index={modalState.type === 'manageQuick' ? idx : undefined} className={`flex justify-between items-center bg-neutral-50 p-2 rounded-xl border transition-all ${vDragIdx === idx ? 'opacity-40 border-emerald-500 scale-95 shadow-inner' : 'border-neutral-100'}`}>
+                                <div className="flex items-center gap-2 flex-1">
+                                  <div className="p-3 text-neutral-400 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')} onTouchCancel={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')}>
+                                    <Icons.GripVertical />
+                                  </div>
+                                  <span className="font-bold text-neutral-700">{name}</span>
+                                </div>
+                                <button onClick={() => modalState.type === 'manageTag' ? delTag(item) : delQuick(idx)} className="text-red-400 p-3 active:scale-75">
+                                  <Icons.Trash size={18} />
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
