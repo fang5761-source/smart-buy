@@ -136,8 +136,6 @@
         }
       });
       
-      const inputRef = useRef(null);
-      
       const getFriendlyName = (path) => {
         if (!path) return '';
         const saved = savedRooms.find(r => r.code === path);
@@ -517,7 +515,7 @@
       return (
         <div className="w-full h-full flex justify-center bg-neutral-100 font-sans">
           
-          {/* 系統提示訊息小視窗 (防走火修復) */}
+          {/* 系統提示訊息小視窗 */}
           {msg && (
             <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-2xl z-[200] animate-slide-up whitespace-nowrap">
               {msg}
@@ -583,7 +581,7 @@
               </div>
             </div>
 
-            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold border-b transition-colors ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>
+            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold transition-colors border-b ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>
               {isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開備戰區</> : <><Icons.Cart size={18} /> 🛒 收起並開始採買</>}
             </button>
 
@@ -724,7 +722,7 @@
                           )}
                         </div>
 
-                        {/* --- 新增的火力偵察留言板 --- */}
+                        {/* 火力偵察留言板 */}
                         <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm mt-4">
                           💬 想跟朵朵說些什麼？
                         </button>
