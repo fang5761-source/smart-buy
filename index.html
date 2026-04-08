@@ -673,8 +673,8 @@
                       <Icons.X />
                     </button>
                   </div>
-                  {/* pb-10 增加底部空間防止按鈕被裁切 */}
-                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-10">
+                  {/* 加大 pb-20 確保底部按鈕不被手機邊緣裁切 */}
+                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-20">
                     {modalState.type === 'about' && (
                       <div className="space-y-4 py-2">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative">
@@ -727,7 +727,7 @@
                           💬 想跟朵朵說些什麼？
                         </button>
 
-                        <button onClick={() => { setModalState({ type: 'donate' }); }} className="w-full bg-[#FFDD00] text-amber-900 py-2.5 px-4 rounded-xl active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm mt-4">
+                        <button onClick={() => { setModalState({ type: 'donate' }); }} className="w-full bg-[#FFDD00] text-amber-900 py-2.5 px-4 rounded-xl active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm mt-4 mb-2">
                           <div className="flex items-center gap-2 font-bold text-base">
                             <Icons.Coffee size={18} /><span>喜歡這 APP 嗎？</span>
                           </div>
@@ -747,8 +747,9 @@
                           <p className="text-[10px] text-amber-600 font-bold mb-3">
                             支援各家銀行 APP、全支付、街口等掃碼
                           </p>
+                          {/* 縮小 QR Code 尺寸從 w-48 變為 w-36 */}
                           <div className="bg-white p-2 rounded-xl shadow-sm inline-block border border-amber-200">
-                            <img src="donate-qr.JPG" alt="贊助條碼" className="w-48 h-48 object-contain rounded-lg" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x200?text=Donate+QR'; }} />
+                            <img src="donate-qr.JPG" alt="贊助條碼" className="w-36 h-36 object-contain rounded-lg" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x200?text=Donate+QR'; }} />
                           </div>
                         </div>
                         <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-100 space-y-2">
@@ -763,7 +764,7 @@
                             document.body.removeChild(temp);
                             setMsg('帳號已複製！');
                             setTimeout(() => setMsg(''), 2000);
-                          }} className="w-full mt-2 bg-white border border-neutral-200 text-neutral-600 py-2 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1">
+                          }} className="w-full mt-2 bg-white border border-neutral-200 text-neutral-600 py-3 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1 mb-2">
                             📋 一鍵複製帳號
                           </button>
                         </div>
@@ -815,7 +816,7 @@
                           </h3>
                           <div className="space-y-3">
                             <input type="text" id="mRoomCode" placeholder="代號 (如 888)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-xl text-center font-bold tracking-widest text-emerald-800" />
-                            <input type="text" id="mRoomNote" placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-neutral-100 text-sm font-bold" />
+                            <input type="text" id="mRoomNote" placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold" />
                             <button onClick={() => { handleTuneRoom(document.getElementById('mRoomCode').value, document.getElementById('mRoomNote').value); }} className="w-full bg-emerald-700 text-white py-3 rounded-xl font-bold active:scale-95 shadow-lg">
                               對頻連線
                             </button>
@@ -823,7 +824,6 @@
                         </div>
                       </div>
                     )}
-                    {/* 其他 modal 類型同樣比照辦理 */}
                     {modalState.type === 'editingTag' && modalState.data && (
                       <div className="grid grid-cols-2 gap-2 py-2">
                         {customTags.map(t => (
