@@ -2,11 +2,8 @@
 <html lang="zh-TW">
 <head>
   <!-- 
-    [DEVELOPER NOTE]
-    AUTHOR: DODO / SYSTEM CODE: SMART-BUY-PRO-V1.0.3
-    ENCRYPTION: FIREBASE AUTHENTICATION PROTOCOL ACTIVE
-    UNAUTHORIZED ACCESS OR MODIFICATION OF THIS FILE IS MONITORED.
-    (C) 2026 DODO TACTICAL LABS. ALL RIGHTS RESERVED.
+    智能採買 v1.0.9 (佩蓉溫馨版)
+    Developed with ❤️ by 朵朵
   -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
@@ -28,7 +25,12 @@
     .animate-slide-up{animation:slideUp 0.3s ease-out;}
     @keyframes pulse-slow{0%,100%{opacity:1;}50%{opacity:0.5;}}
     .animate-pulse-slow{animation:pulse-slow 2s cubic-bezier(0.4,0,0.6,1) infinite;}
+    @keyframes fadeOut{from{opacity:1;}to{opacity:0;pointer-events:none;}}
+    .animate-fade-out{animation:fadeOut 0.5s ease-out forwards;}
     input:focus{font-size:16px!important;}
+    #app-loader{position:fixed;inset:0;z-index:9999;background:#047857;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+    #app-loader .loader-spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
     .font-serif-tc{font-family:'Noto Serif TC',serif;}
     html,body{position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;overscroll-behavior:none;background-color:#047857;-webkit-tap-highlight-color:transparent;}
     #root{width:100%;height:100%;background-color:#f5f5f5;display:flex;justify-content:center;}
@@ -52,6 +54,10 @@
   </script>
 </head>
 <body class="antialiased font-sans">
+  <div id="app-loader">
+    <div class="loader-spinner"></div>
+    <p style="color:rgba(255,255,255,0.9);font-weight:bold;font-size:14px;letter-spacing:0.1em;">智能採買 載入中...</p>
+  </div>
   <div id="root"></div>
   <script type="text/babel" data-type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -120,7 +126,19 @@
       return colors[Math.abs(hash) % colors.length];
     };
 
-    const App = () => {
+    const getTagBorderColor = (tagName) => {
+      if (!tagName || tagName === '無' || tagName === '') return '#d1d5db';
+      const name = tagName.trim();
+      if (name.includes('全聯')) return '#3b82f6';
+      if (name.includes('郵局') || name.includes('郵政')) return '#10b981';
+      if (name.includes('市場')) return '#8b5cf6';
+      if (name.includes('藥') || name.includes('所') || name.includes('醫院')) return '#f43f5e';
+      if (name.includes('好市多')) return '#f43f5e';
+      const colorMap = ['#10b981','#3b82f6','#8b5cf6','#f59e0b','#f43f5e','#06b6d4'];
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      return colorMap[Math.abs(hash) % colorMap.length];
+    };
       const [user, setUser] = useState(null);
       const [items, setItems] = useState([]);
       const [history, setHistory] = useState({});
@@ -206,7 +224,11 @@
           window.history.replaceState({}, document.title, window.location.pathname);
         }
         onAuthStateChanged(auth, u => {
-          if (u) setUser(u);
+          if (u) {
+            setUser(u);
+            const loader = document.getElementById('app-loader');
+            if (loader) { loader.classList.add('animate-fade-out'); setTimeout(() => loader.remove(), 500); }
+          }
           else signInAnonymously(auth).catch(console.error);
         });
         localStorage.setItem('smart_buy_base_id', personalBaseId);
@@ -395,12 +417,13 @@
                 <div className="flex items-center gap-2 font-bold">
                   <Icons.Cart />
                   <h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1>
-                  <button onClick={() => setModalState({ type: 'about' })} className="p-1.5 bg-emerald-600/60 rounded-full text-emerald-100 hover:bg-emerald-500 hover:text-white active:scale-90 transition-all ml-1 shadow-inner border border-emerald-500/50">
-                    <Icons.Info size={16} />
+                  <button onClick={() => setModalState({ type: 'about' })} className="px-3 py-1.5 bg-blue-500 hover:bg-blue-400 active:scale-90 text-white rounded-xl text-sm font-bold shadow-md transition-all ml-1 flex items-center gap-1.5 border border-blue-400">
+                    <Icons.Info size={15} /> 使用說明
                   </button>
                 </div>
                 <div className="flex gap-2">
-                  {roomPath && <button onClick={copyShareLink} className="p-2 bg-white/20 rounded-lg active:scale-90 transition-all"><Icons.Share size={18} /></button>}
+                  <button onClick={copyAppUrl} className="p-2 bg-white/20 rounded-lg active:scale-90 transition-all" title="分享 APP"><Icons.Share size={18} /></button>
+                  {roomPath && <button onClick={copyShareLink} className="p-2 bg-amber-400/80 rounded-lg active:scale-90 transition-all" title="分享頻道"><Icons.Share size={18} /></button>}
                   <button onClick={() => {
                     setModalInput(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' });
                   }} className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
@@ -413,7 +436,7 @@
             <div className={`transition-all duration-300 origin-top overflow-hidden bg-emerald-50 shrink-0 shadow-sm ${isShoppingMode ? 'max-h-0 opacity-0' : 'max-h-[450px] opacity-100 border-b border-emerald-100'}`}>
               <div className="p-3 space-y-3">
                 <form onSubmit={handleAdd} className="flex gap-2 items-center">
-                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買什麼？" className="flex-1 min-w-0 p-3 rounded-xl border-none shadow-inner focus:ring-2 focus:ring-emerald-600 outline-none text-lg bg-white font-bold" />
+                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買或要做什麼？" className="flex-1 min-w-0 p-3 rounded-xl border-none shadow-inner focus:ring-2 focus:ring-emerald-600 outline-none text-lg bg-white font-bold" />
                   <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-14 sm:w-16 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white font-bold" />
                   <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 shrink-0"><Icons.Plus /></button>
                 </form>
@@ -469,7 +492,7 @@
               )}
               
               {filteredItems.map(item => (
-                <div key={item.id} className={`flex items-start gap-2.5 p-2 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'} ${!item.completed && !item.postponed ? getTagStyles(item.tag) : ''}`} style={{ borderLeftWidth: '6px' }}>
+                <div key={item.id} className={`flex items-start gap-2.5 p-2 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'} ${!item.completed && !item.postponed ? getTagStyles(item.tag) : ''}`} style={{ borderLeftWidth: '6px', borderLeftColor: (!item.completed && !item.postponed) ? getTagBorderColor(item.tag) : undefined }}>
                   <div className="flex flex-col items-center gap-2 shrink-0 mt-0.5">
                     <div onClick={() => handleComplete(item)} className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>
                       {item.completed && <Icons.Check size={16} />}
@@ -483,15 +506,15 @@
                   <div className="flex flex-col min-w-0 flex-1 gap-1 w-full py-0.5">
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <span onClick={() => handleComplete(item)} className={`text-base font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>
+                        <span onClick={() => handleComplete(item)} className={`text-xl font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>
                           {item.name}
                         </span>
                         {item.qty ? (
-                          <button onClick={(e) => { e.stopPropagation(); setModalInput(item.qty); setModalState({ type: 'editQty', data: item }); }} disabled={item.completed} className={`text-xs px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 ${item.completed ? 'text-neutral-400' : 'bg-white/50 text-neutral-600 shadow-sm border border-black/5'}`}>
+                          <button onClick={(e) => { e.stopPropagation(); setModalInput(item.qty); setModalState({ type: 'editQty', data: item }); }} disabled={item.completed} className={`text-sm px-2 py-0.5 rounded font-bold whitespace-nowrap shrink-0 ${item.completed ? 'text-neutral-400' : 'bg-white/50 text-neutral-600 shadow-sm border border-black/5'}`}>
                             {item.qty}
                           </button>
                         ) : (!item.completed && (
-                          <button onClick={(e) => { e.stopPropagation(); setModalInput(''); setModalState({ type: 'editQty', data: item }); }} className="text-xs px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap active:scale-90">
+                          <button onClick={(e) => { e.stopPropagation(); setModalInput(''); setModalState({ type: 'editQty', data: item }); }} className="text-sm px-2 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap active:scale-90">
                             +量
                           </button>
                         ))}
@@ -504,7 +527,7 @@
                     </div>
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : 'bg-white/80 border-black/5 shadow-inner shadow-black/5'}`}>
+                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-2.5 py-0.5 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : 'bg-white/80 border-black/5 shadow-inner shadow-black/5'}`}>
                           {item.tag && item.tag !== '無' ? item.tag : '+地點'}
                         </button>
                         {history[item.name] && !item.completed && (
@@ -591,7 +614,7 @@
                       <div className="space-y-4 py-2">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative">
                           <h4 className="font-bold text-emerald-800 text-lg tracking-widest font-serif-tc">智能採買</h4>
-                          <p className="text-xs text-emerald-600 mt-1 font-bold">版本 v1.0.3 (佩蓉溫馨版)</p>
+                          <p className="text-xs text-emerald-600 mt-1 font-bold">版本 v1.0.9 (佩蓉溫馨版)</p>
                           <p className="text-[10px] text-emerald-500/70 mt-2 font-bold">Developed with ❤️ by 朵朵</p>
                           <button onClick={handleForceUpdate} className="mt-4 bg-emerald-200/50 hover:bg-emerald-200 text-emerald-700 text-[10px] px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto active:scale-95 transition-all border border-emerald-300/50"><Icons.Refresh size={12} /> 檢查並載入新版本</button>
                         </div>
@@ -613,23 +636,34 @@
                         <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
                           <p className="text-sm text-amber-800 font-bold mb-2 leading-relaxed">謝謝妳的心意！ 🥰<br /></p>
                           <div className="inline-block bg-amber-500 text-white text-xs px-3 py-1 rounded-full font-bold mb-2 shadow-sm">☕ 一杯咖啡 $50(杯數隨喜)</div>
-                          <p className="text-[10px] text-amber-600 font-bold mb-3">支援各家銀行 APP、全支付、街口等掃碼</p>
-                          <div className="bg-white p-2 rounded-xl shadow-sm inline-block border border-amber-200"><img src="donate-qr-v2.jpg" alt="贊助條碼" className="w-36 h-36 object-contain rounded-lg" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x200?text=Donate+QR'; }} /></div>
                         </div>
                         <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-100 space-y-2">
                           <p className="text-xs font-bold text-neutral-500">也可複製帳號轉帳</p>
                           <p className="text-sm font-bold text-neutral-700 tracking-wider">永豐銀行 (807)<br />204-018-0025253-1</p>
-                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full mt-2 bg-white border border-neutral-200 text-neutral-600 py-3 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1 mb-2">📋 一鍵複製帳號</button>
+                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full mt-3 bg-amber-500 text-white py-4 rounded-xl text-base font-bold active:scale-95 transition-all shadow-lg flex justify-center items-center gap-2 mb-2">📋 一鍵複製帳號</button>
                         </div>
                       </div>
                     )}
                     {modalState.type === 'room' && (
                       <div className="space-y-6 py-2">
+                        {/* iOS 同步教學 */}
+                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200">
+                          <p className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-1.5">📱 iPhone 同步清單 — 1-2-3-4 步驟</p>
+                          <ol className="text-sm text-blue-700 font-bold space-y-1 list-decimal list-inside leading-relaxed">
+                            <li>在此頁面複製「頻道代號」(見下方黃色區塊)</li>
+                            <li>回到 iPhone 主畫面，開啟桌面上的「智能採買」APP</li>
+                            <li>點「頻道設定」→ 按「📋 貼上」按鈕</li>
+                            <li>按「連線」，完成！全家清單瞬間同步 ✅</li>
+                          </ol>
+                        </div>
                         {roomPath && (
                           <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
                             <p className="text-xs text-amber-700 font-bold mb-2">📍 目前所在頻道 (複製代號專用)</p>
-                            <div className="flex items-center justify-between bg-white p-2 rounded-xl border border-amber-100 shadow-sm"><span className="font-mono font-bold text-amber-900 break-all text-sm pl-2">{roomPath}</span><button onClick={() => { const temp = document.createElement('input'); temp.value = roomPath; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="ml-2 shrink-0 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-transform">複製</button></div>
-                            <p className="text-[10px] text-amber-600 mt-2 leading-relaxed">💡 iOS 系統限制，請複製此代號，回到桌面的 APP 貼上即可。</p>
+                            <div className="flex items-center justify-between bg-yellow-100 p-3 rounded-xl border-2 border-yellow-400 shadow-sm">
+                              <span className="font-mono font-bold text-amber-900 break-all text-base pl-1">{roomPath}</span>
+                              <button onClick={() => { const temp = document.createElement('input'); temp.value = roomPath; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="ml-2 shrink-0 bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold active:scale-95 transition-transform shadow-md">📋 複製</button>
+                            </div>
+                            <p className="text-[11px] text-amber-600 mt-2 leading-relaxed">💡 iOS Safari 限制，請複製此代號後，回到桌面 APP 貼上即可。</p>
                           </div>
                         )}
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
