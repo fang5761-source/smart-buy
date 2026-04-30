@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.1.9 (相容性與教學修復版) by 朵朵 -->
+  <!-- 智能採買 v1.1.14 (穩定修復版) by 朵朵 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -22,29 +22,40 @@
     .animate-slide-up{animation:slideUp 0.3s ease-out;}
     @keyframes pulse-slow{0%,100%{opacity:1;}50%{opacity:0.5;}}
     .animate-pulse-slow{animation:pulse-slow 2s cubic-bezier(0.4,0,0.6,1) infinite;}
+    @keyframes subtle-bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-2px);}}
+    .animate-subtle-bounce{animation:subtle-bounce 2s ease-in-out infinite;}
     input:focus{font-size:16px!important;}
     .font-serif-tc{font-family:'Noto Serif TC',serif;}
-    /* 使用 100dvh 解決手機瀏覽器高度顯示問題 */
     html,body{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;overscroll-behavior:none;background-color:#047857;-webkit-tap-highlight-color:transparent;}
     #root{width:100%;height:100%;background-color:#f5f5f5;display:flex;justify-content:center;}
     .drag-handle{cursor:move;touch-action:none;}
     .tag-neutral { background-color: #f9fafb; color: #374151; border-color: #d1d5db; }
+    
+    /* 戰術級膠囊按鈕 */
+    .btn-capsule-tactical {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: white;
+      box-shadow: 0 6px 20px rgba(4, 120, 87, 0.4), inset 0 1px 1px rgba(255,255,255,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .btn-capsule-tactical:active {
+      transform: scale(0.96) translateY(2px);
+      box-shadow: 0 2px 8px rgba(4, 120, 87, 0.3);
+    }
   </style>
 </head>
 <body class="antialiased font-sans">
   <div id="root">
-    <!-- 加入初始載入提示，避免白畫面時使用者困惑 -->
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%;background:#f5f5f5;color:#047857;font-family:sans-serif;">
       <div style="width:40px;height:40px;border:4px solid #ecfdf5;border-top:4px solid #047857;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px;"></div>
-      <p style="font-weight:bold;letter-spacing:2px;font-size:14px;">智能採買 啟動中...</p>
+      <p style="font-weight:bold;letter-spacing:2px;font-size:16px;">智能採買 啟動中...</p>
       <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
     </div>
   </div>
 
-  <!-- 重點修復：加入 data-type="module" 解決手機瀏覽器 SyntaxError 問題 -->
   <script type="text/babel" data-type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const { useState, useEffect, useRef, useMemo } = React;
@@ -62,7 +73,8 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const APP_ID_PATH = "smart-buy-final";
+    const appId = "smart-buy-final";
+    const APP_ID_PATH = appId;
     
     const PRESET_COLORS = [
       { bg: '#ecfdf5', text: '#065f46', border: '#10b981' }, // 翠綠
@@ -89,9 +101,14 @@
       Check: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>,
       Clock: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
       Share: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
-      Settings: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73-1.69-.98l-.38-2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>,
+      Settings: ({size=18}) => (
+        <div style={{width:size, height:size, display:'flex', alignItems:'center', justifyContent:'center'}}>
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12c0,0.33,0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+        </div>
+      ),
       X: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
       ChevronDown: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>,
+      ChevronUp: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m18 15-6-6-6 6"/></svg>,
       GripVertical: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="12" r="1.5"></circle><circle cx="9" cy="6" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>,
       Edit: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
       CheckCircle: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"/></svg>,
@@ -135,15 +152,9 @@
       const [isLoading, setIsLoading] = useState(true);
       const [expandedSection, setExpandedSection] = useState('');
       const [modalInput, setModalInput] = useState('');
-      const [modalSelect, setModalSelect] = useState('');
       const [modalColorIdx, setModalColorIdx] = useState(0);
       const [baseIdEditValue, setBaseIdEditValue] = useState(personalBaseId);
       const [isEditingBaseId, setIsEditingBaseId] = useState(false);
-      const [vDragIdx, setVDragIdx] = useState(null);
-      const [vDragOverIdx, setVDragOverIdx] = useState(null);
-      const [hDragType, setHDragType] = useState(null);
-      const [hDragIdx, setHDragIdx] = useState(null);
-      const [hDragOverIdx, setHDragOverIdx] = useState(null);
       
       const getTagConfig = (tagName) => {
         const found = customTags.find(t => t.n === tagName);
@@ -154,17 +165,8 @@
       const getTagInlineStyles = (tagName, opacity = 1) => {
         const cfg = getTagConfig(tagName);
         if (!cfg) return {};
-        return { backgroundColor: opacity < 1 ? `${cfg.bg}aa` : cfg.bg, color: cfg.text, borderColor: cfg.border };
+        return { backgroundColor: opacity < 1 ? `${cfg.bg}cc` : cfg.bg, color: cfg.text, borderColor: cfg.border };
       };
-      
-      const dragDidHappenTag = useRef(false);
-      const touchTimerTag = useRef(null);
-      const touchStartTag = useRef({ x: 0, y: 0 });
-      const isScrollingTag = useRef(false);
-      const dragDidHappenQuick = useRef(false);
-      const touchTimerQuick = useRef(null);
-      const touchStartQuick = useRef({ x: 0, y: 0 });
-      const isScrollingQuick = useRef(false);
       
       const [savedRooms, setSavedRooms] = useState(() => {
         try {
@@ -187,41 +189,14 @@
         const tagsInUse = Array.from(new Set(items.map(item => item.tag))).filter(t => t && t !== '');
         return ['全部', ...customTags.filter(tag => tagsInUse.includes(tag.n)).map(t => t.n)];
       }, [items, customTags]);
-      
+
       useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const urlRoom = params.get('room');
-        const syncDataRaw = params.get('sync');
-        if (syncDataRaw) {
-          try {
-            const decoded = JSON.parse(decodeURIComponent(atob(syncDataRaw)));
-            setModalState({ type: 'syncDevice', data: decoded });
-          } catch (e) {}
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } else if (urlRoom) {
-          setRoomPath(urlRoom);
-          try { localStorage.setItem('smart_buy_room', urlRoom); } catch(e){}
-          setSavedRooms(prev => {
-            if (prev.find(r => r && r.code === urlRoom)) return prev;
-            const next = [{ code: urlRoom, note: '分享進入' }, ...prev];
-            try { localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(next)); } catch(e){}
-            return next;
-          });
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
         onAuthStateChanged(auth, u => {
           if (u) setUser(u);
           else signInAnonymously(auth).catch(console.error);
         });
         try { localStorage.setItem('smart_buy_base_id', personalBaseId); } catch(e){}
       }, [personalBaseId]);
-      
-      useEffect(() => {
-        const url = new URL(window.location);
-        if (roomPath) url.searchParams.set('room', roomPath);
-        else url.searchParams.delete('room');
-        window.history.replaceState({}, '', url);
-      }, [roomPath]);
 
       useEffect(() => {
         if (!user) return;
@@ -253,6 +228,7 @@
       
       const getConfigRef = () => doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `config_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`, 'settings');
       const getItemRef = (id) => doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`, id);
+      
       const handleAdd = async (e) => {
         if (e) e.preventDefault();
         if (!inputValue.trim() || !user) return;
@@ -262,11 +238,13 @@
       const handleQuickSelect = (qa) => { setInputValue(qa.n || qa.name || ''); setActiveTag(qa.t || qa.tag || ''); };
       const handleComplete = async (item) => { await updateDoc(getItemRef(item.id), { completed: !item.completed, postponed: false }); };
       const handlePostpone = async (e, item) => { e.stopPropagation(); await updateDoc(getItemRef(item.id), { postponed: !item.postponed, completed: false }); };
+      
       const savePrice = async (itemName, price, itemTag, itemId) => {
         const prefix = roomPath ? `room_${roomPath}` : `user_${user.uid}`;
         await setDoc(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `hist_${prefix}`, itemName), { name: itemName, price: price || '', tag: itemTag || '', updatedAt: Date.now() });
         if (itemId) await updateDoc(getItemRef(itemId), { currentPrice: price || '' });
       };
+
       const handleAddNewTag = async (tagName, colorIdx, shouldClose = false) => {
         const name = tagName.trim(); if (!name) return;
         if (customTags.some(t => t.n === name)) { setMsg('地點已存在！'); setTimeout(() => setMsg(''), 1000); return; }
@@ -275,6 +253,39 @@
         setMsg('新增成功'); setTimeout(() => setMsg(''), 1000);
       };
       const delTag = async (tagName) => { const next = customTags.filter(tag => tag.n !== tagName); await setDoc(getConfigRef(), { tags: next }, { merge: true }); };
+      
+      const handleTuneRoomAttempt = async (code, note = '') => {
+        const c = code.trim(); if (!c) { handleTuneRoom('', ''); return; }
+        const finalPath = c.includes('-') ? c : `${personalBaseId}-${c}`;
+        const listRef = collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_room_${finalPath}`);
+        const snap = await getDocs(listRef);
+        if (!snap.empty && !savedRooms.some(r => r.code === finalPath)) {
+          setModalState({ type: 'channelConflict', data: { code: finalPath, note, count: snap.size } });
+        } else {
+          handleTuneRoom(code, note);
+        }
+      };
+
+      const handleTuneRoom = (code, note = '') => {
+        const c = code.trim(); if (!c) { setRoomPath(''); try{localStorage.removeItem('smart_buy_room');}catch(e){} setModalState({ type: null }); return; }
+        const finalPath = c.includes('-') ? c : `${personalBaseId}-${c}`;
+        setRoomPath(finalPath); try{localStorage.setItem('smart_buy_room', finalPath);}catch(e){}
+        setSavedRooms(prev => {
+          const next = [{ code: finalPath, note: note || '' }, ...prev.filter(r => r.code !== finalPath)];
+          try{localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(next));}catch(e){}
+          return next;
+        });
+        setModalState({ type: null }); setMsg(`連線成功`); setTimeout(() => setMsg(''), 1000);
+      };
+
+      const handleClearChannelData = async (code) => {
+        const listRef = collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_room_${code}`);
+        const snap = await getDocs(listRef);
+        for (const d of snap.docs) { await deleteDoc(d.ref); }
+        setMsg('頻道已淨空');
+        handleTuneRoom(code, modalState.data.note);
+      };
+
       const handleUpdateBaseId = (newVal) => {
         const val = newVal.trim(); if (!val) return;
         setPersonalBaseId(val); setBaseIdEditValue(val); try{localStorage.setItem('smart_buy_base_id', val);}catch(e){}
@@ -293,88 +304,23 @@
       };
       const copyAppUrl = async () => {
         const url = `${window.location.origin}${window.location.pathname}`;
-        if (navigator.share) { try { await navigator.share({ title: '智能採買', text: '推薦給妳這個超好用的清單 APP！', url: url }); return; } catch (err) {} }
+        if (navigator.share) { try { await navigator.share({ title: '智能採買', text: '推薦給你這個超好用的清單 APP！', url: url }); return; } catch (err) {} }
         const tempIn = document.createElement('input'); tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
         setMsg('網址已複製！'); setTimeout(() => setMsg(''), 2000);
       };
-      const copySyncLink = async () => {
-        const syncData = { base: personalBaseId, rooms: savedRooms };
-        const encoded = btoa(encodeURIComponent(JSON.stringify(syncData)));
-        const url = `${window.location.origin}${window.location.pathname}?sync=${encoded}`;
-        if (navigator.share) { try { await navigator.share({ title: '智能採買 - 裝備同步', text: '點擊此連結，將妳的 ID 與紀錄同步到新手機！', url: url }); return; } catch (err) {} }
-        const tempIn = document.createElement('input'); tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
-        setMsg('同步連結已複製！'); setTimeout(() => setMsg(''), 2000);
-      };
       const handleForceUpdate = () => {
-        setMsg('正在重整載入最新版本...');
+        setMsg('重整中...');
         if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(r => { for (let rg of r) rg.unregister(); }); }
         setTimeout(() => { window.location.reload(true); }, 1500);
       };
 
-      const onTouchStartHTag = (e, idx) => {
-        touchStartTag.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; isScrollingTag.current = false; dragDidHappenTag.current = false;
-        touchTimerTag.current = setTimeout(() => { if (!isScrollingTag.current) { setHDragIdx(idx); setHDragType('tag'); dragDidHappenTag.current = true; if (navigator.vibrate) navigator.vibrate(50); } }, 350);
-      };
-      const onTouchMoveHTag = (e) => {
-        const dx = Math.abs(e.touches[0].clientX - touchStartTag.current.x); const dy = Math.abs(e.touches[0].clientY - touchStartTag.current.y);
-        if (hDragIdx === null || hDragType !== 'tag') { if (dx > 10 || dy > 10) { isScrollingTag.current = true; clearTimeout(touchTimerTag.current); } return; }
-        e.preventDefault(); const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY); const dropElem = target?.closest('[data-h-tag-index]');
-        if (dropElem) { const overIdx = parseInt(dropElem.getAttribute('data-h-tag-index'), 10); if (overIdx !== hDragOverIdx && overIdx !== hDragIdx) setHDragOverIdx(overIdx); }
-      };
-      const onTouchEndHTag = async () => {
-        clearTimeout(touchTimerTag.current);
-        if (hDragIdx !== null && hDragType === 'tag') {
-          if (hDragOverIdx !== null && hDragIdx !== hDragOverIdx) {
-            const next = [...customTags]; const [moved] = next.splice(hDragIdx, 1); next.splice(hDragOverIdx, 0, moved);
-            setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
-          }
-          setHDragIdx(null); setHDragOverIdx(null); setHDragType(null);
-        }
-      };
-      const onTouchStartHQuick = (e, idx) => {
-        touchStartQuick.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; isScrollingQuick.current = false; dragDidHappenQuick.current = false;
-        touchTimerQuick.current = setTimeout(() => { if (!isScrollingQuick.current) { setHDragIdx(idx); setHDragType('quick'); dragDidHappenQuick.current = true; if (navigator.vibrate) navigator.vibrate(50); } }, 350);
-      };
-      const onTouchMoveHQuick = (e) => {
-        const dx = Math.abs(e.touches[0].clientX - touchStartQuick.current.x); const dy = Math.abs(e.touches[0].clientY - touchStartQuick.current.y);
-        if (hDragIdx === null || hDragType !== 'quick') { if (dx > 10 || dy > 10) { isScrollingQuick.current = true; clearTimeout(touchTimerQuick.current); } return; }
-        e.preventDefault(); const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY); const dropElem = target?.closest('[data-h-quick-index]');
-        if (dropElem) { const overIdx = parseInt(dropElem.getAttribute('data-h-quick-index'), 10); if (overIdx !== hDragOverIdx && overIdx !== hDragIdx) setHDragOverIdx(overIdx); }
-      };
-      const onTouchEndHQuick = async () => {
-        clearTimeout(touchTimerQuick.current);
-        if (hDragIdx !== null && hDragType === 'quick') {
-          if (hDragOverIdx !== null && hDragIdx !== hDragOverIdx) {
-            const next = [...quickItems]; const [moved] = next.splice(hDragIdx, 1); next.splice(hDragOverIdx, 0, moved);
-            setQuickItems(next); const serialized = next.map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' })); await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
-          }
-          setHDragIdx(null); setHDragOverIdx(null); setHDragType(null);
-        }
-      };
-      const onVStart = (idx) => { setVDragIdx(idx); if (navigator.vibrate) navigator.vibrate(30); };
-      const onVMove = (e, attr) => {
-        if (vDragIdx === null) return; e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const dropElem = target?.closest(`[${attr}]`);
-        if (dropElem) { const hoverIdx = parseInt(dropElem.getAttribute(attr), 10); if (hoverIdx !== vDragOverIdx) setVDragOverIdx(hoverIdx); }
-      };
-      const onVEnd = async (type) => {
-        if (vDragIdx !== null && vDragOverIdx !== null && vDragIdx !== vDragOverIdx) {
-          if (type === 'tag') {
-            const next = [...customTags]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
-            setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
-          } else {
-            const next = [...quickItems]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
-            setQuickItems(next); const serialized = next.map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' })); await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
-          }
-        }
-        setVDragIdx(null); setVDragOverIdx(null);
-      };
-      
+      // 修正：補回遺漏的 filteredItems 變數定義
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
         <div className="w-full h-full flex justify-center bg-neutral-100 font-sans text-neutral-800">
           {msg && (
-            <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-2xl z-[200] animate-slide-up whitespace-nowrap">
+            <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-6 py-2.5 rounded-full text-base font-bold shadow-2xl z-[200] animate-slide-up whitespace-nowrap">
               {msg}
             </div>
           )}
@@ -385,16 +331,12 @@
                 <div className="flex items-center gap-2 font-bold">
                   <Icons.Cart />
                   <h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1>
-                  <button onClick={() => setModalState({ type: 'about' })} className="px-3 py-1.5 bg-blue-500 text-white rounded-xl text-sm font-bold shadow-md ml-1 flex items-center gap-1.5 active:scale-90 transition-all">
-                    <Icons.Info size={15} /> 使用說明
+                  <button onClick={() => setModalState({ type: 'about' })} className="px-3 py-1.5 bg-blue-500 text-white rounded-xl text-base font-bold shadow-md ml-1 flex items-center gap-1.5 active:scale-90 transition-all">
+                    <Icons.Info size={16} /> 使用說明
                   </button>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={copyAppUrl} className="p-2 bg-white/20 rounded-lg active:scale-90 transition-all"><Icons.Share size={18} /></button>
-                  {roomPath && <button onClick={() => setModalState({ type: 'room' })} className="p-2 bg-amber-400/80 rounded-lg active:scale-90 transition-all"><Icons.Share size={18} /></button>}
-                  <button onClick={() => {
-                    setModalInput(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' });
-                  }} className={`px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
+                  <button onClick={() => { setModalInput(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setModalState({ type: 'room' }); }} className={`px-2.5 py-1.5 rounded-lg text-sm sm:text-base font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
                     {headerRoomTitle}
                   </button>
                 </div>
@@ -405,281 +347,261 @@
               <div className="px-3 pt-2 pb-1 space-y-1.5">
                 <form onSubmit={handleAdd} className="flex gap-2 items-center">
                   <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買或要做什麼？" className="flex-1 min-w-0 p-3 rounded-xl border-none shadow-inner focus:ring-2 focus:ring-emerald-600 outline-none text-lg bg-white font-bold" />
-                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-14 sm:w-16 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white font-bold" />
-                  <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 shrink-0"><Icons.Plus /></button>
+                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-14 sm:w-20 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white font-bold" />
+                  <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 shrink-0"><Icons.Plus size={24}/></button>
                 </form>
                 <div className="flex items-center gap-1.5 relative overflow-x-auto scrollbar-hide">
                   <div className="sticky left-0 z-10 bg-emerald-50 pr-2 py-0.5">
-                    <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full active:scale-95 shadow-sm"><Icons.Settings size={18} /></button>
+                    <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-2 bg-white rounded-full active:scale-95 shadow-sm border border-emerald-100"><Icons.Settings size={22} /></button>
                   </div>
                   {quickItems.map((qa, i) => (
-                    <button key={i} data-h-quick-index={i} onTouchStart={(e) => onTouchStartHQuick(e, i)} onTouchMove={onTouchMoveHQuick} onTouchEnd={onTouchEndHQuick} onTouchCancel={onTouchEndHQuick} onClick={(e) => {
-                      if (dragDidHappenQuick.current || isScrollingQuick.current) { e.preventDefault(); return; } handleQuickSelect(qa);
-                    }} className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm select-none ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-80 bg-amber-500 text-white z-50' : hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-amber-500' : 'bg-amber-50 border border-amber-200 text-amber-700 active:scale-95'}`}>
-                      + {qa.n || qa.name}
-                    </button>
+                    <button key={i} onClick={() => handleQuickSelect(qa)} className="shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-sm font-bold transition-all shadow-sm bg-amber-50 border border-amber-200 text-amber-700 active:scale-95">+ {qa.n || qa.name}</button>
                   ))}
-                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={14} /></button>
+                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-3 py-2 rounded-full text-sm font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={16} /></button>
                 </div>
                 <div className="flex items-center gap-1.5 pt-1 border-t border-emerald-100/50 relative overflow-x-auto scrollbar-hide">
                   <div className="sticky left-0 z-10 bg-emerald-50 pr-2 py-0.5">
-                    <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-1.5 bg-emerald-100 rounded-full active:scale-95 shadow-sm"><Icons.Settings size={18} /></button>
+                    <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-2 bg-white rounded-full active:scale-95 shadow-sm border border-emerald-100"><Icons.Settings size={22} /></button>
                   </div>
-                  {customTags.map((t, idx) => (
-                    <button key={t.n} data-h-tag-index={idx} onTouchStart={(e) => onTouchStartHTag(e, idx)} onTouchMove={onTouchMoveHTag} onTouchEnd={onTouchEndHTag} onTouchCancel={onTouchEndHTag} onClick={(e) => {
-                      if (dragDidHappenTag.current || isScrollingTag.current) { e.preventDefault(); return; } setActiveTag(activeTag === t.n ? '' : t.n);
-                    }} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm select-none border ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-80 bg-emerald-500 text-white z-50' : hDragOverIdx === idx && hDragType === 'tag' ? 'border-2 border-dashed border-emerald-500' : activeTag === t.n ? 'scale-105 brightness-90 shadow-inner border-black/20' : ''}`} style={activeTag === t.n ? { backgroundColor: PRESET_COLORS[t.c].text, color: '#fff' } : getTagInlineStyles(t.n)}>
-                      {t.n}
-                    </button>
+                  {customTags.map((t) => (
+                    <button key={t.n} onClick={() => setActiveTag(activeTag === t.n ? '' : t.n)} className={`shrink-0 px-3 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm border ${activeTag === t.n ? 'scale-105 brightness-90 shadow-inner border-black/20' : ''}`} style={activeTag === t.n ? { backgroundColor: PRESET_COLORS[t.c].text, color: '#fff' } : getTagInlineStyles(t.n)}>{t.n}</button>
                   ))}
-                  <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={14} /></button>
+                  <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3 py-2 rounded-full text-sm font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={16} /></button>
                 </div>
               </div>
             </div>
 
-            <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold border-b transition-colors shadow-sm ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>
-              {isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開新增清單</> : <><Icons.Cart size={18} /> 🛒 收起並開始採買</>}
-            </button>
+            <div className="shrink-0 flex justify-center bg-white border-y border-neutral-200 py-3">
+              <button 
+                onClick={() => setIsShoppingMode(!isShoppingMode)} 
+                className="btn-capsule-tactical px-10 py-3 rounded-full flex items-center gap-2.5 transition-all group"
+              >
+                {isShoppingMode ? <Icons.ChevronDown size={22} className="animate-subtle-bounce"/> : <Icons.ChevronUp size={22} className="animate-subtle-bounce"/>}
+                <span className="font-bold text-base tracking-wider">{isShoppingMode ? '展開清單設定 (點我)' : '收起並開始採買 (點我)'}</span>
+              </button>
+            </div>
 
             {dynamicFilterTags.length > 1 && (
-              <div className="bg-white border-b border-neutral-100 flex overflow-x-auto scrollbar-hide shrink-0 shadow-sm z-10 px-2 py-1.5 gap-2">
+              <div className="bg-white border-b border-neutral-200 flex overflow-x-auto scrollbar-hide shrink-0 shadow-sm z-10 px-2 py-2 gap-2">
                 {dynamicFilterTags.map(tagName => {
+                  const cfg = getTagConfig(tagName);
                   const isSelected = filterTag === tagName;
                   return (
-                    <button key={`filter-${tagName}`} onClick={() => setFilterTag(tagName)} className={`min-w-[70px] px-3 py-2 rounded-full text-xs font-bold transition-all shadow-sm border ${isSelected ? 'scale-105 border-black/10' : 'opacity-60 border-transparent bg-neutral-100'}`} style={getTagInlineStyles(tagName, isSelected ? 1 : 0.4)}>
-                      {tagName}
-                    </button>
+                    <button key={`filter-${tagName}`} onClick={() => setFilterTag(tagName)} className={`min-w-[80px] px-4 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm border ${isSelected ? 'scale-105 border-black/10' : 'opacity-60 border-transparent bg-neutral-100'}`} style={getTagInlineStyles(tagName, isSelected ? 1 : 0.4)}>{tagName}</button>
                   );
                 })}
               </div>
             )}
 
-            <main className="p-2 space-y-2 bg-neutral-50/50 flex-1 overflow-y-auto pb-24 relative">
+            <main className="p-2 space-y-2.5 bg-neutral-50/50 flex-1 overflow-y-auto pb-24 relative">
               {isLoading && (
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[1px] animate-pulse-slow">
                   <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
-                  <p className="text-emerald-700 font-bold text-sm tracking-widest">正在讀取資料...</p>
+                  <p className="text-emerald-700 font-bold text-base tracking-widest">讀取中...</p>
                 </div>
               )}
               
               {filteredItems.map(item => (
-                <div key={item.id} className={`flex items-start gap-2.5 p-2 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`} style={{ borderLeftWidth: '6px', borderLeftColor: (!item.completed && !item.postponed) ? (getTagConfig(item.tag)?.border || '#d1d5db') : undefined, ...(!item.completed && !item.postponed ? getTagInlineStyles(item.tag, 0.2) : {}) }}>
-                  <div className="flex flex-col items-center gap-2 shrink-0 mt-0.5">
-                    <div onClick={() => handleComplete(item)} className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>
-                      {item.completed && <Icons.Check size={16} />}
-                    </div>
-                    {!item.completed && (
-                      <button onClick={(e) => handlePostpone(e, item)} className={`p-1 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50/50'}`}>
-                        <Icons.Clock size={16} />
-                      </button>
-                    )}
+                <div key={item.id} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`} style={{ borderLeftWidth: '8px', borderLeftColor: (!item.completed && !item.postponed) ? (getTagConfig(item.tag)?.border || '#d1d5db') : undefined, ...(!item.completed && !item.postponed ? getTagInlineStyles(item.tag, 0.2) : {}) }}>
+                  <div className="flex flex-col items-center gap-3 shrink-0 mt-0.5">
+                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={20} />}</div>
+                    {!item.completed && <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50/50'}`}><Icons.Clock size={18} /></button>}
                   </div>
-                  <div className="flex flex-col min-w-0 flex-1 gap-1 w-full py-0.5">
+                  <div className="flex flex-col min-w-0 flex-1 gap-1.5 w-full">
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <span onClick={() => handleComplete(item)} className={`text-xl font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>
-                          {item.name}
-                        </span>
-                        {item.qty ? (
-                          <button onClick={(e) => { e.stopPropagation(); setModalInput(item.qty); setModalState({ type: 'editQty', data: item }); }} disabled={item.completed} className={`text-sm px-2 py-0.5 rounded font-bold whitespace-nowrap shrink-0 ${item.completed ? 'text-neutral-400' : 'bg-white/50 text-neutral-600 shadow-sm border border-black/5'}`}>
-                            {item.qty}
-                          </button>
-                        ) : (!item.completed && (
-                          <button onClick={(e) => { e.stopPropagation(); setModalInput(''); setModalState({ type: 'editQty', data: item }); }} className="text-sm px-2 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap active:scale-90">
-                            +量
-                          </button>
-                        ))}
+                        <span onClick={() => handleComplete(item)} className={`text-xl sm:text-2xl font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
+                        {item.qty && <span className="text-base px-2 py-0.5 rounded font-bold whitespace-nowrap shrink-0 bg-white/50 text-neutral-600 shadow-sm border border-black/5">{item.qty}</span>}
                       </div>
-                      {!item.completed && (
-                        <button onClick={(e) => { e.stopPropagation(); setModalInput(item.currentPrice || ''); setModalState({ type: 'recordingPrice', data: item }); }} className={`px-2 py-0.5 rounded-lg text-xs font-bold active:scale-90 shrink-0 whitespace-nowrap shadow-sm ${item.currentPrice ? 'bg-white text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700'}`}>
-                          {item.currentPrice ? `$${item.currentPrice}` : '記 $'}
-                        </button>
-                      )}
+                      {!item.completed && <button onClick={(e) => { e.stopPropagation(); setModalInput(item.currentPrice || ''); setModalState({ type: 'recordingPrice', data: item }); }} className={`px-2.5 py-1 rounded-lg text-sm font-bold active:scale-90 shrink-0 whitespace-nowrap shadow-sm ${item.currentPrice ? 'bg-white text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700'}`}>{item.currentPrice ? `$${item.currentPrice}` : '記 $'}</button>}
                     </div>
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-2.5 py-0.5 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag) : {}}>
-                          {item.tag && item.tag !== '無' ? item.tag : '+地點'}
-                        </button>
-                        {history[item.name] && !item.completed && (
-                          <span className="text-xs font-bold truncate text-right whitespace-nowrap opacity-80" style={{ color: getTagConfig(item.tag)?.text || '#92400e' }}>
-                            上次：${history[item.name].price} ({history[item.name].tag || '無'})
-                          </span>
-                        )}
+                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-3 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
+                        {history[item.name] && !item.completed && <span className="text-sm font-bold truncate text-right whitespace-nowrap opacity-90" style={{ color: getTagConfig(item.tag)?.text || '#92400e' }}>上次買：${history[item.name].price}</span>}
                       </div>
-                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-1 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0">
-                        <Icons.Trash size={16} />
-                      </button>
+                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={20} /></button>
                     </div>
                   </div>
                 </div>
               ))}
               {items.some(i => i.completed) && (
                 <div className="pt-4 flex justify-center w-full">
-                  <button onClick={clearCompleted} className="flex items-center gap-1.5 px-6 py-2.5 text-red-500 bg-white border border-red-100 rounded-full font-bold active:scale-95 shadow-sm text-sm">
-                    <Icons.Trash size={16} /> 清除已買項目
-                  </button>
+                  <button onClick={clearCompleted} className="flex items-center gap-2 px-8 py-3 text-red-500 bg-white border border-red-100 rounded-full font-bold active:scale-95 shadow-sm text-base"><Icons.Trash size={18} /> 清除已買項目</button>
                 </div>
               )}
             </main>
 
             {modalState.type && (
-              <div className="fixed inset-0 bg-black/60 z-[120] flex items-end sm:items-center justify-center backdrop-blur-sm" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
-                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-6 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2 shrink-0">
-                    <h3 className="text-lg font-bold text-emerald-700 font-serif-tc">
-                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'about' ? '關於與使用說明' : modalState.type === 'donate' ? '請朵朵喝咖啡' : modalState.type === 'addTag' || modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'syncDevice' ? '裝備跨機同步' : '品項設定中心'}
+              <div className="fixed inset-0 bg-black/70 z-[120] flex items-end sm:items-center justify-center backdrop-blur-md" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
+                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-6 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-5 border-b border-neutral-100 pb-3 shrink-0">
+                    <h3 className="text-xl font-bold text-emerald-800 font-serif-tc">
+                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'about' ? '使用說明書' : modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'manageQuick' ? '常用品項設定' : modalState.type === 'channelConflict' ? '偵測到舊資料！' : '設定'}
                     </h3>
-                    <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-1 hover:bg-neutral-100 rounded-full transition-colors">
-                      <Icons.X />
-                    </button>
+                    <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-2 hover:bg-neutral-100 rounded-full transition-colors"><Icons.X size={24} /></button>
                   </div>
-                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-24">
+                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-20">
+                    {modalState.type === 'channelConflict' && modalState.data && (
+                      <div className="space-y-6 py-2 text-center font-bold">
+                        <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200">
+                          <p className="text-lg text-amber-900 mb-3 flex items-center justify-center gap-2">⚠️ 警告：頻道非空白</p>
+                          <p className="text-base text-amber-800 leading-relaxed font-bold">
+                            代號「{modalState.data.code.split('-')[1] || modalState.data.code}」目前已有 <strong className="text-xl">{modalState.data.count}</strong> 項清單資料。<br /><br />
+                            這可能是你或親友以前用過的代號。
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          <button onClick={() => handleTuneRoom(modalState.data.code, modalState.data.note)} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-md active:scale-95">我要承接舊資料</button>
+                          <button onClick={() => handleClearChannelData(modalState.data.code)} className="w-full bg-white text-red-600 border-2 border-red-200 py-4 rounded-xl font-bold text-lg active:scale-95">全部炸掉重來 (淨空頻道)</button>
+                          <button onClick={() => setModalState({type: 'room'})} className="w-full text-neutral-400 py-2 font-bold text-sm">先不要，我換個代號</button>
+                        </div>
+                      </div>
+                    )}
+
                     {modalState.type === 'about' && (
-                      <div className="space-y-4 py-2">
-                        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative">
-                          <h4 className="font-bold text-emerald-800 text-lg tracking-widest font-serif-tc">智能採買</h4>
-                          <p className="text-xs text-emerald-600 mt-1 font-bold">版本 v1.1.9 (相容修復版)</p>
-                          <p className="text-[10px] text-emerald-500/70 mt-2 font-bold">Developed with ❤️ by 朵朵</p>
-                          <button onClick={handleForceUpdate} className="mt-4 bg-emerald-200/50 hover:bg-emerald-200 text-emerald-700 text-[10px] px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto active:scale-95 transition-all border border-emerald-300/50"><Icons.Refresh size={12} /> 檢查並載入新版本</button>
+                      <div className="space-y-6 py-2 px-1">
+                        <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-100 text-center relative shadow-inner">
+                          <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
+                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.1.14 (穩定修復版)</p>
+                          <button onClick={handleForceUpdate} className="mt-4 bg-white text-emerald-700 text-xs px-4 py-2 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 transition-all"><Icons.Refresh size={14} /> 檢查載入新版本</button>
                         </div>
 
-                        <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden">
-                          <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-4 py-3 flex justify-between items-center font-bold text-neutral-700 active:bg-neutral-50"><span className="flex items-center gap-2"><Icons.BookOpen size={18} className="text-blue-500" /> 基礎教學：如何開始？</span><Icons.ChevronDown size={16} className={`transition-transform ${expandedSection === 'manual' ? 'rotate-180' : ''}`} /></button>
+                        <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
+                          <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-5 py-4 flex justify-between items-center font-bold text-lg text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2"><Icons.BookOpen className="text-blue-500" /> 基礎教學：如何開始？</span><Icons.ChevronDown size={20} className={expandedSection === 'manual' ? 'rotate-180' : ''} /></button>
                           {expandedSection === 'manual' && ( 
-                            <div className="px-4 pb-4 pt-2 text-sm text-neutral-600 space-y-4 border-t border-neutral-50 bg-neutral-50/30">
-                              <div className="leading-relaxed space-y-3">
-                                <p>(1) 新增品項：在上方打入名稱（如：雞蛋），按「+」即可。</p>
-                                <p>(2) 設定地點與顏色：點擊項目的地點按鈕設定分類。若想修改顏色，請點標籤旁的 ⚙️ 進入「地點設定中心」，點選「名稱」或「色塊」即可挑選。建議用不同顏色區分，採買更直覺。</p>
-                                <p>(3) 延後購買：點擊時鐘圖案，項目會變色並排到最後面，提醒妳下次再買。</p>
-                                <p>(4) 過濾清單：清單上方有一排彩色小按鈕，點擊按鈕，妳就只會看到該地點的東西，超市採買超效率！</p>
-                                <p>(5) 專注模式：點擊中間的「🛒 收起並開始採買」，可以隱藏上方設定區，讓清單全螢幕顯示，視野更開闊。</p>
-                              </div>
-                              <button onClick={() => setExpandedSection('')} className="w-full py-2 bg-white text-blue-500 rounded-lg border border-blue-100 text-xs font-bold active:scale-95">收起教學</button>
+                            <div className="px-5 pb-5 pt-2 text-lg text-neutral-700 space-y-6 border-t border-neutral-50 bg-neutral-50/40 leading-relaxed font-bold">
+                              <p>(1) 新增品項：在上方打入名稱（如：雞蛋），按「+」按鈕即可。</p>
+                              <p>(2) 地點與顏色：點擊地點按鈕分類。若想修改顏色，點 ⚙️ 進入設定中心，點選「地點名稱」挑選專屬色。顏色分開，採買更直覺！</p>
+                              <p>(3) 記$ 黑科技：點擊項目右側「記 $」，錄入本次價格，系統會幫你記憶。下次買同樣東西，會告訴你上次買多少，讓你買得更聰明。</p>
+                              <p>(4) 專注模式：點擊膠囊按鈕「🛒 收起並開始採買」，隱藏輸入區，讓清單全螢幕顯示。</p>
+                              <button onClick={() => setExpandedSection('')} className="w-full py-3 bg-white text-blue-600 rounded-lg border border-blue-200 font-bold mt-4 shadow-sm">收起本項</button>
                             </div> 
                           )}
                         </div>
 
-                        <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden">
-                          <button onClick={() => setExpandedSection(expandedSection === 'channels' ? '' : 'channels')} className="w-full px-4 py-3 flex justify-between items-center font-bold text-neutral-700 active:bg-neutral-50"><span className="flex items-center gap-2"><Icons.Refresh size={18} className="text-emerald-500" /> 共享頻道：多人即時同步</span><Icons.ChevronDown size={16} className={`transition-transform ${expandedSection === 'channels' ? 'rotate-180' : ''}`} /></button>
+                        <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
+                          <button onClick={() => setExpandedSection(expandedSection === 'channels' ? '' : 'channels')} className="w-full px-5 py-4 flex justify-between items-center font-bold text-lg text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2"><Icons.Refresh className="text-emerald-500" /> 共享頻道：多人同步</span><Icons.ChevronDown size={20} className={expandedSection === 'channels' ? 'rotate-180' : ''} /></button>
                           {expandedSection === 'channels' && ( 
-                            <div className="px-4 pb-4 pt-2 text-sm text-neutral-600 space-y-4 border-t border-neutral-50 bg-neutral-50/30">
-                              <p className="font-bold text-emerald-700">📡 就像是對講機！</p>
-                              <p className="leading-relaxed text-xs">
-                                想像每個頻道代號就是一個頻率。只要多台手機調到同一個代號，清單就會同步冒出來！<br /><br />
-                                舉例一：夫妻同步<br />
-                                姊姊在家裡發現沒奶粉了，在頻道新增一項。老公在外面打開 APP，清單就會自動冒出奶粉，買完打勾，姊姊在家也會看到囉！<br /><br />
-                                舉例二：換手機也不怕<br />
-                                只要記住妳的個人專屬 ID，在新手機輸入同樣代號，妳以前設定的所有地點、常用項都會瞬間找回。<br /><br />
-                                舉例三：公司辦烤肉趴<br />
-                                大家分頭去採購，有人買了木炭打勾，其他人手機上的木炭就會同步消失，絕對不會重複購買，更省下溝通時間！<br /><br />
-                                💡 專家用法：一個人可以設多個頻道，例如 family01（家裡）、work01（公司）、parents01（公婆家），隨時切換。
-                              </p>
-                              <button onClick={() => setExpandedSection('')} className="w-full py-2 bg-white text-emerald-500 rounded-lg border border-emerald-100 text-xs font-bold active:scale-95">收起教學</button>
+                            <div className="px-5 pb-5 pt-2 text-base text-neutral-700 space-y-6 border-t border-neutral-50 bg-neutral-50/40 leading-relaxed text-left font-bold">
+                              <p className="font-bold text-emerald-800 text-xl underline underline-offset-4">📡 無線電對講機原理</p>
+                              <p>頻道代碼就像頻率。多台手機調到同一個數字，清單就會即時同步！</p>
+                              <div className="space-y-5">
+                                <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-2">【烤肉採購】</p><p>大家分頭買，有人買木炭打勾，其他人手機上的木炭就會同步劃掉，不重複買，省下電話確認時間！</p></div>
+                                <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-2">【夫妻同步】</p><p>一人在家發現沒菜，在頻道新增。老公在外面打開 APP 就能看到，買完勾選，同步核銷。</p></div>
+                                <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-2">【多頻道切換】</p><p>可同時存下多個頻道，隨時切換管理個人、公司或家裡的雜事。</p></div>
+                              </div>
+                              <button onClick={() => setExpandedSection('')} className="w-full py-3 bg-white text-emerald-600 rounded-lg border border-emerald-200 font-bold mt-4 shadow-sm">收起本項</button>
                             </div> 
                           )}
                         </div>
 
-                        <div className="flex flex-col gap-3 mt-4">
-                          <button onClick={copyAppUrl} className="w-full bg-white border-2 border-emerald-500 text-emerald-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">分享此 APP 給親友</button>
-                          <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">💬 想跟朵朵說些什麼？</button>
-                          <button onClick={() => { setModalState({ type: 'donate' }); }} className="w-full bg-[#FFDD00] text-amber-900 py-2.5 px-4 rounded-xl active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm mb-2"><div className="flex items-center gap-2 font-bold text-base"><Icons.Coffee size={18} /><span>喜歡這 APP 嗎？</span></div><span className="text-sm font-bold opacity-80">歡迎請我喝杯咖啡</span></button>
-                          <button onClick={() => setExpandedSection('')} className="w-full py-2 text-neutral-400 text-[10px] font-bold">收起所有說明 ↑</button>
+                        <div className="flex flex-col gap-3 mt-6 px-1 pb-10">
+                          <button onClick={copyAppUrl} className="w-full bg-white border-2 border-emerald-500 text-emerald-700 py-5 rounded-2xl font-bold active:scale-95 text-xl flex items-center justify-center gap-2 shadow-sm">分享本 APP 給親友</button>
+                          <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-5 rounded-2xl font-bold active:scale-95 text-xl shadow-sm">💬 給朵朵建議</button>
+                          <button onClick={() => setModalState({ type: 'donate' })} className="w-full bg-[#FFDD00] text-amber-900 py-5 px-4 rounded-2xl active:scale-95 shadow-md font-bold text-xl flex flex-col items-center"><div>喜歡這 APP 嗎？ 歡迎請我喝咖啡</div></button>
                         </div>
                       </div>
                     )}
 
                     {modalState.type === 'room' && (
-                      <div className="space-y-6 py-2">
-                        {roomPath && (
-                          <div className="bg-amber-50 p-4 rounded-2xl border-2 border-amber-200 shadow-md">
-                            <p className="text-xs text-amber-700 font-bold mb-3 flex items-center gap-1.5"><Icons.Refresh size={14} className="animate-spin" /> 目前正在連線頻道：</p>
-                            <div className="bg-yellow-100 p-4 rounded-xl border-2 border-yellow-400 shadow-inner flex flex-col gap-3">
-                              <span className="font-mono font-bold text-amber-900 break-all text-2xl text-center tracking-widest">{roomPath}</span>
-                              <button onClick={() => { 
-                                const temp = document.createElement('input'); 
-                                temp.value = roomPath; 
-                                document.body.appendChild(temp); 
-                                temp.select(); 
-                                document.execCommand('copy'); 
-                                document.body.removeChild(temp); 
-                                setMsg('代號已複製！'); 
-                                setTimeout(() => setMsg(''), 2000); 
-                              }} className="w-full bg-amber-500 text-white py-3 rounded-lg text-base font-bold active:scale-95 transition-transform shadow-md border-b-4 border-amber-700 flex items-center justify-center gap-2">📋 複製代號發給親友</button>
+                      <div className="space-y-6 py-2 px-1 font-bold">
+                        {savedRooms.length > 0 && (
+                          <div className="space-y-3 font-bold">
+                            <h3 className="text-xl font-bold text-neutral-700 flex items-center gap-2 px-1"><Icons.History size={24}/> 我的頻道列表 (點選切換)</h3>
+                            <div className="space-y-3">
+                              {savedRooms.map((room, idx) => (
+                                <div key={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex items-center gap-3 p-5 rounded-2xl border-2 transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-400 shadow-md' : 'bg-white border-neutral-200 shadow-sm'}`}>
+                                  <div className="flex flex-col flex-1 min-w-0">
+                                    <span className={`font-bold text-xl truncate ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
+                                    <span className="text-sm text-neutral-400 font-mono italic truncate">{room.code}</span>
+                                  </div>
+                                  <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    const temp = document.createElement('input'); temp.value = room.code; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp);
+                                    setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000);
+                                  }} className="bg-[#FFDD00] text-amber-900 p-3 rounded-xl active:scale-90 shadow-md border border-amber-400" title="分享頻道代號"><Icons.Share size={24}/></button>
+                                  <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); try{localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(n));}catch(e){}
+                                    if (roomPath === room.code) { setRoomPath(''); try{localStorage.removeItem('smart_buy_room');}catch(e){} }
+                                  }} className="p-3 text-neutral-300 active:scale-90 bg-neutral-50 rounded-xl border border-neutral-100"><Icons.Trash size={24}/></button>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}
 
-                        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                          <div className="flex justify-between items-center mb-1"><p className="text-xs text-emerald-700 font-bold tracking-tight">我的個人專屬 ID (基地台代號)</p><button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-500 flex items-center gap-1 text-[10px] bg-white px-2 py-0.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={10} />修改</button></div>
+                        <div className="bg-emerald-50 p-6 rounded-2xl border-2 border-emerald-100 shadow-inner text-center">
+                          <div className="flex justify-between items-center mb-3 font-bold"><p className="text-base font-bold text-emerald-800">🪪 我的個人 ID (基地台號碼)</p><button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-600 flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded-lg shadow-sm font-bold active:scale-95"><Icons.Edit size={14}/>修改</button></div>
                           {isEditingBaseId ? (
-                            <div className="flex flex-col gap-2 mt-2"><input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-200 outline-none font-bold text-center tracking-widest text-emerald-800" /><button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl shadow-md active:scale-95 flex items-center justify-center gap-1 text-sm font-bold"><Icons.CheckCircle size={16} /> 確定修改並鎖定</button></div>
+                            <div className="flex flex-col gap-2"><input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-4 bg-white rounded-xl border-2 border-emerald-300 text-2xl text-center font-bold tracking-widest outline-none" /><button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-md text-xl active:scale-95"><Icons.CheckCircle size={20} className="inline mr-1" /> 確定並鎖定</button></div>
                           ) : (
-                            <><p className="text-xl font-bold tracking-[0.2em] text-emerald-800 break-all">{personalBaseId}</p><button onClick={copySyncLink} className="w-full mt-3 bg-white border border-emerald-200 text-emerald-600 py-2 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1">產出跨機同步連結</button></>
+                            <p className="text-3xl font-bold tracking-[0.2em] text-emerald-900 break-all">{personalBaseId}</p>
                           )}
                         </div>
 
-                        <div className="pt-4 border-t border-dashed border-neutral-200">
-                          <h3 className="text-xs font-bold text-neutral-500 mb-3">輸入新頻道與備註</h3>
-                          <div className="space-y-3">
-                            <input type="text" id="mRoomCode" placeholder="頻道代號" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-xl text-center font-bold tracking-widest text-emerald-800" />
-                            <input type="text" id="mRoomNote" placeholder="備註 (如：個人、公婆、公司)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold" />
+                        <div className="pt-6 border-t border-dashed border-neutral-300 font-bold">
+                          <h3 className="text-xl font-bold text-neutral-700 mb-4 px-1">連線新頻道</h3>
+                          <div className="space-y-4">
+                            <input type="text" id="mRoomCode" placeholder="請在此輸入代號" className="w-full p-5 bg-neutral-100 rounded-2xl border-2 border-emerald-200 text-3xl text-center font-bold tracking-widest text-emerald-900 outline-none" />
+                            <input type="text" id="mRoomNote" placeholder="加個名稱 (如：個人、公婆、公司)" className="w-full p-5 bg-neutral-100 rounded-2xl border-2 border-emerald-200 text-xl font-bold outline-none" />
                             <div className="flex gap-2">
-                              <button onClick={async () => { try { const text = await navigator.clipboard.readText(); if (text) { document.getElementById('mRoomCode').value = text.trim(); setMsg('已貼上代號！'); setTimeout(() => setMsg(''), 2000); } } catch (err) { setMsg('請手動貼上'); setTimeout(() => setMsg(''), 2000); } }} className="w-1/3 bg-emerald-50 text-emerald-700 py-3 rounded-xl font-bold border border-emerald-200 active:scale-95 shadow-sm flex justify-center items-center gap-1">貼上</button>
-                              <button onClick={() => { handleTuneRoom(document.getElementById('mRoomCode').value, document.getElementById('mRoomNote').value); }} className="w-2/3 bg-emerald-700 text-white py-3 rounded-xl font-bold active:scale-95 shadow-lg">連線頻道</button>
+                              <button onClick={async () => { try { const text = await navigator.clipboard.readText(); if (text) document.getElementById('mRoomCode').value = text.trim(); } catch (err) { setMsg('請長按貼上'); setTimeout(() => setMsg(''), 2000); } }} className="w-1/3 bg-emerald-50 text-emerald-800 py-5 rounded-2xl font-bold border border-emerald-200 active:scale-95 text-2xl shadow-sm">貼上</button>
+                              <button onClick={() => handleTuneRoomAttempt(document.getElementById('mRoomCode').value, document.getElementById('mRoomNote').value)} className="w-2/3 bg-emerald-700 text-white py-5 rounded-2xl font-bold active:scale-95 text-2xl shadow-lg">連線</button>
                             </div>
                           </div>
                         </div>
 
-                        <div className="bg-blue-50 p-5 rounded-2xl border border-blue-200 mt-2">
-                          <p className="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">📡 實戰應用與連線祕訣</p>
-                          <div className="text-[11px] text-blue-700 font-bold space-y-3 leading-relaxed">
-                            <p>(1) 如何連線：點選上方「黃色複製代號」傳給親友，對方在下方貼上代號並按「連線」，兩台手機就會像對講機一樣自動同步清單。</p>
-                            <div className="w-full h-px bg-blue-100"></div>
-                            <p>(2) 烤肉採購：大家分頭去超市，有人買了木炭打勾，其他人手機上的木炭會同步消失，絕不重複買，更省下打電話確認的時間！</p>
-                            <p>(3) 切換頻道：一個人可以同時存下 family01、work01 等代號，隨時從下方的歷史紀錄一鍵切換，管理不同領域的瑣事。</p>
+                        <div className="bg-blue-50 p-6 rounded-2xl border-2 border-blue-200 mt-2 font-bold leading-relaxed shadow-sm">
+                          <p className="text-xl text-blue-900 mb-4 flex items-center gap-2"><Icons.Refresh size={20} className="animate-spin" /> 快速連線步驟：</p>
+                          <div className="text-lg text-blue-800 space-y-4 font-bold">
+                            <p>1. 點列表頻道的 <span className="bg-amber-400 text-amber-900 px-2 py-0.5 rounded shadow-sm">分享圖示</span> 複製代號。</p>
+                            <p>2. 把代號傳給家人 (用 LINE 傳)。</p>
+                            <p>3. 家人在此頁面「貼上代號」並按「連線」。</p>
+                            <div className="pt-5 border-t border-blue-100">
+                              <button onClick={copyAppUrl} className="w-full bg-blue-600 text-white py-5 rounded-2xl flex items-center justify-center gap-2 active:scale-95 shadow-md text-xl">
+                                <Icons.Share size={24}/> 分享 APP 給親友 (必備)
+                              </button>
+                            </div>
                           </div>
                         </div>
-
-                        {savedRooms.length > 0 && (
-                          <div className="pt-4">
-                            <h3 className="text-xs font-bold text-neutral-500 mb-3 flex items-center gap-1.5"><Icons.History size={14} /> 歷史紀錄 (點選切換)</h3>
-                            <div className="space-y-2">{savedRooms.map((room, idx) => ( <div key={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex justify-between items-center p-3 rounded-xl border cursor-pointer transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-300 shadow-sm' : 'bg-white border-neutral-200'}`}><div className="flex flex-col"><span className={`font-bold ${roomPath === room.code ? 'text-amber-700' : 'text-neutral-700'}`}>{room.note || '未命名'}</span><span className="text-[10px] text-neutral-400 font-mono italic">{room.code}</span></div><button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(n)); if (roomPath === room.code) { setRoomPath(''); localStorage.removeItem('smart_buy_room'); } }} className="p-3 text-neutral-300 hover:text-red-500 active:scale-75 bg-neutral-50 rounded-xl border border-neutral-100"><Icons.Trash size={18} /></button></div> ))}</div>
-                          </div>
-                        )}
+                        
+                        <p className="text-base text-neutral-400 text-center px-4 leading-relaxed font-bold">備註：刪除列表只是移除捷徑，雲端資料不會消失，輸入代號後仍會出現舊清單。</p>
                       </div>
                     )}
 
                     {modalState.type === 'manageTag' && (
-                      <div className="flex flex-col h-full">
-                        <div className="flex flex-col gap-3 mb-4 shrink-0 bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                      <div className="flex flex-col h-full gap-5 px-1 font-bold">
+                        <div className="flex flex-col gap-5 mb-4 shrink-0 bg-emerald-50 p-6 rounded-2xl border-2 border-emerald-100 shadow-sm">
                           <div className="flex justify-between items-center mb-1">
-                            <p className="text-xs font-bold text-emerald-700">快速新增地點與顏色</p>
-                            <button onClick={resetAllTagsColor} className="text-[10px] bg-white px-2 py-1 rounded border border-emerald-200 text-emerald-600 font-bold active:scale-90 shadow-sm">一鍵還原翠綠色</button>
+                            <p className="text-xl font-bold text-emerald-900">新增地點與顏色</p>
+                            <button onClick={resetAllTagsColor} className="text-sm bg-white px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 font-bold active:scale-90 shadow-sm">一鍵還原翠綠色</button>
                           </div>
-                          <input type="text" id="mAddTag" placeholder="地點名稱..." className="w-full p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white" />
-                          <div className="flex gap-2 items-center overflow-x-auto scrollbar-hide py-1">
+                          <input type="text" id="mAddTag" placeholder="輸入地點名稱..." className="w-full p-5 rounded-xl border-2 border-emerald-200 outline-none text-2xl font-bold bg-white shadow-inner" />
+                          <div className="flex gap-4 items-center overflow-x-auto scrollbar-hide py-2 px-1">
                             {PRESET_COLORS.map((color, i) => (
-                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-8 h-8 rounded-full border-2 transition-transform ${modalColorIdx === i ? 'border-neutral-800 scale-125 shadow-md' : 'border-transparent'}`} style={{ backgroundColor: color.bg }}></button>
+                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-14 h-14 rounded-full border-4 transition-transform ${modalColorIdx === i ? 'border-neutral-800 scale-125 shadow-xl' : 'border-black/5'}`} style={{ backgroundColor: color.bg }}></button>
                             ))}
                           </div>
-                          <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold active:scale-95 shadow-md">新增地點</button>
+                          <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-bold text-2xl shadow-md active:scale-95 tracking-widest">新增地點</button>
                         </div>
-                        <div className="overflow-y-auto space-y-2 py-2 flex-1 scrollbar-hide" onTouchMove={(e) => onVMove(e, 'data-v-tag-index')}>
+                        <div className="space-y-4 pb-12 font-bold px-1">
+                          <p className="text-lg font-bold text-neutral-700 px-1">已存地點 (點選名稱改色)：</p>
                           {customTags.map((item, idx) => (
-                            <div key={idx} data-v-tag-index={idx} className={`flex justify-between items-center p-2 rounded-xl border transition-all ${vDragIdx === idx ? 'opacity-40 scale-95 shadow-inner' : ''}`} style={getTagInlineStyles(item.n)}>
-                              <div className="flex items-center gap-2 flex-1">
-                                <div className="p-3 text-neutral-400 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical /></div>
-                                <div className="flex flex-col">
-                                  <span className="font-bold text-sm" onClick={() => { setModalColorIdx(item.c); setModalInput(item.n); }}>{item.n}</span>
-                                  <div className="flex gap-1 mt-1">
+                            <div key={idx} className="flex justify-between items-center p-5 rounded-2xl border-4 shadow-md transition-all" style={getTagInlineStyles(item.n)}>
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="p-3 text-neutral-600 drag-handle"><Icons.GripVertical size={28}/></div>
+                                <div className="flex flex-col flex-1 min-w-0">
+                                  <span className="font-bold text-2xl truncate mb-3" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
+                                  <div className="flex gap-3 overflow-x-auto scrollbar-hide py-1">
                                     {PRESET_COLORS.map((c, ci) => (
-                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-3.5 h-3.5 rounded-full border border-black/5 ${item.c === ci ? 'ring-1 ring-black' : ''}`} style={{ backgroundColor: c.bg }} />
+                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-10 h-10 shrink-0 rounded-full border-2 ${item.c === ci ? 'ring-4 ring-black border-white shadow-lg scale-110' : 'border-black/10'}`} style={{ backgroundColor: c.bg }} />
                                     ))}
                                   </div>
                                 </div>
                               </div>
-                              <button onClick={() => delTag(item.n)} className="p-3 active:scale-75 opacity-50 hover:opacity-100"><Icons.Trash size={18} /></button>
+                              <button onClick={() => delTag(item.n)} className="p-4 active:scale-75 opacity-70"><Icons.Trash size={32} /></button>
                             </div>
                           ))}
                         </div>
@@ -687,69 +609,77 @@
                     )}
                     
                     {modalState.type === 'manageQuick' && (
-                      <div className="flex flex-col h-full">
-                        <div className="flex flex-col gap-3 mb-4 shrink-0 bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                          <p className="text-xs font-bold text-amber-700">快速新增常用品項</p>
-                          <input type="text" id="mAddQuick" placeholder="物品名稱..." className="w-full p-3 rounded-lg border border-amber-200 outline-none text-base font-bold bg-white" />
-                          <div className="flex gap-2">
-                            <select id="mAddQuickTag" className="flex-1 min-w-0 p-3 bg-white rounded-lg border border-amber-200 font-bold text-base outline-none text-neutral-700">
-                              <option value="">無預設地點</option>
+                      <div className="flex flex-col h-full gap-5 px-1 font-bold">
+                        <div className="flex flex-col gap-5 mb-4 shrink-0 bg-amber-50 p-6 rounded-2xl border-2 border-amber-100 shadow-sm">
+                          <p className="text-xl font-bold text-amber-900">快速新增常用品項</p>
+                          <input type="text" id="mAddQuick" placeholder="物品名稱..." className="w-full p-5 rounded-xl border-2 border-amber-200 outline-none text-2xl font-bold bg-white shadow-inner" />
+                          <div className="flex gap-3">
+                            <select id="mAddQuickTag" className="flex-1 min-w-0 p-5 bg-white rounded-xl border-2 border-amber-200 font-bold text-xl outline-none shadow-sm">
+                              <option value="">無地點</option>
                               {customTags.map(t => <option key={t.n} value={t.n}>{t.n}</option>)}
                             </select>
-                            <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md">新增</button>
+                            <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-10 rounded-2xl font-bold text-2xl active:scale-95 shadow-md">新增</button>
                           </div>
                         </div>
-                        <div className="overflow-y-auto space-y-2 py-2 flex-1 scrollbar-hide" onTouchMove={(e) => onVMove(e, 'data-v-quick-index')}>
+                        <div className="space-y-4 pb-12 px-1">
                           {quickItems.map((item, idx) => (
-                            <div key={idx} data-v-quick-index={idx} className={`flex justify-between items-center p-2 rounded-xl border transition-all ${vDragIdx === idx ? 'opacity-40 scale-95 shadow-inner' : 'border-neutral-100 bg-neutral-50'}`}>
-                              <div className="flex items-center gap-2 flex-1">
-                                <div className="p-3 text-neutral-400 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd('quick')} onTouchCancel={() => onVEnd('quick')}><Icons.GripVertical /></div>
-                                <span className="font-bold text-sm">{item.n || item.name}</span>
+                            <div key={idx} className="flex justify-between items-center p-5 rounded-2xl border-2 bg-neutral-50 shadow-sm border-neutral-100">
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="p-3 text-neutral-400 drag-handle"><Icons.GripVertical size={28}/></div>
+                                <span className="font-bold text-2xl">{item.n || item.name}</span>
                               </div>
-                              <button onClick={() => delQuick(idx)} className="p-3 active:scale-75 opacity-40 hover:opacity-100"><Icons.Trash size={18} /></button>
+                              <button onClick={() => delQuick(idx)} className="p-4 active:scale-75 opacity-50"><Icons.Trash size={32} /></button>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
-                    
-                    {modalState.type === 'editQty' && modalState.data && (
-                      <div className="space-y-4 py-2">
-                        <div className="text-center mb-1"><span className="text-base font-bold text-emerald-800 bg-emerald-100 px-4 py-1.5 rounded-full tracking-wide shadow-sm">📝 {modalState.data.name}</span></div>
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入數量與單位..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" />
-                        <div className="flex gap-2">
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: '' }); setModalState({ type: null }); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold active:scale-95 transition-transform">清除</button>
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: modalInput }); setModalState({ type: null }); }} className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">確定更新</button>
-                        </div>
-                      </div>
-                    )}
+
                     {modalState.type === 'recordingPrice' && modalState.data && (
-                      <div className="space-y-4 py-2">
-                        <div className="text-center mb-1"><span className="text-base font-bold text-amber-900 bg-[#FFDD00] px-4 py-1.5 rounded-full shadow-sm">💰 {modalState.data.name}</span></div>
-                        <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入購買金額..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" />
-                        <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">確定紀錄</button>
+                      <div className="space-y-8 py-4 text-center font-bold px-1">
+                        <div className="mb-2"><span className="text-2xl font-bold text-amber-900 bg-[#FFDD00] px-10 py-4 rounded-full shadow-lg tracking-widest">💰 {modalState.data.name}</span></div>
+                        <p className="text-xl text-neutral-600 font-bold leading-relaxed px-4">錄入本次購買價格，系統會自動記憶。</p>
+                        <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入金額..." className="w-full p-8 rounded-3xl border-4 border-amber-200 outline-none text-5xl text-center bg-amber-50/30 shadow-inner font-bold text-amber-900" />
+                        <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-amber-600 text-white py-6 rounded-2xl font-bold text-2xl shadow-xl active:scale-95 transition-all">確定錄入</button>
                       </div>
                     )}
+                    
+                    {modalState.type === 'addTag' && (
+                      <div className="space-y-8 py-4 px-1 font-bold">
+                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-6 rounded-2xl border-4 border-emerald-200 outline-none text-3xl font-bold text-center bg-emerald-50/30 shadow-inner" />
+                        <div className="space-y-5">
+                          <p className="text-xl font-bold text-neutral-600 px-1">挑選醒目的顏色：</p>
+                          <div className="grid grid-cols-4 gap-6 px-1">
+                            {PRESET_COLORS.map((color, i) => (
+                              <button key={i} onClick={() => setModalColorIdx(i)} className={`h-20 rounded-3xl border-4 transition-all ${modalColorIdx === i ? 'scale-110 shadow-2xl border-neutral-800' : 'border-black/5'}`} style={{ backgroundColor: color.bg, borderColor: modalColorIdx === i ? color.border : undefined }}></button>
+                            ))}
+                          </div>
+                        </div>
+                        <button onClick={() => handleAddNewTag(modalInput, modalColorIdx, true)} className="w-full bg-emerald-700 text-white py-6 rounded-2xl font-bold text-2xl shadow-xl active:scale-95">確認新增地點</button>
+                      </div>
+                    )}
+                    
                     {modalState.type === 'editingTag' && modalState.data && (
-                      <div className="flex flex-col gap-3 py-2">
-                        <div className="text-center mb-1"><span className="text-base font-bold text-emerald-800 bg-emerald-100 px-4 py-1.5 rounded-full tracking-wide shadow-sm">📍 {modalState.data.name}</span></div>
-                        <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-6 py-4 px-1 font-bold">
+                        <div className="text-center mb-2"><span className="text-2xl font-bold text-emerald-900 bg-emerald-100 px-10 py-4 rounded-full shadow-md">📍 {modalState.data.name}</span></div>
+                        <div className="grid grid-cols-2 gap-5 font-bold">
                           {customTags.map(t => ( 
-                            <button key={t.n} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t.n }); setModalState({ type: null }); }} className={`py-3 rounded-xl font-bold text-sm border shadow-sm ${modalState.data.tag === t.n ? 'brightness-90 scale-95 border-black/20' : ''}`} style={getTagInlineStyles(t.n)}>{t.n}</button> 
+                            <button key={t.n} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t.n }); setModalState({ type: null }); }} className="py-6 rounded-2xl font-bold text-2xl border-4 shadow-sm active:scale-95" style={getTagInlineStyles(t.n)}>{t.n}</button> 
                           ))}
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: '' }); setModalState({ type: null }); }} className="py-3 rounded-xl font-bold text-sm border bg-neutral-100 text-neutral-400">無地點</button>
+                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: '' }); setModalState({ type: null }); }} className="py-6 rounded-2xl font-bold text-2xl border-4 bg-neutral-100 text-neutral-400 border-neutral-200">無地點</button>
                         </div>
                       </div>
                     )}
+
                     {modalState.type === 'donate' && (
-                      <div className="space-y-4 py-2 text-center">
-                        <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                          <p className="text-sm text-amber-800 font-bold mb-2 leading-relaxed">謝謝妳的心意！ 🥰<br /></p>
-                          <div className="inline-block bg-amber-500 text-white text-xs px-3 py-1 rounded-full font-bold mb-2 shadow-sm">☕ 一杯咖啡 $50(杯數隨喜)</div>
+                      <div className="space-y-8 py-6 text-center font-bold px-1">
+                        <div className="bg-amber-50 p-8 rounded-3xl border-4 border-amber-200 shadow-inner">
+                          <p className="text-2xl text-amber-900 font-bold mb-4">謝謝姊姊與妹妹的心意！ 🥰</p>
+                          <div className="inline-block bg-amber-500 text-white text-lg px-8 py-2 rounded-full font-bold shadow-md">一杯咖啡隨喜</div>
                         </div>
-                        <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-100 space-y-3">
-                          <p className="text-sm font-bold text-neutral-700 tracking-wider">永豐銀行 (807)<br />204-018-0025253-1</p>
-                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full bg-amber-500 text-white py-4 rounded-xl text-base font-bold active:scale-95 transition-all shadow-lg flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
+                        <div className="bg-neutral-50 p-8 rounded-3xl border-4 border-neutral-100 space-y-6">
+                          <p className="text-2xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
+                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full bg-amber-500 text-white py-6 rounded-2xl text-2xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-3">📋 一鍵複製帳號</button>
                         </div>
                       </div>
                     )}
