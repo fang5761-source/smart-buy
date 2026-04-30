@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
   <!-- 
-    [SECURITY WARNING - TACTICAL PROTECTION ENABLED]
-    AUTHOR: DODO / SYSTEM CODE: SMART-BUY-PRO-V1
+    [DEVELOPER NOTE]
+    AUTHOR: DODO / SYSTEM CODE: SMART-BUY-PRO-V1.0.3
     ENCRYPTION: FIREBASE AUTHENTICATION PROTOCOL ACTIVE
     UNAUTHORIZED ACCESS OR MODIFICATION OF THIS FILE IS MONITORED.
     (C) 2026 DODO TACTICAL LABS. ALL RIGHTS RESERVED.
@@ -26,11 +26,22 @@
     .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none;}
     @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
     .animate-slide-up{animation:slideUp 0.3s ease-out;}
+    @keyframes pulse-slow{0%,100%{opacity:1;}50%{opacity:0.5;}}
+    .animate-pulse-slow{animation:pulse-slow 2s cubic-bezier(0.4,0,0.6,1) infinite;}
     input:focus{font-size:16px!important;}
     .font-serif-tc{font-family:'Noto Serif TC',serif;}
     html,body{position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;overscroll-behavior:none;background-color:#047857;-webkit-tap-highlight-color:transparent;}
     #root{width:100%;height:100%;background-color:#f5f5f5;display:flex;justify-content:center;}
     .drag-handle{cursor:move;touch-action:none;}
+    
+    /* 配色導航系統 */
+    .tag-emerald { background-color: #ecfdf5; color: #065f46; border-color: #10b981; }
+    .tag-blue { background-color: #eff6ff; color: #1e40af; border-color: #3b82f6; }
+    .tag-purple { background-color: #f5f3ff; color: #5b21b6; border-color: #8b5cf6; }
+    .tag-amber { background-color: #fffbeb; color: #92400e; border-color: #f59e0b; }
+    .tag-rose { background-color: #fff1f2; color: #9f1239; border-color: #f43f5e; }
+    .tag-cyan { background-color: #ecfeff; color: #155e75; border-color: #06b6d4; }
+    .tag-neutral { background-color: #f9fafb; color: #374151; border-color: #d1d5db; }
   </style>
   <script>
     if('serviceWorker' in navigator){
@@ -78,12 +89,12 @@
       Check: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>,
       Clock: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
       Share: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
-      Settings: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>,
+      Settings: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>,
       X: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
       ChevronDown: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>,
       GripVertical: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="12" r="1.5"></circle><circle cx="9" cy="6" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>,
       Edit: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-      CheckCircle: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
+      CheckCircle: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"/></svg>,
       History: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0-5v5h5"/><polyline points="12 7 12 12 16 14"/></svg>,
       Info: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
       Smartphone: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
@@ -92,8 +103,22 @@
       Refresh: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
     };
 
-    const DEFAULT_TAGS = ['全聯', '其它'];
+    const DEFAULT_TAGS = ['全聯', '郵局', '菜市場', '其它'];
     const DEFAULT_QUICK = [{ n: '雞蛋', t: '全聯' }];
+
+    const getTagStyles = (tagName) => {
+      if (!tagName || tagName === '無' || tagName === '') return 'tag-neutral';
+      const colors = ['tag-emerald', 'tag-blue', 'tag-purple', 'tag-amber', 'tag-rose', 'tag-cyan'];
+      const name = tagName.trim();
+      if (name.includes('全聯')) return 'tag-blue';
+      if (name.includes('郵局') || name.includes('郵政')) return 'tag-emerald';
+      if (name.includes('市場')) return 'tag-purple';
+      if (name.includes('藥') || name.includes('所') || name.includes('醫院')) return 'tag-rose';
+      if (name.includes('好市多')) return 'tag-rose';
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      return colors[Math.abs(hash) % colors.length];
+    };
 
     const App = () => {
       const [user, setUser] = useState(null);
@@ -110,6 +135,7 @@
       const [roomPath, setRoomPath] = useState(() => localStorage.getItem('smart_buy_room') || '');
       const [modalState, setModalState] = useState({ type: null, data: null });
       const [msg, setMsg] = useState('');
+      const [isLoading, setIsLoading] = useState(true);
       const [expandedSection, setExpandedSection] = useState('');
       const [modalInput, setModalInput] = useState('');
       const [modalSelect, setModalSelect] = useState('');
@@ -137,9 +163,7 @@
         try {
           const parsed = JSON.parse(raw);
           return parsed.map(r => (typeof r === 'string' ? { code: r, note: '' } : r)).filter(r => r && r.code);
-        } catch (e) {
-          return [];
-        }
+        } catch (e) { return []; }
       });
       
       const getFriendlyName = (path) => {
@@ -164,19 +188,13 @@
         const params = new URLSearchParams(window.location.search);
         const urlRoom = params.get('room');
         const syncDataRaw = params.get('sync');
-
-        // 第一優先：處理跨機同步訊號
         if (syncDataRaw) {
           try {
             const decoded = JSON.parse(decodeURIComponent(atob(syncDataRaw)));
             setModalState({ type: 'syncDevice', data: decoded });
-          } catch (e) {
-            console.error("同步訊號解析失敗", e);
-          }
-          // 移除立即清除網址的設定，讓分享連結能順利跳轉到預設瀏覽器
-        } 
-        // 第二優先：處理一般分享的房間連結
-        else if (urlRoom) {
+          } catch (e) {}
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (urlRoom) {
           setRoomPath(urlRoom);
           localStorage.setItem('smart_buy_room', urlRoom);
           setSavedRooms(prev => {
@@ -185,9 +203,8 @@
             localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(next));
             return next;
           });
-          // 移除立即清除網址的設定，讓分享連結能順利跳轉到預設瀏覽器
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
-
         onAuthStateChanged(auth, u => {
           if (u) setUser(u);
           else signInAnonymously(auth).catch(console.error);
@@ -195,29 +212,24 @@
         localStorage.setItem('smart_buy_base_id', personalBaseId);
       }, [personalBaseId]);
       
-      // 新增火力：讓網址列永遠保持與目前的頻道同步（持續發射信標）
       useEffect(() => {
         const url = new URL(window.location);
-        if (roomPath) {
-          url.searchParams.set('room', roomPath);
-        } else {
-          url.searchParams.delete('room');
-        }
+        if (roomPath) url.searchParams.set('room', roomPath);
+        else url.searchParams.delete('room');
         window.history.replaceState({}, '', url);
       }, [roomPath]);
 
       useEffect(() => {
         if (!user) return;
+        setIsLoading(true);
         const prefix = roomPath ? `room_${roomPath}` : `user_${user.uid}`;
         const unsubItems = onSnapshot(query(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${prefix}`), orderBy('createdAt', 'desc')), snap => {
           setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-        });
+          setIsLoading(false);
+        }, (err) => setIsLoading(false));
         const unsubHist = onSnapshot(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `hist_${prefix}`), snap => {
           const h = {};
-          snap.docs.forEach(d => {
-            const data = d.data();
-            h[data.name] = data;
-          });
+          snap.docs.forEach(d => { const data = d.data(); h[data.name] = data; });
           setHistory(h);
         });
         const unsubConfig = onSnapshot(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `config_${prefix}`, 'settings'), snap => {
@@ -229,350 +241,148 @@
             setDoc(snap.ref, { tags: DEFAULT_TAGS, quick: DEFAULT_QUICK });
           }
         });
-        return () => {
-          unsubItems();
-          unsubHist();
-          unsubConfig();
-        };
+        return () => { unsubItems(); unsubHist(); unsubConfig(); };
       }, [user, roomPath]);
       
       const getConfigRef = () => doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `config_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`, 'settings');
       const getItemRef = (id) => doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`, id);
-      
       const handleAdd = async (e) => {
         if (e) e.preventDefault();
         if (!inputValue.trim() || !user) return;
         await addDoc(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`), { name: inputValue.trim(), qty: qtyValue.trim(), tag: activeTag || '', completed: false, postponed: false, createdAt: Date.now() });
-        setInputValue('');
-        setQtyValue('');
+        setInputValue(''); setQtyValue('');
       };
-      
-      const handleQuickSelect = (qa) => {
-        setInputValue(qa.n || qa.name || '');
-        setActiveTag(qa.t || qa.tag || '');
-      };
-      
-      const handleComplete = async (item) => {
-        await updateDoc(getItemRef(item.id), { completed: !item.completed, postponed: false });
-      };
-      
-      const handlePostpone = async (e, item) => {
-        e.stopPropagation();
-        await updateDoc(getItemRef(item.id), { postponed: !item.postponed, completed: false });
-      };
-      
+      const handleQuickSelect = (qa) => { setInputValue(qa.n || qa.name || ''); setActiveTag(qa.t || qa.tag || ''); };
+      const handleComplete = async (item) => { await updateDoc(getItemRef(item.id), { completed: !item.completed, postponed: false }); };
+      const handlePostpone = async (e, item) => { e.stopPropagation(); await updateDoc(getItemRef(item.id), { postponed: !item.postponed, completed: false }); };
       const savePrice = async (itemName, price, itemTag, itemId) => {
         const prefix = roomPath ? `room_${roomPath}` : `user_${user.uid}`;
         await setDoc(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `hist_${prefix}`, itemName), { name: itemName, price: price || '', tag: itemTag || '', updatedAt: Date.now() });
         if (itemId) await updateDoc(getItemRef(itemId), { currentPrice: price || '' });
       };
-      
       const handleAddNewTag = async (tagName, shouldClose = false) => {
-        const name = tagName.trim();
-        if (!name) return;
-        if (customTags.includes(name)) {
-          setMsg('地點已存在！');
-          setTimeout(() => setMsg(''), 1000);
-          return;
-        }
-        const next = [...customTags, name];
-        await setDoc(getConfigRef(), { tags: next }, { merge: true });
+        const name = tagName.trim(); if (!name) return;
+        if (customTags.includes(name)) { setMsg('地點已存在！'); setTimeout(() => setMsg(''), 1000); return; }
+        const next = [...customTags, name]; await setDoc(getConfigRef(), { tags: next }, { merge: true });
         if (shouldClose) setModalState({ type: null });
-        setMsg('地點新增成功');
-        setTimeout(() => setMsg(''), 1000);
+        setMsg('新增成功'); setTimeout(() => setMsg(''), 1000);
       };
-      
       const handleAddNewQuick = async (name, tag, shouldClose = false) => {
-        const qName = name.trim();
-        if (!qName) return;
+        const qName = name.trim(); if (!qName) return;
         const next = [...quickItems.map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' })), { n: qName, t: tag || '' }];
         await setDoc(getConfigRef(), { quick: next }, { merge: true });
         if (shouldClose) setModalState({ type: null });
-        setMsg('品項新增成功');
-        setTimeout(() => setMsg(''), 1000);
+        setMsg('新增成功'); setTimeout(() => setMsg(''), 1000);
       };
-      
-      const delTag = async (t) => {
-        const next = customTags.filter(tag => tag !== t);
-        await setDoc(getConfigRef(), { tags: next }, { merge: true });
-      };
-      
-      const delQuick = async (idx) => {
-        const next = quickItems.filter((_, i) => i !== idx).map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' }));
-        await setDoc(getConfigRef(), { quick: next }, { merge: true });
-      };
-      
+      const delTag = async (t) => { const next = customTags.filter(tag => tag !== t); await setDoc(getConfigRef(), { tags: next }, { merge: true }); };
+      const delQuick = async (idx) => { const next = quickItems.filter((_, i) => i !== idx).map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' })); await setDoc(getConfigRef(), { quick: next }, { merge: true }); };
       const handleTuneRoom = (friendlyInput, note = '') => {
-        const code = friendlyInput.trim();
-        if (!code) {
-          setRoomPath('');
-          localStorage.removeItem('smart_buy_room');
-          setModalState({ type: null });
-          return;
-        }
+        const code = friendlyInput.trim(); if (!code) { setRoomPath(''); localStorage.removeItem('smart_buy_room'); setModalState({ type: null }); return; }
         const finalPath = code.includes('-') ? code : `${personalBaseId}-${code}`;
-        setRoomPath(finalPath);
-        localStorage.setItem('smart_buy_room', finalPath);
+        setRoomPath(finalPath); localStorage.setItem('smart_buy_room', finalPath);
         const nextSaved = savedRooms.filter(r => r && r.code !== finalPath);
         const finalSaved = [{ code: finalPath, note: note || '' }, ...nextSaved];
-        setSavedRooms(finalSaved);
-        localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(finalSaved));
-        setModalState({ type: null });
-        setMsg(`頻道連線成功`);
-        setTimeout(() => setMsg(''), 1000);
+        setSavedRooms(finalSaved); localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(finalSaved));
+        setModalState({ type: null }); setMsg(`連線成功`); setTimeout(() => setMsg(''), 1000);
       };
-      
       const handleUpdateBaseId = (newVal) => {
-        const val = newVal.trim();
-        if (!val) return;
-        setPersonalBaseId(val);
-        setBaseIdEditValue(val);
-        localStorage.setItem('smart_buy_base_id', val);
-        setMsg('基地碼已固定');
-        setTimeout(() => setMsg(''), 1000);
+        const val = newVal.trim(); if (!val) return;
+        setPersonalBaseId(val); setBaseIdEditValue(val); localStorage.setItem('smart_buy_base_id', val);
+        setMsg('ID 已固定'); setTimeout(() => setMsg(''), 1000);
       };
-      
       const clearCompleted = async () => {
-        if (!user) return;
-        const toDelete = items.filter(i => i.completed);
-        for (const item of toDelete) {
-          await deleteDoc(getItemRef(item.id));
-        }
-        setMsg('已清除完成項目');
-        setTimeout(() => setMsg(''), 1000);
+        if (!user) return; const toDelete = items.filter(i => i.completed);
+        for (const item of toDelete) await deleteDoc(getItemRef(item.id));
+        setMsg('已清除完成項目'); setTimeout(() => setMsg(''), 1000);
       };
-      
       const copyAppUrl = async () => {
         const url = `${window.location.origin}${window.location.pathname}`;
-        if (navigator.share) {
-          try {
-            await navigator.share({ title: '智能採買', text: '這是我超愛用的智能採買 APP，推薦給你！', url: url });
-            return;
-          } catch (err) {
-            console.log('分享被取消或失敗', err);
-          }
-        }
-        const tempIn = document.createElement('input');
-        tempIn.value = url;
-        document.body.appendChild(tempIn);
-        tempIn.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempIn);
-        setMsg('APP 網址已複製！快去分享吧');
-        setTimeout(() => setMsg(''), 2000);
+        if (navigator.share) { try { await navigator.share({ title: '智能採買', text: '推薦給妳這個超好用的清單 APP！', url: url }); return; } catch (err) {} }
+        const tempIn = document.createElement('input'); tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
+        setMsg('網址已複製！'); setTimeout(() => setMsg(''), 2000);
       };
-      
       const copyShareLink = async () => {
         if (!roomPath) return;
         const url = `${window.location.origin}${window.location.pathname}?room=${roomPath}`;
-        if (navigator.share) {
-          try {
-            await navigator.share({ title: '智能採買 - 頻道分享', text: `點擊連結加入我的採買頻道，一起同步購物清單！`, url: url });
-            return;
-          } catch (err) {
-            console.log('分享被取消或失敗', err);
-          }
-        }
-        const tempIn = document.createElement('input');
-        tempIn.value = url;
-        document.body.appendChild(tempIn);
-        tempIn.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempIn);
-        setMsg('對頻網址已複製！');
-        setTimeout(() => setMsg(''), 2000);
+        if (navigator.share) { try { await navigator.share({ title: '智能採買 - 頻道分享', text: `點擊連結加入我的清單，一起同步！`, url: url }); return; } catch (err) {} }
+        const tempIn = document.createElement('input'); tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
+        setMsg('連結已複製！'); setTimeout(() => setMsg(''), 2000);
       };
-
-      // 產生專屬「本機跨裝置同步網址」
       const copySyncLink = async () => {
-        const syncData = {
-          base: personalBaseId,
-          rooms: savedRooms
-        };
+        const syncData = { base: personalBaseId, rooms: savedRooms };
         const encoded = btoa(encodeURIComponent(JSON.stringify(syncData)));
         const url = `${window.location.origin}${window.location.pathname}?sync=${encoded}`;
-
-        if (navigator.share) {
-          try {
-            await navigator.share({ title: '智能採買 - 裝備同步', text: '點擊此連結，將妳的基地 ID 與頻道紀錄同步到新手機！', url: url });
-            return;
-          } catch (err) {
-            console.log('分享被取消或失敗', err);
-          }
-        }
-        const tempIn = document.createElement('input');
-        tempIn.value = url;
-        document.body.appendChild(tempIn);
-        tempIn.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempIn);
-        setMsg('同步網址已複製！請傳到新手機開啟');
-        setTimeout(() => setMsg(''), 2000);
+        if (navigator.share) { try { await navigator.share({ title: '智能採買 - 裝備同步', text: '點擊此連結，將妳的 ID 與紀錄同步到新手機！', url: url }); return; } catch (err) {} }
+        const tempIn = document.createElement('input'); tempIn.value = url; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn);
+        setMsg('同步連結已複製！'); setTimeout(() => setMsg(''), 2000);
       };
-      
       const handleForceUpdate = () => {
-        setMsg('正在為你重整並載入最新裝備...');
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function (registrations) {
-            for (let registration of registrations) {
-              registration.unregister();
-            }
-          });
-        }
-        if ('caches' in window) {
-          caches.keys().then((keyList) => {
-            return Promise.all(keyList.map((key) => {
-              return caches.delete(key);
-            }));
-          });
-        }
-        setTimeout(() => {
-          window.location.reload(true);
-        }, 1500);
+        setMsg('正在重整載入最新版本...');
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(r => { for (let rg of r) rg.unregister(); }); }
+        setTimeout(() => { window.location.reload(true); }, 1500);
       };
-      
       const onTouchStartHTag = (e, idx) => {
-        touchStartTag.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        isScrollingTag.current = false;
-        dragDidHappenTag.current = false;
-        touchTimerTag.current = setTimeout(() => {
-          if (!isScrollingTag.current) {
-            setHDragIdx(idx);
-            setHDragType('tag');
-            dragDidHappenTag.current = true;
-            if (navigator.vibrate) navigator.vibrate(50);
-          }
-        }, 350);
+        touchStartTag.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; isScrollingTag.current = false; dragDidHappenTag.current = false;
+        touchTimerTag.current = setTimeout(() => { if (!isScrollingTag.current) { setHDragIdx(idx); setHDragType('tag'); dragDidHappenTag.current = true; if (navigator.vibrate) navigator.vibrate(50); } }, 350);
       };
-      
       const onTouchMoveHTag = (e) => {
-        const dx = Math.abs(e.touches[0].clientX - touchStartTag.current.x);
-        const dy = Math.abs(e.touches[0].clientY - touchStartTag.current.y);
-        if (hDragIdx === null || hDragType !== 'tag') {
-          if (dx > 10 || dy > 10) {
-            isScrollingTag.current = true;
-            clearTimeout(touchTimerTag.current);
-          }
-          return;
-        }
-        e.preventDefault();
-        const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-        const dropElem = target?.closest('[data-h-tag-index]');
-        if (dropElem) {
-          const overIdx = parseInt(dropElem.getAttribute('data-h-tag-index'), 10);
-          if (overIdx !== hDragOverIdx && overIdx !== hDragIdx) setHDragOverIdx(overIdx);
-        }
+        const dx = Math.abs(e.touches[0].clientX - touchStartTag.current.x); const dy = Math.abs(e.touches[0].clientY - touchStartTag.current.y);
+        if (hDragIdx === null || hDragType !== 'tag') { if (dx > 10 || dy > 10) { isScrollingTag.current = true; clearTimeout(touchTimerTag.current); } return; }
+        e.preventDefault(); const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY); const dropElem = target?.closest('[data-h-tag-index]');
+        if (dropElem) { const overIdx = parseInt(dropElem.getAttribute('data-h-tag-index'), 10); if (overIdx !== hDragOverIdx && overIdx !== hDragIdx) setHDragOverIdx(overIdx); }
       };
-      
       const onTouchEndHTag = async () => {
         clearTimeout(touchTimerTag.current);
         if (hDragIdx !== null && hDragType === 'tag') {
           if (hDragOverIdx !== null && hDragIdx !== hDragOverIdx) {
-            const next = [...customTags];
-            const [moved] = next.splice(hDragIdx, 1);
-            next.splice(hDragOverIdx, 0, moved);
-            setCustomTags(next);
-            await setDoc(getConfigRef(), { tags: next }, { merge: true });
+            const next = [...customTags]; const [moved] = next.splice(hDragIdx, 1); next.splice(hDragOverIdx, 0, moved);
+            setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
           }
-          setHDragIdx(null);
-          setHDragOverIdx(null);
-          setHDragType(null);
+          setHDragIdx(null); setHDragOverIdx(null); setHDragType(null);
         }
       };
-      
       const onTouchStartHQuick = (e, idx) => {
-        touchStartQuick.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        isScrollingQuick.current = false;
-        dragDidHappenQuick.current = false;
-        touchTimerQuick.current = setTimeout(() => {
-          if (!isScrollingQuick.current) {
-            setHDragIdx(idx);
-            setHDragType('quick');
-            dragDidHappenQuick.current = true;
-            if (navigator.vibrate) navigator.vibrate(50);
-          }
-        }, 350);
+        touchStartQuick.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; isScrollingQuick.current = false; dragDidHappenQuick.current = false;
+        touchTimerQuick.current = setTimeout(() => { if (!isScrollingQuick.current) { setHDragIdx(idx); setHDragType('quick'); dragDidHappenQuick.current = true; if (navigator.vibrate) navigator.vibrate(50); } }, 350);
       };
-      
       const onTouchMoveHQuick = (e) => {
-        const dx = Math.abs(e.touches[0].clientX - touchStartQuick.current.x);
-        const dy = Math.abs(e.touches[0].clientY - touchStartQuick.current.y);
-        if (hDragIdx === null || hDragType !== 'quick') {
-          if (dx > 10 || dy > 10) {
-            isScrollingQuick.current = true;
-            clearTimeout(touchTimerQuick.current);
-          }
-          return;
-        }
-        e.preventDefault();
-        const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-        const dropElem = target?.closest('[data-h-quick-index]');
-        if (dropElem) {
-          const overIdx = parseInt(dropElem.getAttribute('data-h-quick-index'), 10);
-          if (overIdx !== hDragOverIdx && overIdx !== hDragIdx) setHDragOverIdx(overIdx);
-        }
+        const dx = Math.abs(e.touches[0].clientX - touchStartQuick.current.x); const dy = Math.abs(e.touches[0].clientY - touchStartQuick.current.y);
+        if (hDragIdx === null || hDragType !== 'quick') { if (dx > 10 || dy > 10) { isScrollingQuick.current = true; clearTimeout(touchTimerQuick.current); } return; }
+        e.preventDefault(); const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY); const dropElem = target?.closest('[data-h-quick-index]');
+        if (dropElem) { const overIdx = parseInt(dropElem.getAttribute('data-h-quick-index'), 10); if (overIdx !== hDragOverIdx && overIdx !== hDragIdx) setHDragOverIdx(overIdx); }
       };
-      
       const onTouchEndHQuick = async () => {
         clearTimeout(touchTimerQuick.current);
         if (hDragIdx !== null && hDragType === 'quick') {
           if (hDragOverIdx !== null && hDragIdx !== hDragOverIdx) {
-            const next = [...quickItems];
-            const [moved] = next.splice(hDragIdx, 1);
-            next.splice(hDragOverIdx, 0, moved);
-            setQuickItems(next);
-            const serialized = next.map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' }));
-            await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
+            const next = [...quickItems]; const [moved] = next.splice(hDragIdx, 1); next.splice(hDragOverIdx, 0, moved);
+            setQuickItems(next); const serialized = next.map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' })); await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
           }
-          setHDragIdx(null);
-          setHDragOverIdx(null);
-          setHDragType(null);
+          setHDragIdx(null); setHDragOverIdx(null); setHDragType(null);
         }
       };
-      
-      const onVStart = (idx) => {
-        setVDragIdx(idx);
-        if (navigator.vibrate) navigator.vibrate(30);
-      };
-      
+      const onVStart = (idx) => { setVDragIdx(idx); if (navigator.vibrate) navigator.vibrate(30); };
       const onVMove = (e, attr) => {
-        if (vDragIdx === null) return;
-        e.preventDefault();
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropElem = target?.closest(`[${attr}]`);
-        if (dropElem) {
-          const hoverIdx = parseInt(dropElem.getAttribute(attr), 10);
-          if (hoverIdx !== vDragOverIdx) setVDragOverIdx(hoverIdx);
-        }
+        if (vDragIdx === null) return; e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const dropElem = target?.closest(`[${attr}]`);
+        if (dropElem) { const hoverIdx = parseInt(dropElem.getAttribute(attr), 10); if (hoverIdx !== vDragOverIdx) setVDragOverIdx(hoverIdx); }
       };
-      
       const onVEnd = async (type) => {
         if (vDragIdx !== null && vDragOverIdx !== null && vDragIdx !== vDragOverIdx) {
           if (type === 'tag') {
-            const next = [...customTags];
-            const [moved] = next.splice(vDragIdx, 1);
-            next.splice(vDragOverIdx, 0, moved);
-            setCustomTags(next);
-            await setDoc(getConfigRef(), { tags: next }, { merge: true });
+            const next = [...customTags]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
+            setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
           } else {
-            const next = [...quickItems];
-            const [moved] = next.splice(vDragIdx, 1);
-            next.splice(vDragOverIdx, 0, moved);
-            setQuickItems(next);
-            const serialized = next.map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' }));
-            await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
+            const next = [...quickItems]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
+            setQuickItems(next); const serialized = next.map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' })); await setDoc(getConfigRef(), { quick: serialized }, { merge: true });
           }
         }
-        setVDragIdx(null);
-        setVDragOverIdx(null);
+        setVDragIdx(null); setVDragOverIdx(null);
       };
       
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
         <div className="w-full h-full flex justify-center bg-neutral-100 font-sans text-neutral-800">
-          
           {msg && (
             <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-2xl z-[200] animate-slide-up whitespace-nowrap">
               {msg}
@@ -603,7 +413,7 @@
             <div className={`transition-all duration-300 origin-top overflow-hidden bg-emerald-50 shrink-0 shadow-sm ${isShoppingMode ? 'max-h-0 opacity-0' : 'max-h-[450px] opacity-100 border-b border-emerald-100'}`}>
               <div className="p-3 space-y-3">
                 <form onSubmit={handleAdd} className="flex gap-2 items-center">
-                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="例如：雞蛋" className="flex-1 min-w-0 p-3 rounded-xl border-none shadow-inner focus:ring-2 focus:ring-emerald-600 outline-none text-lg bg-white font-bold" />
+                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買什麼？" className="flex-1 min-w-0 p-3 rounded-xl border-none shadow-inner focus:ring-2 focus:ring-emerald-600 outline-none text-lg bg-white font-bold" />
                   <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-14 sm:w-16 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white font-bold" />
                   <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 shrink-0"><Icons.Plus /></button>
                 </form>
@@ -613,8 +423,7 @@
                   </div>
                   {quickItems.map((qa, i) => (
                     <button key={i} data-h-quick-index={i} onTouchStart={(e) => onTouchStartHQuick(e, i)} onTouchMove={onTouchMoveHQuick} onTouchEnd={onTouchEndHQuick} onTouchCancel={onTouchEndHQuick} onClick={(e) => {
-                      if (dragDidHappenQuick.current || isScrollingQuick.current) { e.preventDefault(); return; }
-                      handleQuickSelect(qa);
+                      if (dragDidHappenQuick.current || isScrollingQuick.current) { e.preventDefault(); return; } handleQuickSelect(qa);
                     }} className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm select-none ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-80 bg-amber-500 text-white z-50' : hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-amber-500' : 'bg-amber-50 border border-amber-200 text-amber-700 active:scale-95'}`}>
                       + {qa.n || qa.name}
                     </button>
@@ -627,8 +436,7 @@
                   </div>
                   {customTags.map((t, idx) => (
                     <button key={t} data-h-tag-index={idx} onTouchStart={(e) => onTouchStartHTag(e, idx)} onTouchMove={onTouchMoveHTag} onTouchEnd={onTouchEndHTag} onTouchCancel={onTouchEndHTag} onClick={(e) => {
-                      if (dragDidHappenTag.current || isScrollingTag.current) { e.preventDefault(); return; }
-                      setActiveTag(activeTag === t ? '' : t);
+                      if (dragDidHappenTag.current || isScrollingTag.current) { e.preventDefault(); return; } setActiveTag(activeTag === t ? '' : t);
                     }} className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all shadow-sm select-none ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-80 bg-emerald-500 text-white z-50' : hDragOverIdx === idx && hDragType === 'tag' ? 'border-2 border-dashed border-emerald-500' : activeTag === t ? 'bg-emerald-700 text-white scale-105' : 'bg-white text-emerald-700 border border-emerald-200 active:scale-95'}`}>
                       {t}
                     </button>
@@ -639,7 +447,7 @@
             </div>
 
             <button onClick={() => setIsShoppingMode(!isShoppingMode)} className={`shrink-0 w-full py-3 flex items-center justify-center gap-2 text-sm font-bold border-b transition-colors ${isShoppingMode ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-neutral-50 text-neutral-500'}`}>
-              {isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開備戰區</> : <><Icons.Cart size={18} /> 🛒 收起並開始採買</>}
+              {isShoppingMode ? <><Icons.ChevronDown size={18} /> ➕ 展開新增清單</> : <><Icons.Cart size={18} /> 🛒 收起並開始採買</>}
             </button>
 
             {dynamicFilterTags.length > 1 && (
@@ -652,63 +460,70 @@
               </div>
             )}
 
-            <main className="p-3 space-y-3 bg-neutral-50/50 flex-1 overflow-y-auto pb-24">
+            <main className="p-2 space-y-2 bg-neutral-50/50 flex-1 overflow-y-auto pb-24 relative">
+              {isLoading && (
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[1px] animate-pulse-slow">
+                  <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+                  <p className="text-emerald-700 font-bold text-sm tracking-widest">正在讀取資料...</p>
+                </div>
+              )}
+              
               {filteredItems.map(item => (
-                <div key={item.id} className={`flex items-start gap-3 p-3 rounded-2xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white border-emerald-100 shadow-sm'}`}>
+                <div key={item.id} className={`flex items-start gap-2.5 p-2 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50/50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'} ${!item.completed && !item.postponed ? getTagStyles(item.tag) : ''}`} style={{ borderLeftWidth: '6px' }}>
                   <div className="flex flex-col items-center gap-2 shrink-0 mt-0.5">
-                    <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>
-                      {item.completed && <Icons.Check size={18} />}
+                    <div onClick={() => handleComplete(item)} className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>
+                      {item.completed && <Icons.Check size={16} />}
                     </div>
                     {!item.completed && (
-                      <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50'}`}>
-                        <Icons.Clock size={18} />
+                      <button onClick={(e) => handlePostpone(e, item)} className={`p-1 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50'}`}>
+                        <Icons.Clock size={16} />
                       </button>
                     )}
                   </div>
-                  <div className="flex flex-col min-w-0 flex-1 gap-2 w-full py-0.5">
-                    <div className="flex items-center justify-between gap-2 w-full">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span onClick={() => handleComplete(item)} className={`text-lg font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>
+                  <div className="flex flex-col min-w-0 flex-1 gap-1 w-full py-0.5">
+                    <div className="flex items-center justify-between gap-1 w-full">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span onClick={() => handleComplete(item)} className={`text-base font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>
                           {item.name}
                         </span>
                         {item.qty ? (
-                          <button onClick={(e) => { e.stopPropagation(); setModalInput(item.qty); setModalState({ type: 'editQty', data: item }); }} disabled={item.completed} className={`text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 ${item.completed ? 'text-neutral-400' : 'bg-neutral-100 text-neutral-600 shadow-sm'}`}>
+                          <button onClick={(e) => { e.stopPropagation(); setModalInput(item.qty); setModalState({ type: 'editQty', data: item }); }} disabled={item.completed} className={`text-xs px-1.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 ${item.completed ? 'text-neutral-400' : 'bg-white/50 text-neutral-600 shadow-sm border border-black/5'}`}>
                             {item.qty}
                           </button>
                         ) : (!item.completed && (
-                          <button onClick={(e) => { e.stopPropagation(); setModalInput(''); setModalState({ type: 'editQty', data: item }); }} className="text-[10px] px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap active:scale-90">
-                            +數量
+                          <button onClick={(e) => { e.stopPropagation(); setModalInput(''); setModalState({ type: 'editQty', data: item }); }} className="text-xs px-1.5 py-0.5 rounded border border-dashed border-neutral-300 text-neutral-400 font-bold whitespace-nowrap active:scale-90">
+                            +量
                           </button>
                         ))}
                       </div>
                       {!item.completed && (
-                        <button onClick={(e) => { e.stopPropagation(); setModalInput(item.currentPrice || ''); setModalState({ type: 'recordingPrice', data: item }); }} className={`px-2.5 py-1 rounded-lg text-xs font-bold active:scale-90 shrink-0 whitespace-nowrap shadow-sm ${item.currentPrice ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700'}`}>
-                          {item.currentPrice ? `現價 $${item.currentPrice}` : '記 $'}
+                        <button onClick={(e) => { e.stopPropagation(); setModalInput(item.currentPrice || ''); setModalState({ type: 'recordingPrice', data: item }); }} className={`px-2 py-0.5 rounded-lg text-xs font-bold active:scale-90 shrink-0 whitespace-nowrap shadow-sm ${item.currentPrice ? 'bg-white text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700'}`}>
+                          {item.currentPrice ? `$${item.currentPrice}` : '記 $'}
                         </button>
                       )}
                     </div>
-                    <div className="flex items-center justify-between gap-2 mt-1 w-full">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-[10px] px-2 py-0.5 rounded font-bold active:scale-95 transition-transform flex items-center gap-1 ${item.completed ? 'bg-neutral-200 text-neutral-400' : item.tag && item.tag !== '無' ? 'bg-[#e6f4ea] text-[#1e8e3e] border border-emerald-100' : 'bg-neutral-100 text-neutral-400 border border-dashed border-neutral-300'}`}>
+                    <div className="flex items-center justify-between gap-1 w-full">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : 'bg-white/80 border-black/5 shadow-inner shadow-black/5'}`}>
                           {item.tag && item.tag !== '無' ? item.tag : '+地點'}
                         </button>
                         {history[item.name] && !item.completed && (
-                          <span className="text-[10px] text-amber-600 font-bold truncate text-right whitespace-nowrap">
-                            上次買：${history[item.name].price} ({history[item.name].tag || '無'})
+                          <span className="text-xs text-amber-600 font-bold truncate text-right whitespace-nowrap opacity-80">
+                            上次：${history[item.name].price} ({history[item.name].tag || '無'})
                           </span>
                         )}
                       </div>
-                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-1.5 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0">
-                        <Icons.Trash size={18} />
+                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-1 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0">
+                        <Icons.Trash size={16} />
                       </button>
                     </div>
                   </div>
                 </div>
               ))}
               {items.some(i => i.completed) && (
-                <div className="pt-6 flex justify-center w-full">
-                  <button onClick={clearCompleted} className="flex items-center gap-1.5 px-6 py-3 text-red-500 bg-white border border-red-100 rounded-full font-bold active:scale-95 shadow-sm text-sm">
-                    <Icons.Trash size={18} /> 清除畫面中已買
+                <div className="pt-4 flex justify-center w-full">
+                  <button onClick={clearCompleted} className="flex items-center gap-1.5 px-6 py-2.5 text-red-500 bg-white border border-red-100 rounded-full font-bold active:scale-95 shadow-sm text-sm">
+                    <Icons.Trash size={16} /> 清除已買項目
                   </button>
                 </div>
               )}
@@ -719,79 +534,31 @@
                 <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-6 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-2 shrink-0">
                     <h3 className="text-lg font-bold text-emerald-700 font-serif-tc">
-                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '通訊頻道管理' : modalState.type === 'about' ? '關於與設定' : modalState.type === 'donate' ? '請朵朵喝咖啡' : modalState.type === 'addTag' || modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'syncDevice' ? '裝備跨機同步' : '品項設定中心'}
+                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'about' ? '關於與使用說明' : modalState.type === 'donate' ? '請朵朵喝咖啡' : modalState.type === 'addTag' || modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'syncDevice' ? '裝備跨機同步' : '品項設定中心'}
                     </h3>
                     <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-1 hover:bg-neutral-100 rounded-full transition-colors">
                       <Icons.X />
                     </button>
                   </div>
-                  {/* 內部留出 pb-24 滑動空間，讓最下方的按鈕能完全浮上來 */}
                   <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-24">
-                    
-                    {/* ====== 新增裝備：跨機同步確認面板 ====== */}
                     {modalState.type === 'syncDevice' && modalState.data && (
                       <div className="space-y-4 py-2 text-center">
                         <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100">
-                          <p className="text-base text-blue-800 font-bold mb-3 flex items-center justify-center gap-2">
-                            <Icons.Smartphone size={20} /> 接收到裝備同步訊號！
-                          </p>
-                          <p className="text-sm text-blue-600 mb-5 leading-relaxed text-left">
-                            系統將會把這支手機的基地 ID 變更為：<br/>
-                            <span className="inline-block mt-2 font-mono text-lg tracking-wider text-blue-900 bg-white px-3 py-1.5 rounded-lg shadow-sm font-bold border border-blue-200">{modalState.data.base}</span>
-                            <br/><br/>
-                            並且自動為您匯入 <strong className="text-xl mx-1">{modalState.data.rooms?.length || 0}</strong> 個歷史頻道紀錄。
-                          </p>
+                          <p className="text-base text-blue-800 font-bold mb-3 flex items-center justify-center gap-2"><Icons.Smartphone size={20} /> 接收到同步邀請！</p>
+                          <p className="text-sm text-blue-600 mb-5 leading-relaxed text-left">系統將會把這支手機的個人 ID 變更為：<br/><span className="inline-block mt-2 font-mono text-lg tracking-wider text-blue-900 bg-white px-3 py-1.5 rounded-lg shadow-sm font-bold border border-blue-200">{modalState.data.base}</span><br/><br/>並且自動為您匯入 <strong className="text-xl mx-1">{modalState.data.rooms?.length || 0}</strong> 個歷史頻道紀錄。</p>
                           <div className="flex gap-2 mt-6">
-                            <button onClick={() => {
-                                setModalState({ type: null });
-                                setMsg('已取消同步');
-                                setTimeout(() => setMsg(''), 1000);
-                            }} className="flex-1 bg-white text-blue-500 py-3 rounded-xl font-bold border border-blue-200 active:scale-95 shadow-sm transition-transform">
-                              取消
-                            </button>
-                            <button onClick={() => {
-                                const { base, rooms } = modalState.data;
-                                if (base) {
-                                    setPersonalBaseId(base);
-                                    setBaseIdEditValue(base);
-                                    localStorage.setItem('smart_buy_base_id', base);
-                                }
-                                if (rooms && Array.isArray(rooms)) {
-                                    let merged = [...savedRooms];
-                                    rooms.forEach(r => {
-                                        if (!merged.some(m => m.code === r.code)) {
-                                            merged.push(r);
-                                        }
-                                    });
-                                    setSavedRooms(merged);
-                                    localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(merged));
-                                }
-                                setModalState({ type: null });
-                                setMsg('裝備同步成功！');
-                                setTimeout(() => setMsg(''), 2000);
-                                
-                                // 同步完成後，清除網址列的 sync 參數，恢復乾淨狀態
-                                const url = new URL(window.location);
-                                url.searchParams.delete('sync');
-                                window.history.replaceState({}, '', url);
-                            }} className="flex-[2] bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">
-                              確認同步
-                            </button>
+                            <button onClick={() => { setModalState({ type: null }); setMsg('已取消同步'); setTimeout(() => setMsg(''), 1000); }} className="flex-1 bg-white text-blue-500 py-3 rounded-xl font-bold border border-blue-200 active:scale-95 shadow-sm transition-transform">取消</button>
+                            <button onClick={() => { const { base, rooms } = modalState.data; if (base) { setPersonalBaseId(base); setBaseIdEditValue(base); localStorage.setItem('smart_buy_base_id', base); } if (rooms && Array.isArray(rooms)) { let merged = [...savedRooms]; rooms.forEach(r => { if (!merged.some(m => m.code === r.code)) merged.push(r); }); setSavedRooms(merged); localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(merged)); } setModalState({ type: null }); setMsg('同步成功！'); setTimeout(() => setMsg(''), 2000); const url = new URL(window.location); url.searchParams.delete('sync'); window.history.replaceState({}, '', url); }} className="flex-[2] bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">確認同步</button>
                           </div>
                         </div>
                       </div>
                     )}
-
-                    {/* ====== 找回的裝備 1：單點新增標籤 ====== */}
                     {modalState.type === 'addTag' && (
                       <div className="space-y-4 py-2">
-                        {/* 拆除 autoFocus 避免蘋果系統強制彈出鍵盤撞到動態島 */}
                         <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" />
                         <button onClick={() => handleAddNewTag(modalInput, true)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">確認新增</button>
                       </div>
                     )}
-
-                    {/* ====== 找回的裝備 2：單點新增快速品項 ====== */}
                     {modalState.type === 'addQuick' && (
                       <div className="space-y-4 py-2">
                         <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入品項名稱 (如: 衛生紙)..." className="w-full p-4 rounded-xl border-2 border-amber-100 outline-none text-xl font-bold text-center" />
@@ -802,137 +569,57 @@
                         <button onClick={() => handleAddNewQuick(modalInput, modalSelect, true)} className="w-full bg-amber-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">確認新增</button>
                       </div>
                     )}
-
-                    {/* ====== 找回的裝備 3：修改數量 ====== */}
                     {modalState.type === 'editQty' && modalState.data && (
                       <div className="space-y-4 py-2">
-                        <div className="text-center mb-1">
-                          <span className="text-base font-bold text-emerald-800 bg-emerald-100 px-4 py-1.5 rounded-full tracking-wide shadow-sm">
-                            📝 {modalState.data.name}
-                          </span>
-                        </div>
+                        <div className="text-center mb-1"><span className="text-base font-bold text-emerald-800 bg-emerald-100 px-4 py-1.5 rounded-full tracking-wide shadow-sm">📝 {modalState.data.name}</span></div>
                         <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入數量與單位..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" />
                         <div className="flex gap-2">
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: '' }); setModalState({ type: null }); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold active:scale-95 transition-transform">
-                            清除
-                          </button>
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: modalInput }); setModalState({ type: null }); }} className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">
-                            確定更新
-                          </button>
+                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: '' }); setModalState({ type: null }); }} className="flex-1 bg-neutral-100 text-neutral-500 py-3 rounded-xl font-bold active:scale-95 transition-transform">清除</button>
+                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { qty: modalInput }); setModalState({ type: null }); }} className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">確定更新</button>
                         </div>
                       </div>
                     )}
-
-                    {/* ====== 找回的裝備 4：紀錄現價 ====== */}
                     {modalState.type === 'recordingPrice' && modalState.data && (
                       <div className="space-y-4 py-2">
-                        <div className="text-center mb-1">
-                          <span className="text-base font-bold text-amber-900 bg-[#FFDD00] px-4 py-1.5 rounded-full tracking-wide shadow-sm">
-                            💰 {modalState.data.name}
-                          </span>
-                        </div>
-                        <div className="text-xs text-amber-600 font-bold bg-amber-50 p-2 rounded-lg italic text-center">
-                          {history[modalState.data.name] ? `上次買：$${history[modalState.data.name].price}` : '目前尚無比價紀錄'}
-                        </div>
+                        <div className="text-center mb-1"><span className="text-base font-bold text-amber-900 bg-[#FFDD00] px-4 py-1.5 rounded-full tracking-wide shadow-sm">💰 {modalState.data.name}</span></div>
+                        <div className="text-xs text-amber-600 font-bold bg-amber-50 p-2 rounded-lg italic text-center">{history[modalState.data.name] ? `上次買：$${history[modalState.data.name].price}` : '目前尚無紀錄'}</div>
                         <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入購買金額..." className="w-full p-4 rounded-xl border-2 border-emerald-100 outline-none text-xl font-bold text-center" />
-                        <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">
-                          確定紀錄
-                        </button>
+                        <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition-transform">確定紀錄</button>
                       </div>
                     )}
-
                     {modalState.type === 'about' && (
                       <div className="space-y-4 py-2">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative">
                           <h4 className="font-bold text-emerald-800 text-lg tracking-widest font-serif-tc">智能採買</h4>
-                          <p className="text-xs text-emerald-600 mt-1 font-bold">版本 v1.0.0 (旗艦版)</p>
+                          <p className="text-xs text-emerald-600 mt-1 font-bold">版本 v1.0.3 (佩蓉溫馨版)</p>
                           <p className="text-[10px] text-emerald-500/70 mt-2 font-bold">Developed with ❤️ by 朵朵</p>
-                          <button onClick={handleForceUpdate} className="mt-4 bg-emerald-200/50 hover:bg-emerald-200 text-emerald-700 text-[10px] px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto active:scale-95 transition-all border border-emerald-300/50">
-                            <Icons.Refresh size={12} /> 檢查並載入新版本
-                          </button>
+                          <button onClick={handleForceUpdate} className="mt-4 bg-emerald-200/50 hover:bg-emerald-200 text-emerald-700 text-[10px] px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto active:scale-95 transition-all border border-emerald-300/50"><Icons.Refresh size={12} /> 檢查並載入新版本</button>
                         </div>
-                        <button onClick={copyAppUrl} className="w-full bg-white border-2 border-emerald-500 text-emerald-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">
-                          <Icons.Share size={18} /> 分享此 APP
-                        </button>
+                        <button onClick={copyAppUrl} className="w-full bg-white border-2 border-emerald-500 text-emerald-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm">分享此 APP</button>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden">
-                          <button onClick={() => setExpandedSection(expandedSection === 'install' ? '' : 'install')} className="w-full px-4 py-3 flex justify-between items-center font-bold text-neutral-700 active:bg-neutral-50">
-                            <span className="flex items-center gap-2"><Icons.Smartphone size={18} className="text-blue-500" /> 加入手機主畫面</span>
-                            <Icons.ChevronDown size={16} className={`transition-transform ${expandedSection === 'install' ? 'rotate-180' : ''}`} />
-                          </button>
-                          {expandedSection === 'install' && (
-                            <div className="px-4 pb-4 pt-2 text-sm text-neutral-600 space-y-3 border-t border-neutral-50 bg-neutral-50/30">
-                              <p className="leading-relaxed"><strong>🍎 Apple (iOS)：</strong><br />1. 用 Safari 瀏覽器打開本網頁。<br />2. 點擊下方工具列的「分享 📤」按鈕。<br />3. 選擇「加入主畫面 ➕」。</p>
-                              <div className="w-full h-px bg-neutral-200"></div>
-                              <p className="leading-relaxed"><strong>🤖 Android (安卓)：</strong><br />1. 用 Chrome 瀏覽器打開本網頁。<br />2. 點擊右上角的「選單 ⋮」。<br />3. 選擇「加到主畫面」或「安裝應用程式」。</p>
-                            </div>
-                          )}
+                          <button onClick={() => setExpandedSection(expandedSection === 'install' ? '' : 'install')} className="w-full px-4 py-3 flex justify-between items-center font-bold text-neutral-700 active:bg-neutral-50"><span className="flex items-center gap-2"><Icons.Smartphone size={18} className="text-blue-500" /> 加入手機主畫面</span><Icons.ChevronDown size={16} className={`transition-transform ${expandedSection === 'install' ? 'rotate-180' : ''}`} /></button>
+                          {expandedSection === 'install' && ( <div className="px-4 pb-4 pt-2 text-sm text-neutral-600 space-y-3 border-t border-neutral-50 bg-neutral-50/30"><p className="leading-relaxed"><strong>🍎 Apple (iOS)：</strong><br />1. 用 Safari 瀏覽器打開本網頁。<br />2. 點擊下方工具列的「分享 📤」按鈕。<br />3. 選擇「加入主畫面 ➕」。</p><div className="w-full h-px bg-neutral-200"></div><p className="leading-relaxed"><strong>🤖 Android (安卓)：</strong><br />1. 用 Chrome 瀏覽器打開本網頁。<br />2. 點擊右上角的「選單 ⋮」。<br />3. 選擇「加到主畫面」或「安裝應用程式」。</p></div> )}
                         </div>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden">
-                          <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-4 py-3 flex justify-between items-center font-bold text-neutral-700 active:bg-neutral-50">
-                            <span className="flex items-center gap-2"><Icons.BookOpen size={18} className="text-amber-500" /> 使用說明書</span>
-                            <Icons.ChevronDown size={16} className={`transition-transform ${expandedSection === 'manual' ? 'rotate-180' : ''}`} />
-                          </button>
-                          {expandedSection === 'manual' && (
-                            <div className="px-4 pb-4 pt-2 text-sm text-neutral-600 space-y-4 border-t border-neutral-50 bg-neutral-50/30 leading-relaxed">
-                              <div>
-                                <p className="font-bold text-emerald-700 mb-1 flex items-center gap-1">🛒 基礎採買操作</p>
-                                <p>上方輸入框打字，按「+」或鍵盤的 Enter 即可新增。點擊清單項目可打勾完成；點擊「時鐘」可延後下次再買。</p>
-                              </div>
-                              <div className="w-full h-px bg-neutral-200/60"></div>
-                              <div>
-                                <p className="font-bold text-emerald-700 mb-1 flex items-center gap-1">🪪 基地 ID (你的專屬門號)</p>
-                                <p>進入「頻道設定」，會看到一組英文亂碼，這是系統發給你的臨時身分。<strong>強烈建議點擊修改，改成你好記的專屬代碼(如 family 01)！</strong></p>
-                                <p className="text-xs text-neutral-500 mt-1.5 bg-neutral-100 p-2 rounded-lg">💡 <strong>防走失好處：</strong>未來換手機或不小心清除網頁紀錄時，只要把 ID 改回 family 01，你所有的頻道、標籤、清單就會瞬間「連線回歸」，資料絕對安全！</p>
-                              </div>
-                            </div>
-                          )}
+                          <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-4 py-3 flex justify-between items-center font-bold text-neutral-700 active:bg-neutral-50"><span className="flex items-center gap-2"><Icons.BookOpen size={18} className="text-amber-500" /> 使用說明書</span><Icons.ChevronDown size={16} className={`transition-transform ${expandedSection === 'manual' ? 'rotate-180' : ''}`} /></button>
+                          {expandedSection === 'manual' && ( <div className="px-4 pb-4 pt-2 text-sm text-neutral-600 space-y-4 border-t border-neutral-50 bg-neutral-50/30 leading-relaxed"><div><p className="font-bold text-emerald-700 mb-1">🛒 基礎操作</p><p>上方輸入框打字，按「+」或鍵盤的 Enter 即可新增。點擊清單項目可打勾完成；點擊「時鐘」可延後下次再買。</p></div><div className="w-full h-px bg-neutral-200/60"></div><div><p className="font-bold text-emerald-700 mb-1">🪪 個人專屬 ID</p><p>進入「頻道設定」，會看到一組英文亂碼，這是您的專屬身分。<strong>建議點擊修改，改成妳好記的代碼(如 family 01)！</strong></p><p className="text-xs text-neutral-500 mt-1.5 bg-neutral-100 p-2 rounded-lg">💡 未來換手機時，只要把 ID 改回同一個，資料就會自動連線回來喔！</p></div></div> )}
                         </div>
-
-                        {/* 留言板 */}
-                        <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm mt-4">
-                          💬 想跟朵朵說些什麼？
-                        </button>
-
-                        <button onClick={() => { setModalState({ type: 'donate' }); }} className="w-full bg-[#FFDD00] text-amber-900 py-2.5 px-4 rounded-xl active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm mt-4 mb-2">
-                          <div className="flex items-center gap-2 font-bold text-base">
-                            <Icons.Coffee size={18} /><span>喜歡這 APP 嗎？</span>
-                          </div>
-                          <span className="text-sm font-bold opacity-80">歡迎請我喝杯咖啡</span>
-                        </button>
+                        <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-sm mt-4">💬 想跟朵朵說些什麼？</button>
+                        <button onClick={() => { setModalState({ type: 'donate' }); }} className="w-full bg-[#FFDD00] text-amber-900 py-2.5 px-4 rounded-xl active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm mt-4 mb-2"><div className="flex items-center gap-2 font-bold text-base"><Icons.Coffee size={18} /><span>喜歡這 APP 嗎？</span></div><span className="text-sm font-bold opacity-80">歡迎請我喝杯咖啡</span></button>
                       </div>
                     )}
                     {modalState.type === 'donate' && (
                       <div className="space-y-4 py-2 text-center">
                         <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                          <p className="text-sm text-amber-800 font-bold mb-2 leading-relaxed">
-                            謝謝你的心意！能幫上忙是我最大的榮幸 🥰<br />
-                          </p>
-                          <div className="inline-block bg-amber-500 text-white text-xs px-3 py-1 rounded-full font-bold mb-2 shadow-sm">
-                            ☕ 一杯咖啡 $50(杯數隨喜)
-                          </div>
-                          <p className="text-[10px] text-amber-600 font-bold mb-3">
-                            支援各家銀行 APP、全支付、街口等掃碼
-                          </p>
-                          <div className="bg-white p-2 rounded-xl shadow-sm inline-block border border-amber-200">
-                            {/* 把檔名改成 donate-qr-v2.jpg，強制瀏覽器放棄快取 */}
-                            <img src="donate-qr-v2.jpg" alt="贊助條碼" className="w-36 h-36 object-contain rounded-lg" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x200?text=Donate+QR'; }} />
-                          </div>
+                          <p className="text-sm text-amber-800 font-bold mb-2 leading-relaxed">謝謝妳的心意！ 🥰<br /></p>
+                          <div className="inline-block bg-amber-500 text-white text-xs px-3 py-1 rounded-full font-bold mb-2 shadow-sm">☕ 一杯咖啡 $50(杯數隨喜)</div>
+                          <p className="text-[10px] text-amber-600 font-bold mb-3">支援各家銀行 APP、全支付、街口等掃碼</p>
+                          <div className="bg-white p-2 rounded-xl shadow-sm inline-block border border-amber-200"><img src="donate-qr-v2.jpg" alt="贊助條碼" className="w-36 h-36 object-contain rounded-lg" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/200x200?text=Donate+QR'; }} /></div>
                         </div>
                         <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-100 space-y-2">
-                          <p className="text-xs font-bold text-neutral-500">手機不便掃碼？也可複製帳號轉帳</p>
+                          <p className="text-xs font-bold text-neutral-500">也可複製帳號轉帳</p>
                           <p className="text-sm font-bold text-neutral-700 tracking-wider">永豐銀行 (807)<br />204-018-0025253-1</p>
-                          <button onClick={() => {
-                            const temp = document.createElement('input');
-                            temp.value = '20401800252531';
-                            document.body.appendChild(temp);
-                            temp.select();
-                            document.execCommand('copy');
-                            document.body.removeChild(temp);
-                            setMsg('帳號已複製！');
-                            setTimeout(() => setMsg(''), 2000);
-                          }} className="w-full mt-2 bg-white border border-neutral-200 text-neutral-600 py-3 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1 mb-2">
-                            📋 一鍵複製帳號
-                          </button>
+                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full mt-2 bg-white border border-neutral-200 text-neutral-600 py-3 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1 mb-2">📋 一鍵複製帳號</button>
                         </div>
                       </div>
                     )}
@@ -940,95 +627,33 @@
                       <div className="space-y-6 py-2">
                         {roomPath && (
                           <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
-                            <p className="text-xs text-amber-700 font-bold mb-2">📍 目前所在頻道 (跨區複製專用)</p>
-                            <div className="flex items-center justify-between bg-white p-2 rounded-xl border border-amber-100 shadow-sm">
-                              <span className="font-mono font-bold text-amber-900 break-all text-sm pl-2">{roomPath}</span>
-                              <button onClick={() => {
-                                const temp = document.createElement('input');
-                                temp.value = roomPath;
-                                document.body.appendChild(temp);
-                                temp.select();
-                                document.execCommand('copy');
-                                document.body.removeChild(temp);
-                                setMsg('頻道代號已複製！');
-                                setTimeout(() => setMsg(''), 2000);
-                              }} className="ml-2 shrink-0 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-transform">
-                                複製
-                              </button>
-                            </div>
-                            <p className="text-[10px] text-amber-600 mt-2 leading-relaxed">💡 iOS 系統限制外部啟動，請複製此完整代號，回到您的桌面 APP 貼上對頻即可。</p>
+                            <p className="text-xs text-amber-700 font-bold mb-2">📍 目前所在頻道 (複製代號專用)</p>
+                            <div className="flex items-center justify-between bg-white p-2 rounded-xl border border-amber-100 shadow-sm"><span className="font-mono font-bold text-amber-900 break-all text-sm pl-2">{roomPath}</span><button onClick={() => { const temp = document.createElement('input'); temp.value = roomPath; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="ml-2 shrink-0 bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-transform">複製</button></div>
+                            <p className="text-[10px] text-amber-600 mt-2 leading-relaxed">💡 iOS 系統限制，請複製此代號，回到桌面的 APP 貼上即可。</p>
                           </div>
                         )}
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
-                          <div className="flex justify-between items-center mb-1">
-                            <p className="text-xs text-emerald-700 font-bold tracking-tight">基地識別碼 (我的ID)</p>
-                            <button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-500 flex items-center gap-1 text-[10px] bg-white px-2 py-0.5 rounded shadow-sm font-bold active:scale-95">
-                              <Icons.Edit size={10} />修改
-                            </button>
-                          </div>
+                          <div className="flex justify-between items-center mb-1"><p className="text-xs text-emerald-700 font-bold tracking-tight">個人專屬 ID</p><button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-500 flex items-center gap-1 text-[10px] bg-white px-2 py-0.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={10} />修改</button></div>
                           {isEditingBaseId ? (
-                            <div className="flex flex-col gap-2 mt-2">
-                              <input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-200 outline-none font-bold text-center tracking-widest text-emerald-800" />
-                              <button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl shadow-md active:scale-95 flex items-center justify-center gap-1 text-sm font-bold">
-                                <Icons.CheckCircle size={16} /> 確定修改並鎖定
-                              </button>
-                            </div>
+                            <div className="flex flex-col gap-2 mt-2"><input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-200 outline-none font-bold text-center tracking-widest text-emerald-800" /><button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl shadow-md active:scale-95 flex items-center justify-center gap-1 text-sm font-bold"><Icons.CheckCircle size={16} /> 確定修改並鎖定</button></div>
                           ) : (
-                            <>
-                              <p className="text-xl font-bold tracking-[0.2em] text-emerald-800 break-all">{personalBaseId}</p>
-                              {/* 新增的跨機同步產出按鈕 */}
-                              <button onClick={copySyncLink} className="w-full mt-3 bg-white border border-emerald-200 text-emerald-600 py-2 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1 hover:bg-emerald-50">
-                                <Icons.Smartphone size={14} /> 產出本機同步網址 (換機/多機用)
-                              </button>
-                            </>
+                            <><p className="text-xl font-bold tracking-[0.2em] text-emerald-800 break-all">{personalBaseId}</p><button onClick={copySyncLink} className="w-full mt-3 bg-white border border-emerald-200 text-emerald-600 py-2 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex justify-center items-center gap-1 hover:bg-emerald-50">產出同步連結 (換機用)</button></>
                           )}
                         </div>
                         {savedRooms.length > 0 && (
                           <div>
-                            <h3 className="text-xs font-bold text-neutral-500 mb-3 flex items-center gap-1.5">
-                              <Icons.History size={14} /> 歷史通訊頻道
-                            </h3>
-                            <div className="space-y-2">
-                              {savedRooms.map((room, idx) => (
-                                <div key={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex justify-between items-center p-3 rounded-xl border cursor-pointer transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-300 shadow-sm' : 'bg-white border-neutral-200'}`}>
-                                  <div className="flex flex-col">
-                                    <span className={`font-bold ${roomPath === room.code ? 'text-amber-700' : 'text-neutral-700'}`}>{room.note || '未命名'}</span>
-                                    <span className="text-[10px] text-neutral-400 font-mono italic">{room.code}</span>
-                                  </div>
-                                  <button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(n)); if (roomPath === room.code) { setRoomPath(''); localStorage.removeItem('smart_buy_room'); } }} className="p-3 text-neutral-300 hover:text-red-500 active:scale-75 bg-neutral-50 rounded-xl border border-neutral-100">
-                                    <Icons.Trash size={18} />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
+                            <h3 className="text-xs font-bold text-neutral-500 mb-3 flex items-center gap-1.5"><Icons.History size={14} /> 歷史頻道</h3>
+                            <div className="space-y-2">{savedRooms.map((room, idx) => ( <div key={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex justify-between items-center p-3 rounded-xl border cursor-pointer transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-300 shadow-sm' : 'bg-white border-neutral-200'}`}><div className="flex flex-col"><span className={`font-bold ${roomPath === room.code ? 'text-amber-700' : 'text-neutral-700'}`}>{room.note || '未命名'}</span><span className="text-[10px] text-neutral-400 font-mono italic">{room.code}</span></div><button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(n)); if (roomPath === room.code) { setRoomPath(''); localStorage.removeItem('smart_buy_room'); } }} className="p-3 text-neutral-300 hover:text-red-500 active:scale-75 bg-neutral-50 rounded-xl border border-neutral-100"><Icons.Trash size={18} /></button></div> ))}</div>
                           </div>
                         )}
                         <div className="pt-4 border-t border-dashed border-neutral-200">
-                          <h3 className="text-xs font-bold text-neutral-500 mb-3">
-                            <Icons.Plus size={14} /> 輸入新頻道與備註
-                          </h3>
+                          <h3 className="text-xs font-bold text-neutral-500 mb-3">輸入新頻道與備註</h3>
                           <div className="space-y-3">
-                            <input type="text" id="mRoomCode" placeholder="代號 (如 888)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-xl text-center font-bold tracking-widest text-emerald-800" />
+                            <input type="text" id="mRoomCode" placeholder="頻道代號" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-xl text-center font-bold tracking-widest text-emerald-800" />
                             <input type="text" id="mRoomNote" placeholder="加個備註 (如：家人用)" className="w-full p-3 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold" />
                             <div className="flex gap-2">
-                              <button onClick={async () => {
-                                try {
-                                  const text = await navigator.clipboard.readText();
-                                  if (text) {
-                                    document.getElementById('mRoomCode').value = text.trim();
-                                    setMsg('已貼上代碼！請輸入備註並連線');
-                                    setTimeout(() => setMsg(''), 2000);
-                                  }
-                                } catch (err) {
-                                  setMsg('無法讀取剪貼簿，請長按輸入框手動貼上');
-                                  setTimeout(() => setMsg(''), 2000);
-                                }
-                              }} className="w-1/3 bg-emerald-50 text-emerald-700 py-3 rounded-xl font-bold border border-emerald-200 active:scale-95 shadow-sm flex justify-center items-center gap-1 transition-transform">
-                                📋 貼上
-                              </button>
-                              <button onClick={() => { handleTuneRoom(document.getElementById('mRoomCode').value, document.getElementById('mRoomNote').value); }} className="w-2/3 bg-emerald-700 text-white py-3 rounded-xl font-bold active:scale-95 shadow-lg transition-transform">
-                                對頻連線
-                              </button>
+                              <button onClick={async () => { try { const text = await navigator.clipboard.readText(); if (text) { document.getElementById('mRoomCode').value = text.trim(); setMsg('已貼上代號！'); setTimeout(() => setMsg(''), 2000); } } catch (err) { setMsg('請手動貼上'); setTimeout(() => setMsg(''), 2000); } }} className="w-1/3 bg-emerald-50 text-emerald-700 py-3 rounded-xl font-bold border border-emerald-200 active:scale-95 shadow-sm flex justify-center items-center gap-1">貼上</button>
+                              <button onClick={() => { handleTuneRoom(document.getElementById('mRoomCode').value, document.getElementById('mRoomNote').value); }} className="w-2/3 bg-emerald-700 text-white py-3 rounded-xl font-bold active:scale-95 shadow-lg">連線</button>
                             </div>
                           </div>
                         </div>
@@ -1036,65 +661,22 @@
                     )}
                     {modalState.type === 'editingTag' && modalState.data && (
                       <div className="flex flex-col gap-3 py-2">
-                        <div className="text-center mb-1">
-                          <span className="text-base font-bold text-emerald-800 bg-emerald-100 px-4 py-1.5 rounded-full tracking-wide shadow-sm">
-                            📍 {modalState.data.name}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {customTags.map(t => (
-                            <button key={t} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t }); setModalState({ type: null }); }} className={`py-3 rounded-xl font-bold text-sm border ${modalState.data.tag === t ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-50 text-neutral-600'}`}>
-                              {t}
-                            </button>
-                          ))}
-                        </div>
+                        <div className="text-center mb-1"><span className="text-base font-bold text-emerald-800 bg-emerald-100 px-4 py-1.5 rounded-full tracking-wide shadow-sm">📍 {modalState.data.name}</span></div>
+                        <div className="grid grid-cols-2 gap-2">{customTags.map(t => ( <button key={t} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t }); setModalState({ type: null }); }} className={`py-3 rounded-xl font-bold text-sm border ${modalState.data.tag === t ? 'bg-emerald-600 text-white shadow-md' : 'bg-neutral-50 text-neutral-600'}`}>{t}</button> ))}</div>
                       </div>
                     )}
                     {(modalState.type === 'manageTag' || modalState.type === 'manageQuick') && (
                       <div className="flex flex-col h-full">
-                        
-                        {/* ====== 找回的裝備 5：齒輪內的連發新增框 ====== */}
                         {modalState.type === 'manageTag' ? (
-                          <div className="flex flex-col gap-3 mb-4 shrink-0 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                            <p className="text-xs font-bold text-emerald-700">快速新增地點</p>
-                            <div className="flex gap-2">
-                              <input type="text" id="mAddTag" placeholder="地點名稱 (如: 好市多)..." className="flex-1 p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white min-w-0" />
-                              <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, false); document.getElementById('mAddTag').value = ''; } }} className="shrink-0 bg-emerald-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1 transition-transform">
-                                <Icons.Plus size={16} />新增
-                              </button>
-                            </div>
-                          </div>
+                          <div className="flex flex-col gap-3 mb-4 shrink-0 bg-emerald-50 p-3 rounded-xl border border-emerald-100"><p className="text-xs font-bold text-emerald-700">快速新增地點</p><div className="flex gap-2"><input type="text" id="mAddTag" placeholder="地點名稱..." className="flex-1 p-3 rounded-lg border border-emerald-200 outline-none text-base font-bold bg-white min-w-0" /><button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, false); document.getElementById('mAddTag').value = ''; } }} className="shrink-0 bg-emerald-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1 transition-transform">新增</button></div></div>
                         ) : (
-                          <div className="flex flex-col gap-3 mb-4 shrink-0 bg-amber-50 p-3 rounded-xl border border-amber-100">
-                            <p className="text-xs font-bold text-amber-700">快速新增品項</p>
-                            <input type="text" id="mAddQuick" placeholder="品項名稱 (如: 衛生紙)..." className="w-full p-3 rounded-lg border border-amber-200 outline-none text-base font-bold bg-white" />
-                            <div className="flex gap-2">
-                              <select id="mAddQuickTag" className="flex-1 min-w-0 p-3 bg-white rounded-lg border border-amber-200 font-bold text-base outline-none text-neutral-700">
-                                <option value="">無預設地點</option>
-                                {customTags.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
-                              <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1 transition-transform">
-                                <Icons.Plus size={16} />新增
-                              </button>
-                            </div>
-                          </div>
+                          <div className="flex flex-col gap-3 mb-4 shrink-0 bg-amber-50 p-3 rounded-xl border border-amber-100"><p className="text-xs font-bold text-amber-700">快速新增常用項</p><input type="text" id="mAddQuick" placeholder="物品名稱..." className="w-full p-3 rounded-lg border border-amber-200 outline-none text-base font-bold bg-white" /><div className="flex gap-2"><select id="mAddQuickTag" className="flex-1 min-w-0 p-3 bg-white rounded-lg border border-amber-200 font-bold text-base outline-none text-neutral-700"><option value="">無預設地點</option>{customTags.map(t => <option key={t} value={t}>{t}</option>)}</select><button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-5 rounded-lg font-bold active:scale-95 shadow-md flex items-center gap-1 transition-transform">新增</button></div></div>
                         )}
-
                         <div className="overflow-y-auto space-y-2 py-2 flex-1 scrollbar-hide" onTouchMove={(e) => onVMove(e, modalState.type === 'manageTag' ? 'data-v-tag-index' : 'data-v-quick-index')}>
                           {(modalState.type === 'manageTag' ? customTags : quickItems).map((item, idx) => {
                             const name = modalState.type === 'manageTag' ? item : (item.n || item.name);
                             return (
-                              <div key={idx} data-v-tag-index={modalState.type === 'manageTag' ? idx : undefined} data-v-quick-index={modalState.type === 'manageQuick' ? idx : undefined} className={`flex justify-between items-center bg-neutral-50 p-2 rounded-xl border transition-all ${vDragIdx === idx ? 'opacity-40 border-emerald-500 scale-95 shadow-inner' : 'border-neutral-100'}`}>
-                                <div className="flex items-center gap-2 flex-1">
-                                  <div className="p-3 text-neutral-400 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')} onTouchCancel={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')}>
-                                    <Icons.GripVertical />
-                                  </div>
-                                  <span className="font-bold text-neutral-700">{name}</span>
-                                </div>
-                                <button onClick={() => modalState.type === 'manageTag' ? delTag(item) : delQuick(idx)} className="text-red-400 p-3 active:scale-75">
-                                  <Icons.Trash size={18} />
-                                </button>
-                              </div>
+                              <div key={idx} data-v-tag-index={modalState.type === 'manageTag' ? idx : undefined} data-v-quick-index={modalState.type === 'manageQuick' ? idx : undefined} className={`flex justify-between items-center bg-neutral-50 p-2 rounded-xl border transition-all ${vDragIdx === idx ? 'opacity-40 border-emerald-500 scale-95 shadow-inner' : 'border-neutral-100'}`}><div className="flex items-center gap-2 flex-1"><div className="p-3 text-neutral-400 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')} onTouchCancel={() => onVEnd(modalState.type === 'manageTag' ? 'tag' : 'quick')}><Icons.GripVertical /></div><span className="font-bold text-neutral-700 text-sm">{name}</span></div><button onClick={() => modalState.type === 'manageTag' ? delTag(item) : delQuick(idx)} className="text-red-400 p-3 active:scale-75"><Icons.Trash size={18} /></button></div>
                             );
                           })}
                         </div>
