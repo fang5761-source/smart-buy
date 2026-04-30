@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.1.17 (穩定修復與直覺版) by 朵朵 -->
+  <!-- 智能採買 v1.1.18 (戰術排版歸位版) by 朵朵 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -31,7 +31,6 @@
     .drag-handle{cursor:move;touch-action:none;}
     .tag-neutral { background-color: #f9fafb; color: #374151; border-color: #d1d5db; }
     
-    /* 戰術級膠囊按鈕 - 淺色調區隔增加/收合動作 */
     .btn-capsule-tactical {
       background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
       color: #065f46;
@@ -117,11 +116,8 @@
       ChevronUp: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m18 15-6-6-6 6"/></svg>,
       GripVertical: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="12" r="1.5"></circle><circle cx="9" cy="6" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>,
       Info: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-      Edit: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-      CheckCircle: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"/></svg>,
       BookOpen: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
-      Refresh: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
-      Coffee: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+      Refresh: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
     };
 
     const App = () => {
@@ -154,6 +150,17 @@
       const [roomPrefix, setRoomPrefix] = useState(personalBaseId);
       const [roomSuffix, setRoomSuffix] = useState('');
       
+      const [vDragIdx, setVDragIdx] = useState(null);
+      const [vDragOverIdx, setVDragOverIdx] = useState(null);
+      const [hDragType, setHDragType] = useState(null);
+      const [hDragIdx, setHDragIdx] = useState(null);
+      const [hDragOverIdx, setHDragOverIdx] = useState(null);
+      
+      const dragDidHappen = useRef(false);
+      const touchTimer = useRef(null);
+      const touchStartPos = useRef({ x: 0, y: 0 });
+      const isScrolling = useRef(false);
+
       const getTagConfig = (tagName) => {
         const found = customTags.find(t => t.n === tagName);
         if (found && found.c !== undefined) return PRESET_COLORS[found.c] || PRESET_COLORS[0];
@@ -314,6 +321,62 @@
         setTimeout(() => { window.location.reload(true); }, 1500);
       };
 
+      // 拖曳換順序功能恢復
+      const onTouchStartH = (e, idx, type) => {
+        touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        isScrolling.current = false; dragDidHappen.current = false;
+        touchTimer.current = setTimeout(() => {
+          if (!isScrolling.current) {
+            setHDragIdx(idx); setHDragType(type); dragDidHappen.current = true;
+            if (navigator.vibrate) navigator.vibrate(40);
+          }
+        }, 400);
+      };
+      const onTouchMoveH = (e, attr) => {
+        const dx = Math.abs(e.touches[0].clientX - touchStartPos.current.x);
+        const dy = Math.abs(e.touches[0].clientY - touchStartPos.current.y);
+        if (hDragIdx === null) { if (dx > 8 || dy > 8) { isScrolling.current = true; clearTimeout(touchTimer.current); } return; }
+        e.preventDefault();
+        const target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        const dropElem = target?.closest(`[${attr}]`);
+        if (dropElem) {
+          const overIdx = parseInt(dropElem.getAttribute(attr), 10);
+          if (overIdx !== hDragOverIdx) setHDragOverIdx(overIdx);
+        }
+      };
+      const onTouchEndH = async (type) => {
+        clearTimeout(touchTimer.current);
+        if (hDragIdx !== null && hDragOverIdx !== null && hDragIdx !== hDragOverIdx) {
+          if (type === 'tag') {
+            const next = [...customTags]; const [moved] = next.splice(hDragIdx, 1); next.splice(hDragOverIdx, 0, moved);
+            setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
+          } else {
+            const next = [...quickItems]; const [moved] = next.splice(hDragIdx, 1); next.splice(hDragOverIdx, 0, moved);
+            setQuickItems(next); await setDoc(getConfigRef(), { quick: next }, { merge: true });
+          }
+        }
+        setHDragIdx(null); setHDragOverIdx(null); setHDragType(null);
+      };
+      const onVStart = (idx) => { setVDragIdx(idx); if (navigator.vibrate) navigator.vibrate(30); };
+      const onVMove = (e, attr) => {
+        if (vDragIdx === null) return; e.preventDefault();
+        const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropElem = target?.closest(`[${attr}]`);
+        if (dropElem) { const hoverIdx = parseInt(dropElem.getAttribute(attr), 10); if (hoverIdx !== vDragOverIdx) setVDragOverIdx(hoverIdx); }
+      };
+      const onVEnd = async (type) => {
+        if (vDragIdx !== null && vDragOverIdx !== null && vDragIdx !== vDragOverIdx) {
+          if (type === 'tag') {
+            const next = [...customTags]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
+            setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
+          } else {
+            const next = [...quickItems]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
+            setQuickItems(next); await setDoc(getConfigRef(), { quick: next }, { merge: true });
+          }
+        }
+        setVDragIdx(null); setVDragOverIdx(null);
+      };
+
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
       return (
@@ -336,11 +399,7 @@
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => { 
-                    setModalInput(''); 
-                    setIsEditingBaseId(false); 
-                    setBaseIdEditValue(personalBaseId); 
-                    setRoomPrefix(personalBaseId);
-                    setRoomSuffix('');
+                    setModalInput(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setRoomPrefix(personalBaseId); setRoomSuffix('');
                     setModalState({ type: 'room' }); 
                   }} className={`px-2.5 py-1.5 rounded-lg text-sm sm:text-base font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
                     {headerRoomTitle}
@@ -361,7 +420,7 @@
                     <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-2 bg-white rounded-full active:scale-95 shadow-sm border border-emerald-100"><Icons.Settings size={22} /></button>
                   </div>
                   {quickItems.map((qa, i) => (
-                    <button key={i} onClick={() => handleQuickSelect(qa)} className="shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-sm font-bold transition-all shadow-sm bg-amber-50 border border-amber-200 text-amber-700 active:scale-95">+ {qa.n || qa.name}</button>
+                    <button key={i} data-h-quick-idx={i} onTouchStart={(e) => onTouchStartH(e, i, 'quick')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-quick-idx')} onTouchEnd={() => onTouchEndH('quick')} onTouchCancel={() => onTouchEndH('quick')} onClick={() => { if(!dragDidHappen.current) handleQuickSelect(qa); }} className={`shrink-0 whitespace-nowrap px-3 py-2 rounded-full text-sm font-bold transition-all shadow-sm bg-amber-50 border border-amber-200 text-amber-700 active:scale-95 ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-50' : ''}`}>+ {qa.n || qa.name}</button>
                   ))}
                   <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-3 py-2 rounded-full text-sm font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={16} /></button>
                 </div>
@@ -369,8 +428,8 @@
                   <div className="sticky left-0 z-10 bg-emerald-50 pr-2 py-0.5">
                     <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-2 bg-white rounded-full active:scale-95 shadow-sm border border-emerald-100"><Icons.Settings size={22} /></button>
                   </div>
-                  {customTags.map((t) => (
-                    <button key={t.n} onClick={() => setActiveTag(activeTag === t.n ? '' : t.n)} className={`shrink-0 px-3 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm border ${activeTag === t.n ? 'scale-105 brightness-90 shadow-inner border-black/20' : ''}`} style={activeTag === t.n ? { backgroundColor: PRESET_COLORS[t.c].text, color: '#fff' } : getTagInlineStyles(t.n)}>{t.n}</button>
+                  {customTags.map((t, idx) => (
+                    <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(activeTag === t.n ? '' : t.n); }} className={`shrink-0 px-3 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm border ${activeTag === t.n ? 'scale-105 brightness-90 shadow-inner border-black/20' : ''} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-50' : ''}`} style={activeTag === t.n ? { backgroundColor: PRESET_COLORS[t.c].text, color: '#fff' } : getTagInlineStyles(t.n)}>{t.n}</button>
                   ))}
                   <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3 py-2 rounded-full text-sm font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={16} /></button>
                 </div>
@@ -450,37 +509,24 @@
                     <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-2 hover:bg-neutral-100 rounded-full transition-colors"><Icons.X size={24} /></button>
                   </div>
                   <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-20">
-                    {modalState.type === 'channelConflict' && modalState.data && (
-                      <div className="space-y-6 py-2 text-center font-bold">
-                        <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200">
-                          <p className="text-lg text-amber-900 mb-3 flex items-center justify-center gap-2">⚠️ 警告：頻道非空白</p>
-                          <p className="text-base text-amber-800 leading-relaxed font-bold">代號「{modalState.data.code}」已有資料。這可能是以前用過的代號。</p>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                          <button onClick={() => handleTuneRoom(modalState.data.code, modalState.data.note)} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-md active:scale-95">我要承接舊資料</button>
-                          <button onClick={() => handleClearChannelData(modalState.data.code)} className="w-full bg-white text-red-600 border-2 border-red-200 py-4 rounded-xl font-bold text-lg active:scale-95">全部炸掉重來 (淨空)</button>
-                          <button onClick={() => setModalState({type: 'room'})} className="w-full text-neutral-400 py-2 font-bold text-sm">先不要，我換個代號</button>
-                        </div>
-                      </div>
-                    )}
-
                     {modalState.type === 'about' && (
                       <div className="space-y-6 py-2 px-1">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.1.17 (穩定修復版)</p>
+                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.1.18 (戰術排版歸位版)</p>
                           <button onClick={handleForceUpdate} className="mt-4 bg-white text-emerald-700 text-xs px-4 py-2 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 transition-all border border-emerald-100"><Icons.Refresh size={14} /> 檢查載入新版本</button>
                         </div>
 
+                        {/* 基礎教學：卡片式排版 */}
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
                           <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-4 py-3.5 flex justify-between items-center font-bold text-base text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2"><Icons.Cart className="text-blue-500" size={18} /> 基礎教學：如何開始？</span><Icons.ChevronDown size={18} className={expandedSection === 'manual' ? 'rotate-180' : ''} /></button>
                           {expandedSection === 'manual' && ( 
-                            <div className="px-5 pb-5 pt-2 text-sm text-neutral-700 space-y-4 border-t border-neutral-50 bg-neutral-50/40 leading-relaxed font-bold">
-                              <p>• 新增品項：在上方打入名稱（如：雞蛋），按「+」即可。</p>
-                              <p>• 地點與顏色：點擊項目的地點按鈕分類。若想修改顏色，點 ⚙️ 進入設定中心，點選「名稱」挑選專屬色，一眼區分區域。</p>
-                              <p>• 記$ 黑科技：點擊項目右側「記 $」，錄入本次價格，系統會幫你記憶。下次買同樣東西，會告訴你上次買多少。</p>
-                              <p>• 專注模式：點擊膠囊按鈕「🛒 收起並開始採買」，隱藏輸入區，讓清單全螢幕顯示，視野更開闊。</p>
-                              <button onClick={() => setExpandedSection('')} className="w-full py-2.5 bg-white text-blue-600 rounded-lg border border-blue-200 font-bold mt-4 shadow-sm">收起教學 ↑</button>
+                            <div className="px-5 pb-5 pt-3 text-sm text-neutral-700 space-y-4 border-t border-neutral-50 bg-neutral-50/40 leading-relaxed font-bold">
+                              <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1 font-bold">【新增品項】</p><p>在上方打入名稱（如：雞蛋），按「+」即可。長按標籤震動後可自由更換順序。</p></div>
+                              <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1 font-bold">【地點與顏色】</p><p>點擊地點按鈕分類。若想改色，點 ⚙️ 進入設定中心，點選「名稱」挑選專屬色。</p></div>
+                              <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1 font-bold">【記$ 黑科技】</p><p>點擊「記 $」錄入本次價格，系統自動幫你記憶。下次買同樣東西，會告訴你上次買多少。</p></div>
+                              <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1 font-bold">【專注模式】</p><p>點擊膠囊按鈕「🛒 收起並開始採買」，隱藏輸入區，讓清單全螢幕顯示，視野更開闊。</p></div>
+                              <button onClick={() => setExpandedSection('')} className="w-full py-2.5 bg-white text-blue-600 rounded-lg border border-blue-200 font-bold mt-2 shadow-sm">收起教學 ↑</button>
                             </div> 
                           )}
                         </div>
@@ -488,15 +534,15 @@
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
                           <button onClick={() => setExpandedSection(expandedSection === 'channels' ? '' : 'channels')} className="w-full px-4 py-3.5 flex justify-between items-center font-bold text-base text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2"><Icons.Refresh className="text-emerald-500" size={18} /> 共享頻道：多人同步</span><Icons.ChevronDown size={18} className={expandedSection === 'channels' ? 'rotate-180' : ''} /></button>
                           {expandedSection === 'channels' && ( 
-                            <div className="px-5 pb-5 pt-2 text-sm text-neutral-700 space-y-5 border-t border-neutral-50 bg-neutral-50/40 leading-relaxed text-left font-bold">
+                            <div className="px-5 pb-5 pt-3 text-sm text-neutral-700 space-y-5 border-t border-neutral-50 bg-neutral-50/40 leading-relaxed text-left font-bold">
                               <p className="font-bold text-emerald-800 underline underline-offset-4">📡 無線電對講機原理</p>
-                              <p>代碼就像頻率。多台手機調到同一個數字，清單就會同步！</p>
+                              <p>代碼就像頻率。多台手機調到同一個數字，清單就會即時同步！</p>
                               <div className="space-y-4">
-                                <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-1 text-sm font-bold">【烤肉採購實例】</p><p className="text-xs">大家分頭買，有人買木炭打勾，其他人手機上同步劃掉，不重複買，省下電話確認時間！</p></div>
-                                <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-1 text-sm font-bold">【夫妻同步實例】</p><p className="text-xs">一人在家新增品項，另一人在外面打開 APP 就能看到，買完勾選即可同步完成。</p></div>
-                                <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-1 text-sm font-bold">【多頻道切換】</p><p className="text-xs">可同時存下多個頻道，隨時切換管理個人、公司或家裡的雜事。</p></div>
+                                <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-1 font-bold">【烤肉採購實例】</p><p>大家分頭買，有人買木炭打勾，其他人手機上同步劃掉，省下電話確認時間！</p></div>
+                                <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-1 font-bold">【夫妻同步實例】</p><p>一人在家新增品項，另一人在外面打開 APP 就能看到，買完勾選即可同步完成。</p></div>
+                                <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm"><p className="text-emerald-700 mb-1 font-bold">【多頻道切換】</p><p>可同時存下多個頻道，隨時切換管理個人、公司或家裡的雜事。</p></div>
                               </div>
-                              <button onClick={() => setExpandedSection('')} className="w-full py-2.5 bg-white text-emerald-600 rounded-lg border border-emerald-200 font-bold mt-4 shadow-sm">收起教學 ↑</button>
+                              <button onClick={() => setExpandedSection('')} className="w-full py-2.5 bg-white text-emerald-600 rounded-lg border border-emerald-200 font-bold mt-2 shadow-sm">收起教學 ↑</button>
                             </div> 
                           )}
                         </div>
@@ -510,7 +556,7 @@
                     )}
 
                     {modalState.type === 'room' && (
-                      <div className="space-y-6 py-2 px-1 font-bold">
+                      <div className="space-y-6 py-2 px-1">
                         {savedRooms.length > 0 && (
                           <div className="space-y-3 font-bold">
                             <h3 className="text-base font-bold text-neutral-600 flex items-center gap-2 px-1"><Icons.History size={18}/> 我的頻道列表 (點選切換)</h3>
@@ -540,15 +586,15 @@
                         <div className="bg-emerald-50 p-5 rounded-2xl border-2 border-emerald-100 shadow-inner text-center">
                           <div className="flex justify-between items-center mb-2 font-bold"><p className="text-sm font-bold text-emerald-800">🪪 我的個人 ID (主號碼)</p><button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-600 flex items-center gap-1 text-xs bg-white px-3 py-1 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={12}/>修改</button></div>
                           {isEditingBaseId ? (
-                            <div className="flex flex-col gap-2"><input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-300 text-xl text-center font-bold outline-none" /><button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-md"><Icons.CheckCircle size={18} className="inline mr-1" /> 確定並鎖定</button></div>
+                            <div className="flex flex-col gap-2"><input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-300 text-xl text-center font-bold outline-none" /><button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95"><Icons.CheckCircle size={18} className="inline mr-1" /> 確定並鎖定</button></div>
                           ) : (
                             <p className="text-2xl font-bold tracking-[0.2em] text-emerald-900 break-all">{personalBaseId}</p>
                           )}
                         </div>
 
-                        <div className="pt-6 border-t border-dashed border-neutral-300 font-bold">
+                        <div className="pt-6 border-t border-dashed border-neutral-300">
                           <h3 className="text-base font-bold text-neutral-700 mb-3 px-1">連線新頻道</h3>
-                          <div className="space-y-4">
+                          <div className="space-y-4 font-bold">
                             <div className="flex items-center gap-2">
                                <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="w-2/5 p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base text-center font-bold tracking-wider text-emerald-900 outline-none" placeholder="個人ID" />
                                <span className="text-emerald-300 font-bold text-xl">-</span>
@@ -557,25 +603,16 @@
                             <input type="text" id="mRoomNote" placeholder="頻道備註 (如：全家用、公婆、公司)" className="w-full p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold outline-none" />
                             <div className="flex gap-2">
                               <button onClick={async () => { 
-                                try { 
-                                  const text = await navigator.clipboard.readText(); 
-                                  if (text) {
-                                    if (text.includes('-')) {
-                                      const [p, s] = text.split('-');
-                                      setRoomPrefix(p); setRoomSuffix(s);
-                                    } else {
-                                      setRoomSuffix(text);
-                                    }
-                                  } 
-                                } catch (err) { setMsg('請手動輸入'); setTimeout(() => setMsg(''), 2000); } 
+                                try { const text = await navigator.clipboard.readText(); if (text) { if (text.includes('-')) { const [p, s] = text.split('-'); setRoomPrefix(p); setRoomSuffix(s); } else { setRoomSuffix(text); } } } 
+                                catch (err) { setMsg('請手動輸入'); setTimeout(() => setMsg(''), 2000); } 
                               }} className="w-1/3 bg-emerald-50 text-emerald-800 py-4 rounded-xl font-bold border border-emerald-200 active:scale-95 text-base">貼上</button>
                               <button onClick={() => handleTuneRoomAttempt(roomPrefix, roomSuffix, document.getElementById('mRoomNote').value)} className="w-2/3 bg-emerald-700 text-white py-4 rounded-xl font-bold active:scale-95 text-base shadow-lg">連線頻道</button>
                             </div>
                           </div>
                         </div>
 
-                        <div className="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200 mt-2 font-bold leading-relaxed">
-                          <p className="text-base font-bold text-blue-900 mb-3 flex items-center gap-2">📡 快速連線步驟：</p>
+                        <div className="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200 mt-2">
+                          <p className="text-base font-bold text-blue-900 mb-3">📡 快速連線步驟：</p>
                           <div className="text-sm text-blue-800 space-y-3 font-bold leading-relaxed">
                             <p>1. 點選頻道列表的黃色 <Icons.Copy size={14} className="inline"/> 按鈕複製代號。</p>
                             <p>2. 把代號傳給家人 (例如用 LINE 傳送)。</p>
@@ -603,19 +640,19 @@
                               <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-11 h-11 rounded-full border-2 transition-transform ${modalColorIdx === i ? 'border-neutral-800 scale-110 shadow-md' : 'border-black/5'}`} style={{ backgroundColor: color.bg }}></button>
                             ))}
                           </div>
-                          <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg active:scale-95">新增地點</button>
+                          <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg active:scale-95 shadow-md">新增地點</button>
                         </div>
-                        <div className="space-y-3 pb-10 px-1">
-                          <p className="text-sm font-bold text-neutral-500">已存地點 (點選名稱改色)：</p>
+                        <div className="space-y-3 pb-10 px-1" onTouchMove={(e) => onVMove(e, 'data-v-tag-idx')}>
+                          <p className="text-sm font-bold text-neutral-500">已存地點 (長按圖示拖曳換位)：</p>
                           {customTags.map((item, idx) => (
-                            <div key={idx} className="flex justify-between items-center p-3.5 rounded-2xl border-2 shadow-sm transition-all" style={getTagInlineStyles(item.n)}>
+                            <div key={idx} data-v-tag-idx={idx} className={`flex justify-between items-center p-3.5 rounded-2xl border-2 shadow-sm transition-all ${vDragIdx === idx ? 'opacity-40 scale-95' : ''}`} style={getTagInlineStyles(item.n)}>
                               <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <div className="p-3 text-neutral-500 drag-handle"><Icons.GripVertical size={20}/></div>
+                                <div className="p-3 text-neutral-500 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical size={20}/></div>
                                 <div className="flex flex-col flex-1 min-w-0">
                                   <span className="font-bold text-lg truncate" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
                                   <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hide py-1">
                                     {PRESET_COLORS.map((c, ci) => (
-                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-7 h-7 shrink-0 rounded-full border ${item.c === ci ? 'ring-2 ring-black border-white scale-110' : 'border-black/10'}`} style={{ backgroundColor: c.bg }} />
+                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-7 h-7 shrink-0 rounded-full border ${item.c === ci ? 'ring-2 ring-black border-white scale-110 shadow-sm' : 'border-black/10'}`} style={{ backgroundColor: c.bg }} />
                                     ))}
                                   </div>
                                 </div>
@@ -631,20 +668,21 @@
                       <div className="flex flex-col h-full gap-4 px-1 font-bold">
                         <div className="flex flex-col gap-4 mb-4 shrink-0 bg-amber-50 p-5 rounded-2xl border-2 border-amber-100 shadow-sm">
                           <p className="text-base font-bold text-amber-900">快速新增常用品項</p>
-                          <input type="text" id="mAddQuick" placeholder="物品名稱..." className="w-full p-4 rounded-xl border-2 border-amber-200 outline-none text-lg font-bold bg-white" />
+                          <input type="text" id="mAddQuick" placeholder="物品名稱..." className="w-full p-4 rounded-xl border-2 border-amber-200 outline-none text-lg font-bold bg-white shadow-inner" />
                           <div className="flex gap-3">
-                            <select id="mAddQuickTag" className="flex-1 min-w-0 p-4 bg-white rounded-xl border-2 border-amber-200 font-bold text-base outline-none">
+                            <select id="mAddQuickTag" className="flex-1 min-w-0 p-4 bg-white rounded-xl border-2 border-amber-200 font-bold text-base outline-none shadow-sm">
                               <option value="">無地點</option>
                               {customTags.map(t => <option key={t.n} value={t.n}>{t.n}</option>)}
                             </select>
                             <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-8 rounded-xl font-bold text-lg active:scale-95 shadow-md">新增</button>
                           </div>
                         </div>
-                        <div className="space-y-3 pb-10 px-1">
+                        <div className="space-y-3 pb-10 px-1" onTouchMove={(e) => onVMove(e, 'data-v-quick-idx')}>
+                           <p className="text-sm font-bold text-neutral-500">已存品項 (長按圖示拖曳)：</p>
                           {quickItems.map((item, idx) => (
-                            <div key={idx} className="flex justify-between items-center p-3.5 rounded-2xl border-2 bg-neutral-50 shadow-sm border-neutral-100">
+                            <div key={idx} data-v-quick-idx={idx} className={`flex justify-between items-center p-3.5 rounded-2xl border-2 bg-neutral-50 shadow-sm border-neutral-100 ${vDragIdx === idx ? 'opacity-40 scale-95' : ''}`}>
                               <div className="flex items-center gap-3 flex-1">
-                                <div className="p-3 text-neutral-400 drag-handle"><Icons.GripVertical size={20}/></div>
+                                <div className="p-3 text-neutral-400 drag-handle" onTouchStart={() => onVStart(idx)} onTouchEnd={() => onVEnd('quick')} onTouchCancel={() => onVEnd('quick')}><Icons.GripVertical size={20}/></div>
                                 <span className="font-bold text-base">{item.n || item.name}</span>
                               </div>
                               <button onClick={() => delQuick(idx)} className="p-3 active:scale-75 opacity-50"><Icons.Trash size={24} /></button>
@@ -654,10 +692,11 @@
                       </div>
                     )}
 
+                    {/* 其他通用 Modal 邏輯維持原樣 */}
                     {modalState.type === 'recordingPrice' && modalState.data && (
                       <div className="space-y-8 py-4 text-center font-bold px-1">
                         <div className="mb-2"><span className="text-xl font-bold text-amber-900 bg-[#FFDD00] px-10 py-4 rounded-full shadow-lg tracking-widest">💰 {modalState.data.name}</span></div>
-                        <p className="text-base text-neutral-600 font-bold px-4">錄入本次購買價格，系統會自動記憶。下次再買同樣東西時，會悄悄告訴你上次買多少錢，讓你買得更聰明。</p>
+                        <p className="text-base text-neutral-600 font-bold px-4 leading-relaxed underline underline-offset-4 decoration-amber-300 decoration-2">錄入本次購買價格，系統會自動記憶。下次再買同樣東西時，會悄悄告訴你上次買多少錢，讓你買得更聰明。</p>
                         <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入金額..." className="w-full p-6 rounded-2xl border-4 border-amber-200 outline-none text-4xl text-center bg-amber-50/30 shadow-inner font-bold text-amber-900" />
                         <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-amber-600 text-white py-5 rounded-2xl font-bold text-xl shadow-lg active:scale-95 transition-all">確定錄入</button>
                       </div>
@@ -694,7 +733,7 @@
                       <div className="space-y-8 py-6 text-center font-bold px-1">
                         <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-inner">
                           <p className="text-lg text-amber-900 font-bold mb-2">謝謝姊姊與妹妹的心意！ 🥰</p>
-                          <div className="inline-block bg-amber-500 text-white text-xs px-6 py-1.5 rounded-full font-bold shadow-md">一杯咖啡隨喜</div>
+                          <div className="inline-block bg-amber-500 text-white text-xs px-6 py-1.5 rounded-full font-bold shadow-md shadow-amber-200">一杯咖啡隨喜</div>
                         </div>
                         <div className="bg-neutral-50 p-6 rounded-2xl border-2 border-neutral-100 space-y-4">
                           <p className="text-xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
