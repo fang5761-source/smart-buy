@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.1.23 (全面修復與美化版) by 大樂 -->
+  <!-- 智能採買 v1.1.24 (全面修復與視力友善版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -29,13 +29,12 @@
     html,body{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;overscroll-behavior:none;background-color:#047857;-webkit-tap-highlight-color:transparent;}
     #root{width:100%;height:100%;background-color:#f5f5f5;display:flex;justify-content:center;}
     
-    /* 拖曳強化：絕對禁止選取文字與系統選單 */
+    /* 拖曳強化：絕對禁止選取文字 */
     .drag-handle{cursor:move;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
     .draggable-pill{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
     
     .tag-neutral { background-color: #f9fafb; color: #374151; border-color: #d1d5db; }
     
-    /* 戰術級膠囊按鈕：淺色調，區隔主動作 */
     .btn-capsule-tactical {
       background: linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%);
       color: #065f46;
@@ -47,12 +46,14 @@
       transform: scale(0.96);
       background: #c8e6c9;
     }
+    /* 修正選取樣式：移除黑色圈圈，改用白色環狀標示 */
     .color-ring-active {
       transform: scale(1.1);
       box-shadow: inset 0 0 0 4px #fff, 0 0 0 3px currentColor;
     }
-    /* 解決蘋果動態島重疊問題 */
+    /* 解決蘋果動態島重疊：全域安全間距 */
     .safe-pt { padding-top: env(safe-area-inset-top); }
+    .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
   </style>
 </head>
 <body class="antialiased font-sans">
@@ -634,7 +635,7 @@
                             <div className="flex items-center gap-2">
                                <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="w-1/3 p-3.5 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base text-center font-bold text-emerald-900 outline-none shadow-inner" placeholder="ID" />
                                <span className="text-emerald-300 font-bold text-xl">-</span>
-                               <input type="text" value={roomSuffix} onChange={e => setRoomSuffix(e.target.value)} className="flex-1 p-3.5 bg-white rounded-xl border-2 border-emerald-200 text-base text-center font-bold text-emerald-900 outline-none shadow-sm" placeholder="自訂名稱" />
+                               <input type="text" value={roomSuffix} onChange={e => setRoomSuffix(e.target.value)} className="flex-1 p-3.5 bg-white rounded-xl border-2 border-emerald-200 text-base text-center font-bold text-emerald-900 outline-none shadow-sm" placeholder="名稱" />
                             </div>
                             <input type="text" id="mRoomNote" placeholder="頻道備註 (如：全家用、公司)" className="w-full p-3.5 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold outline-none font-bold" />
                             <div className="flex gap-2">
@@ -648,7 +649,7 @@
                         </div>
 
                         <div className="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200 mt-2 font-bold leading-relaxed shadow-sm">
-                          <p className="text-base font-bold text-blue-900 mb-3">📡 快速連線步驟：</p>
+                          <p className="text-lg font-bold text-blue-900 mb-3">📡 快速連線步驟：</p>
                           <div className="text-sm text-blue-800 space-y-4 font-bold leading-relaxed">
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">1.</span>
@@ -694,7 +695,7 @@
                               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                 <div className="p-2 text-neutral-500 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical size={20}/></div>
                                 <div className="flex flex-col flex-1 min-w-0 px-1">
-                                  <span className="font-bold text-xl truncate mb-2" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
+                                  <span className="font-bold text-xl truncate mb-3" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
                                   <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
                                     {PRESET_COLORS.map((c, ci) => (
                                       <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-7 h-7 shrink-0 rounded-full border-2 transition-all ${item.c === ci ? 'ring-4 ring-black border-white shadow-sm scale-110' : 'border-black/10'}`} style={{ backgroundColor: c.bg }} />
@@ -725,7 +726,7 @@
                         <div className="space-y-2 pb-10 px-1 font-bold" onTouchMove={(e) => onVMove(e, 'data-v-quick-idx')}>
                            <p className="text-sm font-bold text-neutral-500 px-1">已存品項 (長按圖示拖曳)：</p>
                           {quickItems.map((item, idx) => (
-                            <div key={idx} data-v-quick-idx={idx} className={`flex justify-between items-center p-3 rounded-2xl border-2 bg-neutral-50 shadow-sm border-neutral-100 ${vDragIdx === idx ? 'opacity-40 scale-95' : ''}`}>
+                            <div key={idx} data-v-quick-idx={idx} className={`flex justify-between items-center p-3.5 rounded-2xl border-2 bg-neutral-50 shadow-sm border-neutral-100 ${vDragIdx === idx ? 'opacity-40 scale-95' : ''}`}>
                               <div className="flex items-center gap-2 flex-1">
                                 <div className="p-3 text-neutral-400 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('quick')} onTouchCancel={() => onVEnd('quick')}><Icons.GripVertical size={20}/></div>
                                 <span className="font-bold text-xl px-1">{item.n || item.name}</span>
@@ -748,7 +749,7 @@
                     
                     {modalState.type === 'addTag' && (
                       <div className="space-y-6 py-4 px-1 font-bold">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入地點名稱..." className="w-full p-5 rounded-2xl border-2 border-emerald-200 outline-none text-2xl font-bold text-center bg-emerald-50/30 shadow-inner" />
+                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-5 rounded-2xl border-2 border-emerald-200 outline-none text-2xl font-bold text-center bg-emerald-50/30 shadow-inner" />
                         <div className="space-y-4">
                           <p className="text-lg font-bold text-neutral-600 px-1 font-serif-tc">挑選顏色：</p>
                           <div className="grid grid-cols-4 gap-4 px-1">
