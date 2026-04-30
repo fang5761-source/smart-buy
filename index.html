@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.1.24 (全面修復與視力友善版) by 大樂 -->
+  <!-- 智能採買 v1.1.24 (全面修復與視力友善版) by 朵朵 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -287,6 +287,7 @@
           const s = suffix.trim();
           if (!p && !s) { handleTuneRoom('', ''); return; }
           const finalPath = (p && s) ? `${p}-${s}` : (p || s);
+          
           const listRef = collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_room_${finalPath}`);
           const snap = await getDocs(listRef);
           if (!snap.empty && !savedRooms.some(r => r.code === finalPath)) {
@@ -439,7 +440,7 @@
                   <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-14 sm:w-20 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white font-bold" />
                   <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 shrink-0"><Icons.Plus size={24}/></button>
                 </form>
-                <div className="flex items-center gap-1.5 relative overflow-x-auto scrollbar-hide">
+                <div className="flex items-center gap-1.5 relative overflow-x-auto scrollbar-hide px-1">
                   <div className="sticky left-0 z-10 bg-emerald-50 pr-2 py-0.5">
                     <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-2 bg-white rounded-full active:scale-95 shadow-sm border border-emerald-100"><Icons.Settings size={22} /></button>
                   </div>
@@ -448,7 +449,7 @@
                   ))}
                   <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-3 py-2 rounded-full text-sm font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={16} /></button>
                 </div>
-                <div className="flex items-center gap-1.5 pt-1 border-t border-emerald-100/50 relative overflow-x-auto scrollbar-hide">
+                <div className="flex items-center gap-1.5 pt-1 border-t border-emerald-100/50 relative overflow-x-auto scrollbar-hide px-1">
                   <div className="sticky left-0 z-10 bg-emerald-50 pr-2 py-0.5">
                     <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-2 bg-white rounded-full active:scale-95 shadow-sm border border-emerald-100"><Icons.Settings size={22} /></button>
                   </div>
@@ -525,7 +526,7 @@
 
             {modalState.type && (
               <div className="fixed inset-0 bg-black/70 z-[120] flex items-end sm:items-center justify-center backdrop-blur-md" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
-                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-4 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[92vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-4 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[95vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-3 shrink-0 safe-pt">
                     <h3 className="text-xl font-bold text-emerald-800 font-serif-tc">
                       {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'editQty' ? '修改數量' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'about' ? '使用說明書' : modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'manageQuick' ? '常用品項設定' : modalState.type === 'channelConflict' ? '偵測到舊資料' : '設定'}
@@ -537,7 +538,7 @@
                       <div className="space-y-6 py-2 text-center font-bold">
                         <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200">
                           <p className="text-lg text-amber-900 mb-3 flex items-center justify-center gap-2">⚠️ 警告：頻道非空白</p>
-                          <p className="text-base text-amber-800 leading-relaxed font-bold">代號「{modalState.data.code}」已有資料。這可能是以前用過的代號。</p>
+                          <p className="text-base text-amber-800 leading-relaxed font-bold font-serif-tc">代號「{modalState.data.code}」已有資料。這可能是以前用過的代號。</p>
                         </div>
                         <div className="flex flex-col gap-3">
                           <button onClick={() => handleTuneRoom(modalState.data.code, modalState.data.note)} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-md active:scale-95">我要承接舊資料</button>
@@ -548,10 +549,10 @@
                     )}
 
                     {modalState.type === 'about' && (
-                      <div className="space-y-6 py-2 px-1">
+                      <div className="space-y-6 py-2 px-1 font-bold">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.1.22 (全面修復版)</p>
+                          <p className="text-sm text-emerald-700 mt-1">版本 v1.1.24 (全面修復版)</p>
                           <button onClick={handleForceUpdate} className="mt-4 bg-white text-emerald-700 text-xs px-4 py-2 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={14} /> 檢查載入新版本</button>
                         </div>
 
@@ -586,7 +587,7 @@
 
                         <div className="flex flex-col gap-3 mt-4 px-1 pb-10">
                           <button onClick={copyAppUrl} className="w-full bg-white border-2 border-emerald-500 text-emerald-700 py-4 rounded-2xl font-bold active:scale-95 text-base flex items-center justify-center gap-2 shadow-sm">分享 APP 給親友</button>
-                          <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-4 rounded-2xl font-bold active:scale-95 text-base shadow-sm">💬 給朵朵建議</button>
+                          <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-4 rounded-2xl font-bold active:scale-95 text-base shadow-sm">💬 給大樂建議</button>
                           <button onClick={() => setModalState({ type: 'donate' })} className="w-full bg-[#FFDD00] text-amber-900 py-4 px-4 rounded-2xl active:scale-95 shadow-md font-bold text-lg flex flex-col items-center"><div>喜歡這 APP 嗎？ 歡迎請我喝咖啡</div></button>
                         </div>
                       </div>
@@ -653,7 +654,7 @@
                           <div className="text-sm text-blue-800 space-y-4 font-bold leading-relaxed">
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">1.</span>
-                                <p>點選頻道列表的黃色 <Icons.Copy size={16} className="inline mx-0.5"/> 按鈕<br/>複製代號。</p>
+                                <p>點選列表頻道的 <Icons.Copy size={16} className="inline mx-0.5 text-amber-600"/> 按鈕複製代號。</p>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">2.</span>
@@ -680,13 +681,13 @@
                             <p className="text-lg font-bold text-emerald-900 font-serif-tc">新增地點與顏色</p>
                             <button onClick={resetAllTagsColor} className="text-xs bg-white px-2 py-1 rounded-lg border border-emerald-300 text-emerald-700 font-bold active:scale-90 shadow-sm">一鍵還原</button>
                           </div>
-                          <input type="text" id="mAddTag" placeholder="地點名稱..." className="w-full p-3.5 rounded-xl border-2 border-emerald-200 outline-none text-xl font-bold bg-white" />
+                          <input type="text" id="mAddTag" placeholder="地點名稱..." className="w-full p-3.5 rounded-xl border-2 border-emerald-200 outline-none text-xl font-bold bg-white shadow-inner" />
                           <div className="flex gap-2.5 items-center overflow-x-auto scrollbar-hide py-3 px-1">
                             {PRESET_COLORS.map((color, i) => (
                               <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-9 h-9 rounded-full border-2 transition-all ${modalColorIdx === i ? 'color-ring-active' : 'border-black/5'}`} style={{ backgroundColor: color.bg, color: color.border }}></button>
                             ))}
                           </div>
-                          <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-700 text-white py-3.5 rounded-xl font-bold text-xl active:scale-95 shadow-md">新增地點</button>
+                          <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold text-xl active:scale-95 shadow-md">新增地點</button>
                         </div>
                         <div className="space-y-3 pb-10 px-1 font-bold" onTouchMove={(e) => onVMove(e, 'data-v-tag-idx')}>
                           <p className="text-sm font-bold text-neutral-500 px-1">已存地點 (長按圖示拖曳)：</p>
@@ -695,7 +696,7 @@
                               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                 <div className="p-2 text-neutral-500 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical size={20}/></div>
                                 <div className="flex flex-col flex-1 min-w-0 px-1">
-                                  <span className="font-bold text-xl truncate mb-3" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
+                                  <span className="font-bold text-xl truncate mb-2" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
                                   <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
                                     {PRESET_COLORS.map((c, ci) => (
                                       <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-7 h-7 shrink-0 rounded-full border-2 transition-all ${item.c === ci ? 'ring-4 ring-black border-white shadow-sm scale-110' : 'border-black/10'}`} style={{ backgroundColor: c.bg }} />
@@ -739,8 +740,8 @@
                     )}
 
                     {modalState.type === 'recordingPrice' && modalState.data && (
-                      <div className="space-y-6 py-4 text-center font-bold px-1">
-                        <div className="mb-2"><span className="text-xl font-bold text-amber-900 bg-[#FFDD00] px-10 py-4 rounded-full shadow-lg tracking-widest font-serif-tc">💰 {modalState.data.name}</span></div>
+                      <div className="space-y-6 py-4 text-center font-bold px-1 font-serif-tc">
+                        <div className="mb-2"><span className="text-xl font-bold text-amber-900 bg-[#FFDD00] px-10 py-4 rounded-full shadow-lg tracking-widest">💰 {modalState.data.name}</span></div>
                         <p className="text-lg text-neutral-600 font-bold px-4 leading-relaxed underline underline-offset-4 decoration-amber-300 decoration-2">錄入本次價格，系統自動記憶。下次再買同樣東西，會告訴你上次買多少，讓你買得更聰明。</p>
                         <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入金額..." className="w-full p-6 rounded-2xl border-4 border-amber-200 outline-none text-4xl text-center bg-amber-50/30 shadow-inner font-bold text-amber-900" />
                         <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-amber-600 text-white py-5 rounded-2xl font-bold text-xl shadow-lg active:scale-95 transition-all">確定錄入</button>
@@ -776,11 +777,11 @@
 
                     {modalState.type === 'donate' && (
                       <div className="space-y-8 py-6 text-center font-bold px-1">
-                        <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-inner">
-                          <p className="text-xl text-amber-900 font-bold mb-2 font-serif-tc">謝謝姊姊與妹妹的心意！ 🥰</p>
+                        <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-inner font-serif-tc">
+                          <p className="text-xl text-amber-900 font-bold mb-2">謝謝姊姊與妹妹的心意！ 🥰</p>
                           <div className="inline-block bg-amber-500 text-white text-xs px-6 py-1.5 rounded-full font-bold shadow-md shadow-amber-200">一杯咖啡隨喜</div>
                         </div>
-                        <div className="bg-neutral-50 p-6 rounded-2xl border-2 border-neutral-100 space-y-4 shadow-sm">
+                        <div className="bg-neutral-50 p-6 rounded-2xl border-2 border-neutral-100 space-y-4 shadow-sm font-bold">
                           <p className="text-xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
                           <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full bg-amber-500 text-white py-5 rounded-2xl text-xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
                         </div>
