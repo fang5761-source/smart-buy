@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.2.19 (頻道排版微調版) by 大樂 -->
+  <!-- 智能採買 v1.2.21 (捲軸重置與穩定版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -396,8 +396,11 @@
             console.log('Share canceled', err);
           }
         } else {
+          // 加入防捲動保護的臨時複製區
           const tempIn = document.createElement('textarea'); 
           tempIn.value = shareText; 
+          tempIn.style.position = 'fixed';
+          tempIn.style.top = '0';
           document.body.appendChild(tempIn); 
           tempIn.select(); 
           document.execCommand('copy'); 
@@ -485,7 +488,7 @@
 
           <div className="w-full max-w-md bg-white h-full flex flex-col relative shadow-2xl sm:border-x border-neutral-200 z-0 overflow-hidden">
             <header className="bg-emerald-700 text-white shrink-0 shadow-lg z-20 safe-pt">
-              <div className="px-4 py-3 sm:py-4 flex justify-between items-center h-auto min-h-[60px]">
+              <div className="px-4 py-3 sm:py-4 flex justify-between items-center h-auto min-h-[64px]">
                 <div className="flex items-center gap-2 font-bold">
                   <Icons.Cart />
                   <h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1>
@@ -625,14 +628,15 @@
 
             {modalState.type && (
               <div className="fixed inset-0 bg-black/70 z-[120] flex items-end sm:items-center justify-center backdrop-blur-md" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
-                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-5 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[80vh] overflow-hidden mt-12 safe-pb" onClick={e => e.stopPropagation()}>
+                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-5 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden mt-12 safe-pb" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-3 shrink-0">
                     <h3 className="text-xl font-bold text-emerald-800 font-serif-tc">
-                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'addQuick' ? '自訂常用品項' : modalState.type === 'addTag' ? '新增地點' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'about' ? '使用說明書' : modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'manageQuick' ? '常用品項設定' : modalState.type === 'channelConflict' ? '偵測到舊資料' : '設定'}
+                      {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'addQuick' ? '自訂常用品項' : modalState.type === 'addTag' ? '新增地點' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'about' ? '使用說明書' : modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'manageQuick' ? '常用品項設定' : modalState.type === 'channelConflict' ? '偵測到舊資料' : modalState.type === 'donate' ? '請我喝咖啡' : '設定'}
                     </h3>
                     <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-2 hover:bg-neutral-100 rounded-full transition-colors"><Icons.X size={24} /></button>
                   </div>
-                  <div className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-20">
+                  {/* 使用 key={modalState.type} 確保切換視窗時捲軸重置到最上方 */}
+                  <div key={modalState.type} className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-20">
                     
                     {modalState.type === 'addQuick' && (
                       <div className="space-y-6 py-4 px-1 font-bold">
@@ -666,7 +670,7 @@
                       <div className="space-y-6 py-2 px-1 font-bold">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.19 (頻道排版微調版)</p>
+                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.21 (捲軸重置與穩定版)</p>
                           <button onClick={handleForceUpdate} className="mt-4 bg-white text-emerald-700 text-xs px-4 py-2 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={14} /> 檢查載入新版本</button>
                         </div>
 
@@ -727,7 +731,13 @@
                                   </div>
                                   <button onClick={(e) => {
                                     e.stopPropagation();
-                                    const temp = document.createElement('input'); temp.value = room.code; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp);
+                                    const temp = document.createElement('input'); 
+                                    temp.style.position = 'fixed'; temp.style.top = '0';
+                                    temp.value = room.code; 
+                                    document.body.appendChild(temp); 
+                                    temp.select(); 
+                                    document.execCommand('copy'); 
+                                    document.body.removeChild(temp);
                                     setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000);
                                   }} className="bg-[#FFDD00] text-amber-900 p-2.5 rounded-lg active:scale-90 shadow-sm border border-amber-400" title="複製代號"><Icons.Copy size={20}/></button>
                                   <button onClick={(e) => {
@@ -809,7 +819,7 @@
                             </div>
                             <div className="pt-3 border-t border-blue-100">
                               <button onClick={handleShareApp} className="w-full bg-blue-600 text-white py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-95 shadow-md text-base">
-                                <Icons.Share size={20}/> 分享 APP 給親友
+                                <Icons.Share size={20}/> 分享 APP 連結給親友
                               </button>
                             </div>
                           </div>
@@ -923,7 +933,16 @@
                         </div>
                         <div className="bg-neutral-50 p-6 rounded-2xl border-2 border-neutral-100 space-y-4 shadow-sm font-bold">
                           <p className="text-xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
-                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full bg-amber-500 text-white py-5 rounded-2xl text-xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
+                          <button onClick={() => { 
+                            const temp = document.createElement('input'); 
+                            temp.style.position = 'fixed'; temp.style.top = '0';
+                            temp.value = '20401800252531'; 
+                            document.body.appendChild(temp); 
+                            temp.select(); 
+                            document.execCommand('copy'); 
+                            document.body.removeChild(temp); 
+                            setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); 
+                          }} className="w-full bg-amber-500 text-white py-5 rounded-2xl text-xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
                         </div>
                       </div>
                     )}
