@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.2.15 (極致清爽與防護升級版) by 大樂 -->
+  <!-- 智能採買 v1.2.17 (極簡無痕版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -47,9 +47,6 @@
       transform: scale(0.96);
       background: #c8e6c9;
     }
-    /* 解決 Apple 動態島重疊 */
-    .safe-pt { padding-top: env(safe-area-inset-top, 20px); }
-    .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
     
     /* 馬卡龍色選取樣式 */
     .macaron-ring-active {
@@ -549,9 +546,9 @@
               </div>
             )}
 
-            {/* 立體過濾標籤列：直接在清單上方，維持乾淨清爽 */}
+            {/* 立體過濾標籤列：小箭頭設計，未選中時採用淺灰色 */}
             {dynamicFilterTags.length > 1 && (
-              <div className="bg-white flex overflow-x-auto scrollbar-hide shrink-0 z-10 px-3 pt-3 gap-1.5 border-b-2 border-emerald-700/10">
+              <div className="bg-white flex overflow-x-auto scrollbar-hide shrink-0 z-10 px-3 pt-1 gap-1.5 border-b-2 border-emerald-700/10">
                 {dynamicFilterTags.map(tagName => {
                   const isSelected = filterTag === tagName;
                   const cfg = tagName === '全部' ? { bg: '#ecfdf5', text: '#065f46', border: '#10b981' } : (getTagConfig(tagName) || { bg: '#f1f5f9', text: '#334155', border: '#cbd5e1' });
@@ -601,7 +598,8 @@
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag, false) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
-                        {history[item.name] && !item.completed && <span className="text-xs font-bold truncate text-right whitespace-nowrap opacity-90 font-serif-tc" style={{ color: getTagConfig(item.tag)?.border || '#92400e' }}>上次：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
+                        {/* 修復「記 $」黑科技顯示，顏色採用深色 text */}
+                        {history[item.name] && !item.completed && <span className="text-xs font-bold truncate text-right whitespace-nowrap font-serif-tc" style={{ color: getTagConfig(item.tag)?.text || '#92400e' }}>上次：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
                       </div>
                       <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={20} /></button>
                     </div>
@@ -617,8 +615,9 @@
 
             {modalState.type && (
               <div className="fixed inset-0 bg-black/70 z-[120] flex items-end sm:items-center justify-center backdrop-blur-md" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
-                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-4 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[95vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-3 shrink-0 safe-pt">
+                {/* 修復動態島重疊：將 max-h 調整為 85vh 並加入 mt-8 */}
+                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-5 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden mt-8" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-3 shrink-0">
                     <h3 className="text-xl font-bold text-emerald-800 font-serif-tc">
                       {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'addQuick' ? '自訂常用品項' : modalState.type === 'addTag' ? '新增地點' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'about' ? '使用說明書' : modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'manageQuick' ? '常用品項設定' : modalState.type === 'channelConflict' ? '偵測到舊資料' : '設定'}
                     </h3>
@@ -648,8 +647,9 @@
                         </div>
                         <div className="flex flex-col gap-3">
                           <button onClick={() => handleTuneRoom(modalState.data.code, modalState.data.note)} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-md active:scale-95">我要承接舊資料</button>
-                          <button onClick={() => handleClearChannelData(modalState.data.code)} className="w-full bg-white text-red-600 border-2 border-red-200 py-4 rounded-xl font-bold text-lg active:scale-95">全部炸掉重來 (淨空)</button>
-                          <button onClick={() => setModalState({type: 'room'})} className="w-full text-neutral-400 py-2 font-bold text-sm">先不要，我換個代號</button>
+                          <button onClick={() => handleClearChannelData(modalState.data.code)} className="w-full bg-white text-red-600 border-2 border-red-200 py-4 rounded-xl font-bold text-lg active:scale-95">全部清空重來</button>
+                          {/* 將先不要改成實體按鈕 */}
+                          <button onClick={() => setModalState({type: 'room'})} className="w-full bg-neutral-100 text-neutral-500 border-2 border-neutral-200 py-3.5 rounded-xl font-bold text-base active:scale-95 mt-2">先不要，我要返回</button>
                         </div>
                       </div>
                     )}
@@ -658,7 +658,7 @@
                       <div className="space-y-6 py-2 px-1 font-bold">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.15 (極致清爽修復版)</p>
+                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.17 (極簡無痕版)</p>
                           <button onClick={handleForceUpdate} className="mt-4 bg-white text-emerald-700 text-xs px-4 py-2 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={14} /> 檢查載入新版本</button>
                         </div>
 
@@ -698,7 +698,7 @@
                           </button>
                           <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-4 rounded-2xl font-bold active:scale-95 text-base shadow-sm">💬 想跟我說些什麼嗎？</button>
                           <button onClick={() => setModalState({ type: 'donate' })} className="w-full bg-[#FFDD00] text-amber-900 py-3 px-4 rounded-2xl active:scale-95 shadow-md font-bold text-base flex flex-col items-center gap-1">
-                            <span className="flex items-center gap-1.5">☕️ 喜歡這 APP 嗎？</span>
+                            <span className="flex items-center gap-1.5"><Icons.Coffee size={20}/> 喜歡這 APP 嗎？</span>
                             <span>歡迎請我喝咖啡</span>
                           </button>
                         </div>
@@ -806,6 +806,7 @@
                       </div>
                     )}
 
+                    {/* 修復「+新增地點」視窗 */}
                     {modalState.type === 'addTag' && (
                       <div className="space-y-6 py-4 px-1 font-bold">
                         <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-5 rounded-2xl border-2 border-emerald-200 outline-none text-2xl font-bold text-center bg-emerald-50/30 shadow-inner" />
@@ -830,7 +831,6 @@
                           </div>
                           <input type="text" id="mAddTag" placeholder="地點名稱..." className="w-full p-3.5 rounded-xl border-2 border-emerald-200 outline-none text-xl font-bold bg-white" />
                           
-                          {/* 24色馬卡龍色選盤：左右單行滑動，加入上下內距防切邊 */}
                           <div className="flex gap-3 items-center overflow-x-auto scrollbar-hide py-3 px-2">
                             {MACARON_COLORS.map((cfg, i) => (
                               <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-10 h-10 rounded-full transition-transform ${modalColorIdx === i ? 'macaron-ring-active' : 'border border-black/10'}`} style={{ backgroundColor: cfg.bg, color: cfg.border }}></button>
@@ -849,7 +849,7 @@
                                 <div className="p-2 text-neutral-500 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical size={20}/></div>
                                 <div className="flex flex-col flex-1 min-w-0 px-1 py-1">
                                   <span className="font-bold text-xl truncate mb-2" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
-                                  {/* 已存地點的精簡色盤：左右滑動選擇 24 色 */}
+                                  {/* 已存地點的色盤：移除黑底，使用底色展示 */}
                                   <div className="flex gap-2 overflow-x-auto scrollbar-hide py-2 px-2">
                                     {MACARON_COLORS.map((cfg, ci) => (
                                       <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-8 h-8 shrink-0 rounded-full transition-all`} style={{ backgroundColor: cfg.bg, boxShadow: item.c === ci ? `0 0 0 2px #fff, 0 0 0 4px ${cfg.border}` : 'inset 0 0 0 1px rgba(0,0,0,0.1)' }} />
@@ -900,6 +900,22 @@
                         <p className="text-lg text-neutral-600 font-bold px-4 leading-relaxed underline underline-offset-4 decoration-amber-300 decoration-2">錄入本次價格，系統自動記憶。下次再買同樣東西，會告訴你上次買多少，讓你買得更聰明。</p>
                         <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入金額..." className="w-full p-6 rounded-2xl border-4 border-amber-200 outline-none text-4xl text-center bg-amber-50/30 shadow-inner font-bold text-amber-900" />
                         <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-amber-600 text-white py-5 rounded-2xl font-bold text-xl shadow-lg active:scale-95 transition-all">確定錄入</button>
+                      </div>
+                    )}
+                    
+                    {modalState.type === 'donate' && (
+                      <div className="space-y-8 py-6 text-center font-bold px-1">
+                        <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-inner font-serif-tc">
+                          <Icons.Coffee size={32} className="mx-auto mb-2 text-amber-700" />
+                          <p className="text-xl text-amber-900 font-bold mb-4">謝謝你的心意！ 🥰</p>
+                          <div className="inline-block bg-amber-500 text-white text-base px-6 py-2.5 rounded-full font-bold shadow-md shadow-amber-200 leading-tight">
+                            一杯咖啡 $50<br/><span className="text-xs opacity-90 font-sans">(杯數隨喜)</span>
+                          </div>
+                        </div>
+                        <div className="bg-neutral-50 p-6 rounded-2xl border-2 border-neutral-100 space-y-4 shadow-sm font-bold">
+                          <p className="text-xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
+                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full bg-amber-500 text-white py-5 rounded-2xl text-xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
+                        </div>
                       </div>
                     )}
                   </div>
