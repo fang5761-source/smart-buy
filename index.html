@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.2.18 (終極避障與無痕版) by 大樂 -->
+  <!-- 智能採買 v1.2.19 (頻道排版微調版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -484,7 +484,6 @@
           )}
 
           <div className="w-full max-w-md bg-white h-full flex flex-col relative shadow-2xl sm:border-x border-neutral-200 z-0 overflow-hidden">
-            {/* 標題列：加入 safe-pt 確保不與動態島重疊 */}
             <header className="bg-emerald-700 text-white shrink-0 shadow-lg z-20 safe-pt">
               <div className="px-4 py-3 sm:py-4 flex justify-between items-center h-auto min-h-[60px]">
                 <div className="flex items-center gap-2 font-bold">
@@ -559,7 +558,6 @@
               </div>
             )}
 
-            {/* 立體過濾標籤列：直接貼齊頂部，刪除多餘的「我的採買清單」分隔線 */}
             {dynamicFilterTags.length > 1 && (
               <div className="bg-white flex overflow-x-auto scrollbar-hide shrink-0 z-10 px-3 pt-3 gap-1.5 border-b-2 border-emerald-700/10">
                 {dynamicFilterTags.map(tagName => {
@@ -611,7 +609,6 @@
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag, false) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
-                        {/* 修復黑科技字體顏色，使其對比度足夠 */}
                         {history[item.name] && !item.completed && <span className="text-xs font-bold truncate text-right whitespace-nowrap font-serif-tc" style={{ color: getTagConfig(item.tag)?.text || '#9f1239' }}>上次：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
                       </div>
                       <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={20} /></button>
@@ -628,7 +625,6 @@
 
             {modalState.type && (
               <div className="fixed inset-0 bg-black/70 z-[120] flex items-end sm:items-center justify-center backdrop-blur-md" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
-                {/* 彈窗安全高度調整為 max-h-[80vh] 和 mt-12 避免撞到動態島 */}
                 <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-5 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[80vh] overflow-hidden mt-12 safe-pb" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-3 shrink-0">
                     <h3 className="text-xl font-bold text-emerald-800 font-serif-tc">
@@ -670,7 +666,7 @@
                       <div className="space-y-6 py-2 px-1 font-bold">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.18 (終極無痕版)</p>
+                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.19 (頻道排版微調版)</p>
                           <button onClick={handleForceUpdate} className="mt-4 bg-white text-emerald-700 text-xs px-4 py-2 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={14} /> 檢查載入新版本</button>
                         </div>
 
@@ -755,7 +751,10 @@
                         </div>
 
                         <div className="pt-5 border-t border-dashed border-neutral-300 font-bold">
-                          <h3 className="text-[15px] sm:text-[17px] font-bold text-neutral-700 mb-3 px-1 font-serif-tc tracking-tighter whitespace-nowrap">建立新頻道(自己ID) / 連線共同頻道(親友ID)</h3>
+                          <div className="mb-3 px-1">
+                            <h3 className="text-base sm:text-lg font-bold text-neutral-700 font-serif-tc">建立新頻道</h3>
+                            <p className="text-xs sm:text-sm font-bold text-neutral-400 mt-1">個人專屬 ID / 親友 ID</p>
+                          </div>
                           <div className="space-y-3">
                             <div className="flex items-center gap-2 w-full">
                                <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="w-2/5 shrink-0 min-w-0 p-3.5 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base text-center font-bold tracking-wider text-emerald-900 outline-none shadow-inner" placeholder="ID" />
@@ -798,7 +797,7 @@
                           <div className="text-sm text-blue-800 space-y-4 font-bold leading-relaxed">
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">1.</span>
-                                <p style={{ textIndent: '-2px' }}>點選頻道列表的 <span className="bg-[#FFDD00] text-amber-900 px-1.5 py-0.5 rounded-md shadow-sm inline-flex items-center align-middle mx-1"><Icons.Copy size={14}/></span>複製代號。</p>
+                                <p style={{ textIndent: '-2px' }}>點選頻道列表的 <span className="bg-[#FFDD00] text-amber-900 px-1.5 py-0.5 rounded-md shadow-sm inline-flex items-center align-middle mx-1"><Icons.Copy size={16}/></span>複製代號。</p>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">2.</span>
