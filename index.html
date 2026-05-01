@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.2.3 (莫蘭迪色系與流暢排版版) by 大樂 -->
+  <!-- 智能採買 v1.2.7 (馬卡龍色系與極致緊湊版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -50,6 +50,13 @@
     /* 解決 Apple 動態島重疊 */
     .safe-pt { padding-top: env(safe-area-inset-top, 20px); }
     .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
+    
+    /* 馬卡龍色選取樣式 */
+    .macaron-ring-active {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 3px #fff, 0 0 0 5px currentColor;
+      z-index: 10;
+    }
   </style>
 </head>
 <body class="antialiased font-sans">
@@ -83,19 +90,39 @@
     const db = getFirestore(app);
     const APP_ID_PATH = "smart-buy-final";
     
-    // 莫蘭迪 24 色系 (優雅低飽和度)
-    const MORANDI_COLORS = [
-      '#78909c', '#8a9a86', '#a3b19b', '#607d8b', '#8d9eb6', '#a5b2c1', 
-      '#9e8a9d', '#857586', '#bcaab9', '#b58b88', '#c8a2a1', '#a67c78', 
-      '#b8947e', '#c7ae96', '#d9c8b4', '#9e9185', '#8b8378', '#707070', 
-      '#5f7a76', '#799692', '#94a7a1', '#ab8269', '#bf9e8a', '#d2baaa'
+    // 24 色馬卡龍色系 (明亮、優雅)
+    const MACARON_COLORS = [
+      { bg: '#ecfdf5', text: '#065f46', border: '#10b981' }, // 0: 翠綠 (原)
+      { bg: '#eff6ff', text: '#1e40af', border: '#3b82f6' }, // 1: 寶藍 (原)
+      { bg: '#f5f3ff', text: '#5b21b6', border: '#8b5cf6' }, // 2: 紫色 (原)
+      { bg: '#fffbeb', text: '#92400e', border: '#f59e0b' }, // 3: 琥珀 (原)
+      { bg: '#fff1f2', text: '#9f1239', border: '#f43f5e' }, // 4: 玫瑰 (原)
+      { bg: '#ecfeff', text: '#155e75', border: '#06b6d4' }, // 5: 靛藍 (原)
+      { bg: '#fdf2f8', text: '#9d174d', border: '#ec4899' }, // 6: 粉紅 (原)
+      { bg: '#f0fdf4', text: '#166534', border: '#22c55e' }, // 7: 亮綠 (原)
+      { bg: '#fff7ed', text: '#9a3412', border: '#f97316' }, // 8: 蜜桃橘
+      { bg: '#faf5ff', text: '#6b21a8', border: '#a855f7' }, // 9: 薰衣草紫
+      { bg: '#fef2f2', text: '#be123c', border: '#fb7185' }, // 10: 櫻花粉
+      { bg: '#f0f9ff', text: '#0f172a', border: '#38bdf8' }, // 11: 天空藍
+      { bg: '#fdf4ff', text: '#86198f', border: '#d946ef' }, // 12: 霓虹紫
+      { bg: '#ecfeff', text: '#164e63', border: '#0891b2' }, // 13: 青色
+      { bg: '#f8fafc', text: '#334155', border: '#64748b' }, // 14: 灰藍
+      { bg: '#fefce8', text: '#a16207', border: '#eab308' }, // 15: 檸檬黃
+      { bg: '#f0fdfa', text: '#14532d', border: '#14b8a6' }, // 16: 薄荷綠
+      { bg: '#fff1f2', text: '#be123c', border: '#e11d48' }, // 17: 覆盆子紅
+      { bg: '#f5f3ff', text: '#4c1d95', border: '#7c3aed' }, // 18: 深紫
+      { bg: '#fef2f2', text: '#991b1b', border: '#ef4444' }, // 19: 草莓紅
+      { bg: '#fffbeb', text: '#b45309', border: '#d97706' }, // 20: 芒果黃
+      { bg: '#ecfdf5', text: '#064e3b', border: '#059669' }, // 21: 翡翠綠
+      { bg: '#eff6ff', text: '#1e3a8a', border: '#2563eb' }, // 22: 海洋藍
+      { bg: '#fdf2f8', text: '#831843', border: '#db2777' }  // 23: 桃紅
     ];
 
     const DEFAULT_TAGS = [
-      { n: '全聯', c: 3 },
-      { n: '好市多', c: 9 },
-      { n: '烘焙', c: 12 },
-      { n: '好朋友', c: 7 }
+      { n: '全聯', c: 1 },
+      { n: '好市多', c: 3 },
+      { n: '烘焙', c: 8 },
+      { n: '好朋友', c: 5 }
     ];
     const DEFAULT_QUICK = [
       { n: '雞蛋', t: '全聯' },
@@ -125,12 +152,8 @@
       ChevronUp: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>,
       GripVertical: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="12" r="1.5"></circle><circle cx="9" cy="6" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>,
       Info: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-      Edit: ({size=16, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+      Edit: ({size=16, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg>,
       CheckCircle: ({size=16, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-      Smartphone: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
-      Coffee: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>,
-      BookOpen: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
-      History: ({size=16, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0-5v5h5"/><polyline points="12 7 12 12 16 14"/></svg>,
       Refresh: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
     };
 
@@ -177,17 +200,17 @@
 
       const getTagConfig = (tagName) => {
         const found = customTags.find(t => t.n === tagName);
-        if (found && found.c !== undefined) return MORANDI_COLORS[found.c] || MORANDI_COLORS[0];
+        if (found && found.c !== undefined) return MACARON_COLORS[found.c] || MACARON_COLORS[0];
         return null;
       };
 
       const getTagInlineStyles = (tagName, isOutline = false) => {
-        const hex = getTagConfig(tagName);
-        if (!hex) return {};
+        const cfg = getTagConfig(tagName);
+        if (!cfg) return {};
         if (isOutline) {
-          return { backgroundColor: '#ffffff', color: hex, borderColor: hex };
+          return { backgroundColor: '#ffffff', color: cfg.border, borderColor: cfg.border };
         }
-        return { backgroundColor: hex, color: '#fff', borderColor: hex };
+        return { backgroundColor: cfg.border, color: '#fff', borderColor: cfg.border };
       };
       
       const [savedRooms, setSavedRooms] = useState(() => {
@@ -349,7 +372,6 @@
         setTimeout(() => { window.location.reload(true); }, 1500);
       };
 
-      // 拖曳換順序功能
       const onTouchStartH = (e, idx, type) => {
         touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         isScrolling.current = false; dragDidHappen.current = false;
@@ -407,8 +429,6 @@
       };
 
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
-
-      // 動態判定當前拖曳時是否要鎖定卷軸
       const scrollContainerClass = (type) => {
         if (hDragIdx !== null && hDragType === type) return 'overflow-hidden';
         return 'overflow-x-auto scrollbar-hide';
@@ -443,66 +463,66 @@
               </div>
             </header>
 
-            {/* 友軍直覺版：全新白底輸入區 */}
+            {/* 白底輸入區：極致緊湊行距與扁膠囊 */}
             {!isShoppingMode && (
-              <div className="bg-white px-3 pt-3 pb-2 shadow-sm relative z-10 shrink-0 border-b border-emerald-100">
+              <div className="bg-white px-3 pt-2 pb-1.5 shadow-sm relative z-10 shrink-0 border-b border-emerald-100">
                 {/* 雙輸入框 */}
-                <form onSubmit={handleAdd} className="flex gap-2 items-center mb-2">
-                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買或要做什麼？" className="flex-1 min-w-0 p-3.5 rounded-2xl border border-neutral-200 shadow-sm outline-none text-base sm:text-lg font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
-                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-16 sm:w-20 p-3.5 rounded-2xl border border-neutral-200 shadow-sm text-center outline-none text-base font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
+                <form onSubmit={handleAdd} className="flex gap-2 items-center mb-1">
+                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買或要做什麼？" className="flex-1 min-w-0 p-3 rounded-2xl border border-neutral-200 shadow-sm outline-none text-base sm:text-lg font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
+                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-16 sm:w-20 p-3 rounded-2xl border border-neutral-200 shadow-sm text-center outline-none text-base font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
                 </form>
                 
-                {/* 常用品項設定區塊 - 行距縮小、扁膠囊 */}
-                <div className={`flex items-center gap-2 relative ${scrollContainerClass('quick')} py-1 mt-1`}>
+                {/* 常用品項 - 扁膠囊與小間距 */}
+                <div className={`flex items-center gap-2 relative ${scrollContainerClass('quick')} py-0.5 mt-0.5`}>
                   <div className="sticky left-0 bg-white pr-1 z-10 flex items-center justify-center">
-                    <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-700 w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={20} /></button>
+                    <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-700 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={18} /></button>
                   </div>
                   {quickItems.map((qa, i) => (
-                    <button key={i} data-h-quick-idx={i} onTouchStart={(e) => onTouchStartH(e, i, 'quick')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-quick-idx')} onTouchEnd={() => onTouchEndH('quick')} onTouchCancel={() => onTouchEndH('quick')} onClick={() => { if(!dragDidHappen.current) handleQuickSelect(qa); }} className={`shrink-0 draggable-pill whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-sm bg-orange-50 border border-orange-200 text-orange-600 active:scale-95 ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-orange-500' : ''}`}>+ {qa.n || qa.name}</button>
+                    <button key={i} data-h-quick-idx={i} onTouchStart={(e) => onTouchStartH(e, i, 'quick')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-quick-idx')} onTouchEnd={() => onTouchEndH('quick')} onTouchCancel={() => onTouchEndH('quick')} onClick={() => { if(!dragDidHappen.current) handleQuickSelect(qa); }} className={`shrink-0 draggable-pill whitespace-nowrap px-3.5 py-1 rounded-full text-sm font-bold transition-all shadow-sm bg-orange-50 border border-orange-200 text-orange-600 active:scale-95 ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-orange-500' : ''}`}>+ {qa.n || qa.name}</button>
                   ))}
-                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-4 py-1.5 rounded-full text-sm font-bold text-orange-500 bg-white border border-dashed border-orange-300 active:scale-95 whitespace-nowrap">+ 自訂</button>
+                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-3.5 py-1 rounded-full text-sm font-bold text-orange-500 bg-white border border-dashed border-orange-300 active:scale-95 whitespace-nowrap">+ 自訂</button>
                 </div>
                 
-                {/* 地點標籤區塊 - 行距縮小、扁膠囊 */}
-                <div className={`flex items-center gap-2 relative ${scrollContainerClass('tag')} py-1 mt-1`}>
+                {/* 地點標籤 - 扁膠囊與小間距 */}
+                <div className={`flex items-center gap-2 relative ${scrollContainerClass('tag')} py-0.5 mt-0.5`}>
                   <div className="sticky left-0 bg-white pr-1 z-10 flex items-center justify-center">
-                    <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-700 w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={20} /></button>
+                    <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-700 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={18} /></button>
                   </div>
                   {customTags.map((t, idx) => {
                     const isSelected = activeTag === t.n;
                     const style = getTagInlineStyles(t.n, !isSelected);
                     return (
-                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={style}>{t.n}</button>
+                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-3.5 py-1 rounded-full text-sm font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={style}>{t.n}</button>
                     )
                   })}
-                  <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3.5 py-1.5 rounded-full text-sm font-bold text-emerald-600 bg-white border border-dashed border-emerald-300 active:scale-95 flex items-center justify-center"><Icons.Plus size={16} /></button>
+                  <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3 py-1 rounded-full text-sm font-bold text-emerald-600 bg-white border border-dashed border-emerald-300 active:scale-95 flex items-center justify-center"><Icons.Plus size={16} /></button>
                 </div>
                 
-                {/* 雙按鈕動作區 - 並排設計 */}
-                <div className="flex gap-3 mt-3 mb-1 px-1">
-                  <button onClick={() => setIsShoppingMode(true)} className="flex-[0.8] py-3 bg-emerald-50 text-emerald-700 font-bold rounded-2xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform text-base shadow-sm border border-emerald-100">
-                    <Icons.ChevronUp size={20} /> 收起
+                {/* 雙按鈕動作區 - 並排設計縮減行距 */}
+                <div className="flex gap-2 mt-2 mb-1 px-1">
+                  <button onClick={() => setIsShoppingMode(true)} className="flex-[0.8] py-2.5 bg-emerald-50 text-emerald-700 font-bold rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform text-sm shadow-sm border border-emerald-100">
+                    <Icons.ChevronUp size={18} /> 收起
                   </button>
-                  <button onClick={handleAdd} className="flex-[1.2] py-3 bg-emerald-800 text-white font-bold rounded-2xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-transform text-base">
-                    <Icons.Plus size={20} /> 新增
+                  <button onClick={handleAdd} className="flex-[1.2] py-2.5 bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-transform text-sm">
+                    <Icons.Plus size={18} /> 新增
                   </button>
                 </div>
               </div>
             )}
 
             {isShoppingMode && (
-              <div className="bg-white px-4 py-3 shadow-sm relative z-10 shrink-0 flex justify-center border-b border-neutral-100">
-                 <button onClick={() => setIsShoppingMode(false)} className="flex items-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-8 py-2.5 rounded-full active:scale-95 transition-transform border border-emerald-200 shadow-sm">
-                     <Icons.ChevronDown size={20}/> 展開新增清單
+              <div className="bg-white px-4 py-2 shadow-sm relative z-10 shrink-0 flex justify-center border-b border-neutral-100">
+                 <button onClick={() => setIsShoppingMode(false)} className="flex items-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-6 py-2 rounded-full active:scale-95 transition-transform border border-emerald-200 shadow-sm text-sm">
+                     <Icons.ChevronDown size={18}/> 展開新增清單
                  </button>
               </div>
             )}
 
             {/* 精緻分隔線與採買清單標題 */}
-            <div className="flex items-center justify-center gap-3 px-5 py-4 shrink-0 bg-white">
+            <div className="flex items-center justify-center gap-3 px-5 py-3 shrink-0 bg-white">
               <div className="h-px bg-emerald-800 flex-1 opacity-60"></div>
-              <div className="text-emerald-800 font-bold text-lg flex items-center gap-1.5">
-                <Icons.Cart size={20}/> 我的採買清單
+              <div className="text-emerald-800 font-bold text-base flex items-center gap-1.5">
+                <Icons.Cart size={18}/> 我的採買清單
               </div>
               <div className="h-px bg-emerald-800 flex-1 opacity-60"></div>
             </div>
@@ -543,7 +563,7 @@
               )}
               
               {filteredItems.map(item => (
-                <div key={item.id} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`} style={{ borderLeftWidth: '8px', borderLeftColor: (!item.completed && !item.postponed) ? (getTagConfig(item.tag) || '#d1d5db') : undefined, ...(!item.completed && !item.postponed ? getTagInlineStyles(item.tag, true) : {}) }}>
+                <div key={item.id} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`} style={{ borderLeftWidth: '8px', borderLeftColor: (!item.completed && !item.postponed) ? (getTagConfig(item.tag)?.border || '#d1d5db') : undefined, ...(!item.completed && !item.postponed ? getTagInlineStyles(item.tag, true) : {}) }}>
                   <div className="flex flex-col items-center gap-3 shrink-0 mt-0.5">
                     <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={20} />}</div>
                     {!item.completed && <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50/50'}`}><Icons.Clock size={18} /></button>}
@@ -558,9 +578,9 @@
                     </div>
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-3 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
-                        {/* 顯示上次在哪裡買的黑科技 */}
-                        {history[item.name] && !item.completed && <span className="text-sm font-bold truncate text-right whitespace-nowrap opacity-90 font-serif-tc" style={{ color: getTagConfig(item.tag) || '#92400e' }}>上次買：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
+                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
+                        {/* 顯示上次購買金額與地點 */}
+                        {history[item.name] && !item.completed && <span className="text-xs font-bold truncate text-right whitespace-nowrap opacity-90 font-serif-tc" style={{ color: getTagConfig(item.tag)?.border || '#92400e' }}>上次買：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
                       </div>
                       <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={20} /></button>
                     </div>
@@ -602,7 +622,7 @@
                       <div className="space-y-6 py-2 px-1 font-bold">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.5 (終極戰術版)</p>
+                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.7 (馬卡龍極致版)</p>
                           <button onClick={handleForceUpdate} className="mt-4 bg-white text-emerald-700 text-xs px-4 py-2 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={14} /> 檢查載入新版本</button>
                         </div>
 
@@ -612,9 +632,9 @@
                           {expandedSection === 'manual' && ( 
                             <div className="px-5 pb-5 pt-3 text-sm text-neutral-700 space-y-4 border-t border-neutral-50 bg-neutral-50/40 leading-relaxed font-bold">
                               <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1">【新增品項】</p><p>在上方打入名稱按「+」即可。長按標籤震動後可更換順序。</p></div>
-                              <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1">【地點與顏色】</p><p>點擊地點按鈕分類。若想改色，點 ⚙️ 進入設定中心點選名稱即可挑選專屬莫蘭迪色。</p></div>
+                              <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1">【地點與顏色】</p><p>點擊地點按鈕分類。若想改色，點 ⚙️ 進入設定中心點選名稱即可挑選馬卡龍色。</p></div>
                               <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1">【記$ 黑科技】</p><p>點擊「記 $」錄入價格，系統會自動幫你記憶，下次買會提醒你上次在哪裡買、買多少錢。</p></div>
-                              <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1">【專注模式】</p><p>點擊中間按鈕「🛒 收起」，隱藏輸入區，清單視野更開闊。</p></div>
+                              <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-1">【專注模式】</p><p>點擊「收起」按鈕，隱藏輸入區，清單視野更開闊。</p></div>
                               <button onClick={() => setExpandedSection('')} className="w-full py-2.5 bg-white text-blue-600 rounded-lg border border-blue-200 font-bold mt-2 shadow-sm">收起教學 ↑</button>
                             </div> 
                           )}
@@ -683,9 +703,8 @@
                         <div className="pt-5 border-t border-dashed border-neutral-300 font-bold">
                           <h3 className="text-base font-bold text-neutral-700 mb-3 px-1 font-serif-tc">連線新頻道</h3>
                           <div className="space-y-3">
-                            {/* 修正雙輸入框寬度：左側固定，右側自適應 */}
                             <div className="flex items-center gap-2 w-full">
-                               <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="w-[100px] sm:w-[120px] shrink-0 min-w-0 p-3.5 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base text-center font-bold tracking-wider text-emerald-900 outline-none shadow-inner" placeholder="ID" />
+                               <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="w-[120px] sm:w-[140px] shrink-0 min-w-0 p-3.5 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base text-center font-bold tracking-wider text-emerald-900 outline-none shadow-inner" placeholder="ID" />
                                <span className="text-emerald-300 font-bold text-xl shrink-0">-</span>
                                <input type="text" value={roomSuffix} onChange={e => setRoomSuffix(e.target.value)} className="flex-1 min-w-0 p-3.5 bg-white rounded-xl border-2 border-emerald-200 text-base text-center font-bold tracking-wider text-emerald-900 outline-none shadow-sm" placeholder="自訂名稱" />
                             </div>
@@ -745,10 +764,10 @@
                           </div>
                           <input type="text" id="mAddTag" placeholder="地點名稱..." className="w-full p-3.5 rounded-xl border-2 border-emerald-200 outline-none text-xl font-bold bg-white" />
                           
-                          {/* 新增地點：24色莫蘭迪色系選擇盤 */}
-                          <div className="flex flex-wrap gap-2.5 justify-center py-3 px-1">
-                            {MORANDI_COLORS.map((hex, i) => (
-                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-9 h-9 rounded-full transition-transform ${modalColorIdx === i ? 'color-ring-active' : 'border border-black/5'}`} style={{ backgroundColor: hex, color: hex }}></button>
+                          {/* 24色馬卡龍色選盤：可左右滑動 */}
+                          <div className="flex gap-2.5 items-center overflow-x-auto scrollbar-hide py-3 px-1">
+                            {MACARON_COLORS.map((cfg, i) => (
+                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-9 h-9 rounded-full transition-transform ${modalColorIdx === i ? 'macaron-ring-active' : 'border border-black/5'}`} style={{ backgroundColor: cfg.bg, color: cfg.border }}></button>
                             ))}
                           </div>
 
@@ -762,10 +781,10 @@
                                 <div className="p-2 text-neutral-500 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical size={20}/></div>
                                 <div className="flex flex-col flex-1 min-w-0 px-1 py-1">
                                   <span className="font-bold text-xl truncate mb-2" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
+                                  {/* 已存地點的精簡色盤：可左右滑動選擇 24 色 */}
                                   <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-1">
-                                    {/* 已存地點換色：移除黑框，使用白環光圈 */}
-                                    {MORANDI_COLORS.slice(0, 12).map((hex, ci) => (
-                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-7 h-7 shrink-0 rounded-full transition-all`} style={{ backgroundColor: hex, boxShadow: item.c === ci ? `0 0 0 2px #fff, 0 0 0 4px ${hex}` : 'inset 0 0 0 1px rgba(0,0,0,0.1)' }} />
+                                    {MACARON_COLORS.map((cfg, ci) => (
+                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-7 h-7 shrink-0 rounded-full transition-all`} style={{ backgroundColor: cfg.bg, boxShadow: item.c === ci ? `0 0 0 2px #fff, 0 0 0 4px ${cfg.border}` : 'inset 0 0 0 1px rgba(0,0,0,0.1)' }} />
                                     ))}
                                   </div>
                                 </div>
@@ -811,46 +830,6 @@
                         <p className="text-lg text-neutral-600 font-bold px-4 leading-relaxed underline underline-offset-4 decoration-amber-300 decoration-2">錄入本次價格，系統自動記憶。下次再買同樣東西，會告訴你上次買多少，讓你買得更聰明。</p>
                         <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入金額..." className="w-full p-6 rounded-2xl border-4 border-amber-200 outline-none text-4xl text-center bg-amber-50/30 shadow-inner font-bold text-amber-900" />
                         <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-amber-600 text-white py-5 rounded-2xl font-bold text-xl shadow-lg active:scale-95 transition-all">確定錄入</button>
-                      </div>
-                    )}
-                    
-                    {modalState.type === 'addTag' && (
-                      <div className="space-y-6 py-4 px-1 font-bold">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-5 rounded-2xl border-2 border-emerald-200 outline-none text-2xl font-bold text-center bg-emerald-50/30 shadow-inner" />
-                        <div className="space-y-4">
-                          <p className="text-lg font-bold text-neutral-600 px-1 font-serif-tc">挑選顏色：</p>
-                          <div className="flex flex-wrap gap-3 justify-center px-1">
-                            {MORANDI_COLORS.map((hex, i) => (
-                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-11 h-11 rounded-full transition-transform ${modalColorIdx === i ? 'color-ring-active' : 'border border-black/5'}`} style={{ backgroundColor: hex, color: hex }}></button>
-                            ))}
-                          </div>
-                        </div>
-                        <button onClick={() => handleAddNewTag(modalInput, modalColorIdx, true)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-xl shadow-lg active:scale-95">確認新增</button>
-                      </div>
-                    )}
-                    
-                    {modalState.type === 'editingTag' && modalState.data && (
-                      <div className="flex flex-col gap-4 py-4 px-1 font-bold font-serif-tc">
-                        <div className="text-center mb-2"><span className="text-xl font-bold text-emerald-900 bg-emerald-100 px-10 py-4 rounded-full shadow-md">📍 {modalState.data.name}</span></div>
-                        <div className="grid grid-cols-2 gap-3 font-bold">
-                          {customTags.map(t => ( 
-                            <button key={t.n} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t.n }); setModalState({ type: null }); }} className="py-5 rounded-2xl font-bold text-xl border-2 shadow-sm active:scale-95" style={getTagInlineStyles(t.n)}>{t.n}</button> 
-                          ))}
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: '' }); setModalState({ type: null }); }} className="py-5 rounded-2xl font-bold text-xl border-2 bg-neutral-100 text-neutral-400 border-neutral-200">無地點</button>
-                        </div>
-                      </div>
-                    )}
-
-                    {modalState.type === 'donate' && (
-                      <div className="space-y-8 py-6 text-center font-bold px-1">
-                        <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-inner font-serif-tc">
-                          <p className="text-xl text-amber-900 font-bold mb-2">謝謝姊姊與妹妹的心意！ 🥰</p>
-                          <div className="inline-block bg-amber-500 text-white text-xs px-6 py-1.5 rounded-full font-bold shadow-md shadow-amber-200">一杯咖啡隨喜</div>
-                        </div>
-                        <div className="bg-neutral-50 p-6 rounded-2xl border-2 border-neutral-100 space-y-4 shadow-sm font-bold">
-                          <p className="text-xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
-                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full bg-amber-500 text-white py-5 rounded-2xl text-xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
-                        </div>
                       </div>
                     )}
                   </div>
