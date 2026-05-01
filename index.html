@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.1.25 (全方位視力友善與穩定版) by 大樂 -->
+  <!-- 智能採買 v1.2.2 (友軍直覺介面升級版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -29,32 +29,20 @@
     html,body{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;overscroll-behavior:none;background-color:#047857;-webkit-tap-highlight-color:transparent;}
     #root{width:100%;height:100%;background-color:#f5f5f5;display:flex;justify-content:center;}
     
-    /* 拖曳強化：絕對禁止選取文字 */
+    /* 拖曳強化：絕對禁止選取文字與系統選單 */
     .drag-handle{cursor:move;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
     .draggable-pill{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
     
     .tag-neutral { background-color: #f9fafb; color: #374151; border-color: #d1d5db; }
     
-    /* 戰術級膠囊按鈕 - 淺色文字區隔動作 */
-    .btn-capsule-tactical {
-      background: linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%);
-      color: #065f46;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-      border: 1.5px solid #10b981;
-      -webkit-user-select:none;user-select:none;
-    }
-    .btn-capsule-tactical:active {
-      transform: scale(0.96);
-      background: #c8e6c9;
-    }
-    /* 修正選取樣式：移除黑色圈圈，改用高對比白色光環 */
+    /* 修正選取樣式：白色光環 */
     .color-ring-active {
       transform: scale(1.1);
       box-shadow: inset 0 0 0 3px #fff, 0 0 0 3px currentColor;
     }
     /* 解決 Apple 動態島重疊 */
     .safe-pt { padding-top: env(safe-area-inset-top, 20px); }
-    .safe-mt { margin-top: env(safe-area-inset-top, 0px); }
+    .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
   </style>
 </head>
 <body class="antialiased font-sans">
@@ -105,11 +93,14 @@
 
     const DEFAULT_TAGS = [
       { n: '全聯', c: 1 },
-      { n: '郵局', c: 0 },
-      { n: '菜市場', c: 2 },
-      { n: '其它', c: 6 }
+      { n: '好市多', c: 4 },
+      { n: '烘焙', c: 9 },
+      { n: '好朋友', c: 5 }
     ];
-    const DEFAULT_QUICK = [{ n: '雞蛋', t: '全聯' }];
+    const DEFAULT_QUICK = [
+      { n: '雞蛋', t: '全聯' },
+      { n: '豆腐', t: '全聯' }
+    ];
 
     const generateId = (len = 4) => {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -118,30 +109,29 @@
       return res;
     };
 
-    // 補齊所有 Icon 定義
     const Icons = {
-      Cart: ({size=22}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>,
-      Plus: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-      Trash: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>,
-      Check: ({size=20}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>,
-      Clock: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-      Copy: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
-      Share: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
-      Settings: ({size=18}) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12c0,0.33,0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+      Cart: ({size=22, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>,
+      Plus: ({size=20, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+      Trash: ({size=20, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>,
+      Check: ({size=20, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>,
+      Clock: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+      Copy: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>,
+      Share: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8m-4-6-4-4-4 4m4-4v13"/></svg>,
+      Settings: ({size=18, className=""}) => (
+        <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12c0,0.33,0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
       ),
-      X: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
-      ChevronDown: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>,
-      ChevronUp: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m18 15-6-6-6 6"/></svg>,
-      GripVertical: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="12" r="1.5"></circle><circle cx="9" cy="6" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>,
-      Info: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-      Edit: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-      CheckCircle: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-      Smartphone: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
-      Coffee: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>,
-      BookOpen: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
-      History: ({size=16}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0-5v5h5"/><polyline points="12 7 12 12 16 14"/></svg>,
-      Refresh: ({size=18}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      X: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      ChevronDown: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>,
+      ChevronUp: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>,
+      GripVertical: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="12" r="1.5"></circle><circle cx="9" cy="6" r="1.5"></circle><circle cx="9" cy="18" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="15" cy="6" r="1.5"></circle><circle cx="15" cy="18" r="1.5"></circle></svg>,
+      Info: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+      Edit: ({size=16, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+      CheckCircle: ({size=16, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+      Smartphone: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
+      Coffee: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>,
+      BookOpen: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+      History: ({size=16, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0-5v5h5"/><polyline points="12 7 12 12 16 14"/></svg>,
+      Refresh: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
     };
 
     const App = () => {
@@ -191,10 +181,13 @@
         return null;
       };
 
-      const getTagInlineStyles = (tagName, opacity = 1) => {
+      const getTagInlineStyles = (tagName, isOutline = false) => {
         const cfg = getTagConfig(tagName);
         if (!cfg) return {};
-        return { backgroundColor: opacity < 1 ? `${cfg.bg}cc` : cfg.bg, color: cfg.text, borderColor: cfg.border };
+        if (isOutline) {
+          return { backgroundColor: '#ffffff', color: cfg.border, borderColor: cfg.border };
+        }
+        return { backgroundColor: cfg.border, color: '#fff', borderColor: cfg.border };
       };
       
       const [savedRooms, setSavedRooms] = useState(() => {
@@ -282,6 +275,14 @@
         setMsg('新增成功'); setTimeout(() => setMsg(''), 1000);
       };
       const delTag = async (tagName) => { const next = customTags.filter(tag => tag.n !== tagName); await setDoc(getConfigRef(), { tags: next }, { merge: true }); };
+      const handleAddNewQuick = async (name, tag, shouldClose = false) => {
+        const qName = name.trim(); if (!qName) return;
+        const next = [...quickItems.map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' })), { n: qName, t: tag || '' }];
+        await setDoc(getConfigRef(), { quick: next }, { merge: true });
+        if (shouldClose) setModalState({ type: null });
+        setMsg('新增成功'); setTimeout(() => setMsg(''), 1000);
+      };
+      const delQuick = async (idx) => { const next = quickItems.filter((_, i) => i !== idx).map(q => ({ n: q.n || q.name, t: q.t || q.tag || '' })); await setDoc(getConfigRef(), { quick: next }, { merge: true }); };
       
       const handleTuneRoomAttempt = async (prefix, suffix, note = '') => {
         try {
@@ -289,7 +290,6 @@
           const s = suffix.trim();
           if (!p && !s) { handleTuneRoom('', ''); return; }
           const finalPath = (p && s) ? `${p}-${s}` : (p || s);
-          
           const listRef = collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_room_${finalPath}`);
           const snap = await getDocs(listRef);
           if (!snap.empty && !savedRooms.some(r => r.code === finalPath)) {
@@ -406,6 +406,12 @@
 
       const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
 
+      // 動態判定當前拖曳時是否要鎖定卷軸
+      const scrollContainerClass = (type) => {
+        if (hDragIdx !== null && hDragType === type) return 'overflow-hidden';
+        return 'overflow-x-auto scrollbar-hide';
+      };
+
       return (
         <div className="w-full h-full flex justify-center bg-neutral-100 font-sans text-neutral-800">
           {msg && (
@@ -414,7 +420,7 @@
             </div>
           )}
 
-          <div className="w-full max-md bg-white h-full flex flex-col relative shadow-2xl sm:border-x border-neutral-200 z-0 overflow-hidden">
+          <div className="w-full max-w-md bg-white h-full flex flex-col relative shadow-2xl sm:border-x border-neutral-200 z-0 overflow-hidden">
             <header className="bg-emerald-700 text-white shrink-0 shadow-lg z-20 safe-pt">
               <div className="px-4 py-3 sm:py-4 flex justify-between items-center h-auto min-h-[64px]">
                 <div className="flex items-center gap-2 font-bold">
@@ -435,53 +441,92 @@
               </div>
             </header>
 
-            <div className={`transition-all duration-300 origin-top overflow-hidden bg-emerald-50 shrink-0 shadow-sm ${isShoppingMode ? 'max-h-0 opacity-0' : 'max-h-[450px] opacity-100 border-b border-emerald-100'}`}>
-              <div className="px-3 pt-2 pb-1 space-y-1.5">
-                <form onSubmit={handleAdd} className="flex gap-2 items-center">
-                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買或要做什麼？" className="flex-1 min-w-0 p-3 rounded-xl border-none shadow-inner focus:ring-2 focus:ring-emerald-600 outline-none text-lg bg-white font-bold" />
-                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-14 sm:w-20 p-3 rounded-xl border-none shadow-inner text-center outline-none text-base bg-white font-bold" />
-                  <button type="submit" className="bg-emerald-700 text-white p-3 rounded-xl shadow-lg active:scale-95 shrink-0"><Icons.Plus size={24}/></button>
+            {/* 友軍直覺版：全新白底輸入區 */}
+            {!isShoppingMode && (
+              <div className="bg-white px-3 pt-3 pb-2 shadow-sm relative z-10 shrink-0 border-b border-emerald-100">
+                {/* 雙輸入框 */}
+                <form onSubmit={handleAdd} className="flex gap-2 items-center mb-2">
+                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買或要做什麼？" className="flex-1 min-w-0 p-3.5 rounded-2xl border border-neutral-200 shadow-sm outline-none text-base sm:text-lg font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
+                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-16 sm:w-20 p-3.5 rounded-2xl border border-neutral-200 shadow-sm text-center outline-none text-base font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
                 </form>
-                <div className="flex items-center gap-1.5 relative overflow-x-auto scrollbar-hide px-1">
-                  <div className="sticky left-0 z-10 bg-emerald-50 pr-2 py-0.5">
-                    <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-2 bg-white rounded-full active:scale-95 shadow-sm border border-emerald-100"><Icons.Settings size={22} /></button>
+                
+                {/* 常用品項設定區塊 - 行距縮小、扁膠囊 */}
+                <div className={`flex items-center gap-2 relative ${scrollContainerClass('quick')} py-1 mt-1`}>
+                  <div className="sticky left-0 bg-white pr-1 z-10 flex items-center justify-center">
+                    <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-700 w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={20} /></button>
                   </div>
                   {quickItems.map((qa, i) => (
-                    <button key={i} data-h-quick-idx={i} onTouchStart={(e) => onTouchStartH(e, i, 'quick')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-quick-idx')} onTouchEnd={() => onTouchEndH('quick')} onTouchCancel={() => onTouchEndH('quick')} onClick={() => { if(!dragDidHappen.current) handleQuickSelect(qa); }} className={`shrink-0 draggable-pill whitespace-nowrap px-3 py-2 rounded-full text-sm font-bold transition-all shadow-sm bg-amber-50 border border-amber-200 text-amber-700 active:scale-95 ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-50' : ''}`}>+ {qa.n || qa.name}</button>
+                    <button key={i} data-h-quick-idx={i} onTouchStart={(e) => onTouchStartH(e, i, 'quick')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-quick-idx')} onTouchEnd={() => onTouchEndH('quick')} onTouchCancel={() => onTouchEndH('quick')} onClick={() => { if(!dragDidHappen.current) handleQuickSelect(qa); }} className={`shrink-0 draggable-pill whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-all shadow-sm bg-orange-50 border border-orange-200 text-orange-600 active:scale-95 ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-orange-500' : ''}`}>+ {qa.n || qa.name}</button>
                   ))}
-                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-3 py-2 rounded-full text-sm font-bold text-amber-600 bg-amber-50 border border-amber-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={16} /></button>
+                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-4 py-1.5 rounded-full text-sm font-bold text-orange-500 bg-white border border-dashed border-orange-300 active:scale-95 whitespace-nowrap">+ 自訂</button>
                 </div>
-                <div className="flex items-center gap-1.5 pt-1 border-t border-emerald-100/50 relative overflow-x-auto scrollbar-hide px-1">
-                  <div className="sticky left-0 z-10 bg-emerald-50 pr-2 py-0.5">
-                    <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-600 flex items-center justify-center p-2 bg-white rounded-full active:scale-95 shadow-sm border border-emerald-100"><Icons.Settings size={22} /></button>
+                
+                {/* 地點標籤區塊 - 行距縮小、扁膠囊 */}
+                <div className={`flex items-center gap-2 relative ${scrollContainerClass('tag')} py-1 mt-1`}>
+                  <div className="sticky left-0 bg-white pr-1 z-10 flex items-center justify-center">
+                    <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-700 w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={20} /></button>
                   </div>
-                  {customTags.map((t, idx) => (
-                    <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(activeTag === t.n ? '' : t.n); }} className={`shrink-0 draggable-pill px-3 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm border ${activeTag === t.n ? 'scale-105 brightness-90 shadow-inner border-black/20' : ''} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-50' : ''}`} style={activeTag === t.n ? { backgroundColor: PRESET_COLORS[t.c].text, color: '#fff' } : getTagInlineStyles(t.n)}>{t.n}</button>
-                  ))}
-                  <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3 py-2 rounded-full text-sm font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 border-dashed flex items-center justify-center active:scale-95"><Icons.Plus size={16} /></button>
+                  {customTags.map((t, idx) => {
+                    const isSelected = activeTag === t.n;
+                    const style = getTagInlineStyles(t.n, !isSelected);
+                    return (
+                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={style}>{t.n}</button>
+                    )
+                  })}
+                  <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3.5 py-1.5 rounded-full text-sm font-bold text-emerald-600 bg-white border border-dashed border-emerald-300 active:scale-95 flex items-center justify-center"><Icons.Plus size={16} /></button>
+                </div>
+                
+                {/* 雙按鈕動作區 - 並排設計 */}
+                <div className="flex gap-3 mt-3 mb-1 px-1">
+                  <button onClick={() => setIsShoppingMode(true)} className="flex-[0.8] py-3 bg-emerald-50 text-emerald-700 font-bold rounded-2xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform text-base shadow-sm border border-emerald-100">
+                    <Icons.ChevronUp size={20} /> 收起
+                  </button>
+                  <button onClick={handleAdd} className="flex-[1.2] py-3 bg-emerald-700 text-white font-bold rounded-2xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-transform text-base">
+                    <Icons.Plus size={20} /> 新增
+                  </button>
                 </div>
               </div>
+            )}
+
+            {isShoppingMode && (
+              <div className="bg-white px-4 py-3 shadow-sm relative z-10 shrink-0 flex justify-center border-b border-neutral-100">
+                 <button onClick={() => setIsShoppingMode(false)} className="flex items-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-8 py-2.5 rounded-full active:scale-95 transition-transform border border-emerald-200 shadow-sm">
+                     <Icons.ChevronDown size={20}/> 展開新增清單
+                 </button>
+              </div>
+            )}
+
+            {/* 精緻分隔線與採買清單標題 */}
+            <div className="flex items-center justify-center gap-3 px-5 py-4 shrink-0 bg-white">
+              <div className="h-px bg-emerald-800 flex-1 opacity-60"></div>
+              <div className="text-emerald-800 font-bold text-lg flex items-center gap-1.5">
+                <Icons.Cart size={20}/> 我的採買清單
+              </div>
+              <div className="h-px bg-emerald-800 flex-1 opacity-60"></div>
             </div>
 
-            <div className="shrink-0 flex justify-center bg-white border-y border-neutral-200 py-3 px-4">
-              <button 
-                onClick={() => setIsShoppingMode(!isShoppingMode)} 
-                className="btn-capsule-tactical w-full max-w-[280px] py-3 rounded-full flex items-center justify-center gap-2.5 transition-all shadow-sm"
-              >
-                {isShoppingMode ? <Icons.ChevronDown size={22} className="animate-subtle-bounce"/> : <Icons.ChevronUp size={22} className="animate-subtle-bounce"/>}
-                <span className="font-bold text-base tracking-widest opacity-60">
-                  {isShoppingMode ? '展開清單設定' : '收起並開始採買'}
-                </span>
-              </button>
-            </div>
-
+            {/* 立體過濾標籤列：小箭頭設計 */}
             {dynamicFilterTags.length > 1 && (
-              <div className="bg-white border-b border-neutral-200 flex overflow-x-auto scrollbar-hide shrink-0 shadow-sm z-10 px-2 py-2 gap-2">
+              <div className="bg-white flex overflow-x-auto scrollbar-hide shrink-0 z-10 px-3 pt-1 gap-1.5 border-b-2 border-emerald-700/10">
                 {dynamicFilterTags.map(tagName => {
-                  const cfg = getTagConfig(tagName);
                   const isSelected = filterTag === tagName;
+                  const cfg = tagName === '全部' ? { border: '#047857' } : (getTagConfig(tagName) || { border: '#64748b' });
+                  
+                  const activeStyle = { backgroundColor: cfg.border, color: '#fff', borderColor: cfg.border };
+                  const inactiveStyle = { backgroundColor: '#fff', color: cfg.border, borderColor: cfg.border };
+                  
                   return (
-                    <button key={`filter-${tagName}`} onClick={() => setFilterTag(tagName)} className={`min-w-[80px] px-4 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm border ${isSelected ? 'scale-105 border-black/10' : 'opacity-60 border-transparent bg-neutral-100'}`} style={getTagInlineStyles(tagName, isSelected ? 1 : 0.4)}>{tagName}</button>
+                    <button 
+                      key={`filter-${tagName}`} 
+                      onClick={() => setFilterTag(tagName)} 
+                      className={`relative px-4 py-2 text-sm font-bold transition-all rounded-t-xl whitespace-nowrap border-x border-t ${isSelected ? 'shadow-sm z-20' : 'opacity-70 hover:opacity-100'}`}
+                      style={isSelected ? activeStyle : inactiveStyle}
+                    >
+                      {tagName}
+                      {isSelected && (
+                        <div className="absolute -bottom-[10px] left-1/2 -translate-x-1/2 border-[5px] border-transparent" style={{ borderTopColor: cfg.border }}></div>
+                      )}
+                    </button>
                   );
                 })}
               </div>
@@ -511,8 +556,9 @@
                     </div>
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-3 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
-                        {history[item.name] && !item.completed && <span className="text-sm font-bold truncate text-right whitespace-nowrap opacity-90 font-serif-tc" style={{ color: getTagConfig(item.tag)?.text || '#92400e' }}>上次買：${history[item.name].price}</span>}
+                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-3 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag, true) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
+                        {/* 修復：顯示上次在哪裡買的黑科技 */}
+                        {history[item.name] && !item.completed && <span className="text-sm font-bold truncate text-right whitespace-nowrap opacity-90 font-serif-tc" style={{ color: getTagConfig(item.tag)?.text || '#92400e' }}>上次買：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
                       </div>
                       <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={20} /></button>
                     </div>
@@ -554,7 +600,7 @@
                       <div className="space-y-6 py-2 px-1 font-bold">
                         <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-1">版本 v1.1.25 (全面修復版)</p>
+                          <p className="text-sm text-emerald-700 mt-1 font-bold">版本 v1.2.2 (友軍直覺介面升級版)</p>
                           <button onClick={handleForceUpdate} className="mt-4 bg-white text-emerald-700 text-xs px-4 py-2 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={14} /> 檢查載入新版本</button>
                         </div>
 
@@ -643,17 +689,8 @@
                             <input type="text" id="mRoomNote" placeholder="頻道備註 (如：全家用、公司)" className="w-full p-3.5 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold outline-none font-bold" />
                             <div className="flex gap-2">
                               <button onClick={async () => { 
-                                try { 
-                                  const text = await navigator.clipboard.readText(); 
-                                  if (text) {
-                                    if (text.includes('-')) {
-                                      const [p, s] = text.split('-');
-                                      setRoomPrefix(p); setRoomSuffix(s);
-                                    } else {
-                                      setRoomSuffix(text);
-                                    }
-                                  } 
-                                } catch (err) { setMsg('請手動輸入'); setTimeout(() => setMsg(''), 2000); } 
+                                try { const text = await navigator.clipboard.readText(); if (text) { if (text.includes('-')) { const [p, s] = text.split('-'); setRoomPrefix(p); setRoomSuffix(s); } else { setRoomSuffix(text); } } } 
+                                catch (err) { setMsg('請手動輸入'); setTimeout(() => setMsg(''), 2000); } 
                               }} className="w-1/3 bg-emerald-50 text-emerald-800 py-3.5 rounded-xl font-bold border border-emerald-200 active:scale-95 text-base">貼上</button>
                               <button onClick={() => handleTuneRoomAttempt(roomPrefix, roomSuffix, document.getElementById('mRoomNote').value)} className="w-2/3 bg-emerald-700 text-white py-3.5 rounded-xl font-bold active:scale-95 text-base shadow-lg">連線頻道</button>
                             </div>
@@ -661,11 +698,11 @@
                         </div>
 
                         <div className="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200 mt-2 font-bold leading-relaxed shadow-sm">
-                          <p className="text-lg font-bold text-blue-900 mb-3">📡 快速連線步驟：</p>
-                          <div className="text-sm text-blue-800 space-y-4 font-bold leading-relaxed">
+                          <p className="text-base font-bold text-blue-900 mb-3">📡 快速連線步驟：</p>
+                          <div className="text-sm text-blue-800 space-y-3 font-bold leading-relaxed">
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">1.</span>
-                                <p style={{ textIndent: '-2px' }}>點選頻道列表的 <span className="bg-[#FFDD00] text-amber-900 p-1 rounded inline-flex items-center shadow-sm"><Icons.Copy size={12}/></span> 按鈕複製代號。</p>
+                                <p style={{ textIndent: '-2px' }}>點選頻道列表的 <span className="bg-[#FFDD00] text-amber-900 px-1 py-0.5 rounded shadow-sm inline-flex items-center"><Icons.Copy size={14}/></span> 複製代號。</p>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">2.</span>
@@ -695,12 +732,12 @@
                           <input type="text" id="mAddTag" placeholder="地點名稱..." className="w-full p-3.5 rounded-xl border-2 border-emerald-200 outline-none text-xl font-bold bg-white" />
                           <div className="flex gap-2.5 items-center overflow-x-auto scrollbar-hide py-3 px-1">
                             {PRESET_COLORS.map((color, i) => (
-                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-9 h-9 rounded-full border-2 transition-all ${modalColorIdx === i ? 'color-ring-active' : 'border-black/5'}`} style={{ backgroundColor: color.bg, color: color.border }}></button>
+                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-9 h-9 rounded-full border-2 transition-transform ${modalColorIdx === i ? 'color-ring-active' : 'border-black/5'}`} style={{ backgroundColor: color.bg, color: color.border }}></button>
                             ))}
                           </div>
                           <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-700 text-white py-3.5 rounded-xl font-bold text-xl active:scale-95 shadow-md">新增地點</button>
                         </div>
-                        <div className="space-y-3 pb-10 px-1 font-bold" onTouchMove={(e) => onVMove(e, 'data-v-tag-idx')}>
+                        <div className="space-y-3 pb-10 px-1 font-bold">
                           <p className="text-sm font-bold text-neutral-500 px-1">已存地點 (長按圖示拖曳)：</p>
                           {customTags.map((item, idx) => (
                             <div key={idx} data-v-tag-idx={idx} className={`flex justify-between items-center p-3 rounded-2xl border-2 shadow-sm transition-all ${vDragIdx === idx ? 'opacity-40 scale-95' : ''}`} style={getTagInlineStyles(item.n)}>
@@ -710,7 +747,7 @@
                                   <span className="font-bold text-xl truncate mb-2" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
                                   <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1 px-1">
                                     {PRESET_COLORS.map((c, ci) => (
-                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-7 h-7 shrink-0 rounded-full border-2 transition-all ${item.c === ci ? 'ring-4 ring-black border-white shadow-sm scale-110' : 'border-black/10'}`} style={{ backgroundColor: c.bg }} />
+                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-7 h-7 shrink-0 rounded-full border-2 transition-all ${item.c === ci ? 'ring-2 ring-black border-white shadow-sm scale-110' : 'border-black/10'}`} style={{ backgroundColor: c.bg }} />
                                     ))}
                                   </div>
                                 </div>
@@ -735,7 +772,7 @@
                             <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-8 rounded-xl font-bold text-xl active:scale-95 shadow-md font-bold">新增</button>
                           </div>
                         </div>
-                        <div className="space-y-2 pb-10 px-1 font-bold" onTouchMove={(e) => onVMove(e, 'data-v-quick-idx')}>
+                        <div className="space-y-2 pb-10 px-1 font-bold">
                            <p className="text-sm font-bold text-neutral-500 px-1">已存品項 (長按圖示拖曳)：</p>
                           {quickItems.map((item, idx) => (
                             <div key={idx} data-v-quick-idx={idx} className={`flex justify-between items-center p-3.5 rounded-2xl border-2 bg-neutral-50 shadow-sm border-neutral-100 ${vDragIdx === idx ? 'opacity-40 scale-95' : ''}`}>
@@ -756,46 +793,6 @@
                         <p className="text-lg text-neutral-600 font-bold px-4 leading-relaxed underline underline-offset-4 decoration-amber-300 decoration-2">錄入本次價格，系統自動記憶。下次再買同樣東西，會告訴你上次買多少，讓你買得更聰明。</p>
                         <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入金額..." className="w-full p-6 rounded-2xl border-4 border-amber-200 outline-none text-4xl text-center bg-amber-50/30 shadow-inner font-bold text-amber-900" />
                         <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-amber-600 text-white py-5 rounded-2xl font-bold text-xl shadow-lg active:scale-95 transition-all">確定錄入</button>
-                      </div>
-                    )}
-                    
-                    {modalState.type === 'addTag' && (
-                      <div className="space-y-6 py-4 px-1 font-bold">
-                        <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-5 rounded-2xl border-2 border-emerald-200 outline-none text-2xl font-bold text-center bg-emerald-50/30 shadow-inner" />
-                        <div className="space-y-4">
-                          <p className="text-lg font-bold text-neutral-600 px-1 font-serif-tc">挑選顏色：</p>
-                          <div className="grid grid-cols-4 gap-4 px-1">
-                            {PRESET_COLORS.map((color, i) => (
-                              <button key={i} onClick={() => setModalColorIdx(i)} className={`h-11 rounded-2xl border-2 transition-all ${modalColorIdx === i ? 'color-ring-active' : 'border-black/5'}`} style={{ backgroundColor: color.bg, color: color.border }}></button>
-                            ))}
-                          </div>
-                        </div>
-                        <button onClick={() => handleAddNewTag(modalInput, modalColorIdx, true)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-xl shadow-lg active:scale-95">確認新增</button>
-                      </div>
-                    )}
-                    
-                    {modalState.type === 'editingTag' && modalState.data && (
-                      <div className="flex flex-col gap-4 py-4 px-1 font-bold font-serif-tc">
-                        <div className="text-center mb-2"><span className="text-xl font-bold text-emerald-900 bg-emerald-100 px-10 py-4 rounded-full shadow-md">📍 {modalState.data.name}</span></div>
-                        <div className="grid grid-cols-2 gap-3 font-bold">
-                          {customTags.map(t => ( 
-                            <button key={t.n} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t.n }); setModalState({ type: null }); }} className="py-5 rounded-2xl font-bold text-xl border-2 shadow-sm active:scale-95" style={getTagInlineStyles(t.n)}>{t.n}</button> 
-                          ))}
-                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: '' }); setModalState({ type: null }); }} className="py-5 rounded-2xl font-bold text-xl border-2 bg-neutral-100 text-neutral-400 border-neutral-200">無地點</button>
-                        </div>
-                      </div>
-                    )}
-
-                    {modalState.type === 'donate' && (
-                      <div className="space-y-8 py-6 text-center font-bold px-1">
-                        <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-inner font-serif-tc">
-                          <p className="text-xl text-amber-900 font-bold mb-2">謝謝姊姊與妹妹的心意！ 🥰</p>
-                          <div className="inline-block bg-amber-500 text-white text-xs px-6 py-1.5 rounded-full font-bold shadow-md shadow-amber-200">一杯咖啡隨喜</div>
-                        </div>
-                        <div className="bg-neutral-50 p-6 rounded-2xl border-2 border-neutral-100 space-y-4 shadow-sm font-bold">
-                          <p className="text-xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
-                          <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="w-full bg-amber-500 text-white py-5 rounded-2xl text-xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
-                        </div>
                       </div>
                     )}
                   </div>
