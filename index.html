@@ -463,9 +463,12 @@
           if (type === 'tag') {
             const next = [...customTags]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
             setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
-          } else {
+          } else if (type === 'quick') {
             const next = [...quickItems]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
             setQuickItems(next); await setDoc(getConfigRef(), { quick: next }, { merge: true });
+          } else if (type === 'room') {
+            const next = [...savedRooms]; const [moved] = next.splice(vDragIdx, 1); next.splice(vDragOverIdx, 0, moved);
+            setSavedRooms(next); try{localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(next));}catch(e){}
           }
         }
         setVDragIdx(null); setVDragOverIdx(null);
@@ -721,10 +724,11 @@
                       <div className="space-y-5 py-2 px-1">
                         {savedRooms.length > 0 && (
                           <div className="space-y-3 font-bold">
-                            <h3 className="text-lg font-bold text-neutral-600 flex items-center gap-2 px-1"><Icons.History size={20}/> 頻道列表 (點選切換)</h3>
-                            <div className="space-y-2.5">
+                            <h3 className="text-lg font-bold text-neutral-600 flex items-center gap-2 px-1"><Icons.History size={20}/> 頻道列表 (長按圖示拖曳)</h3>
+                            <div className="space-y-2.5" onTouchMove={(e) => onVMove(e, 'data-v-room-idx')}>
                               {savedRooms.map((room, idx) => (
-                                <div key={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-400 shadow-md' : 'bg-white border-neutral-200 shadow-sm'}`}>
+                                <div key={idx} data-v-room-idx={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex items-center gap-2 p-3.5 rounded-2xl border-2 transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-400 shadow-md' : 'bg-white border-neutral-200 shadow-sm'} ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative' : ''} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`}>
+                                  <div className="p-2 -ml-2 text-neutral-400 drag-handle" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { e.stopPropagation(); onVStart(idx); }} onTouchEnd={(e) => { e.stopPropagation(); onVEnd('room'); }} onTouchCancel={(e) => { e.stopPropagation(); onVEnd('room'); }}><Icons.GripVertical size={20}/></div>
                                   <div className="flex flex-col flex-1 min-w-0">
                                     <span className={`font-bold text-base truncate ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
                                     <span className="text-[10px] text-neutral-400 font-mono italic truncate">{room.code}</span>
