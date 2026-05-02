@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.2.26 (完美分享版) by 大樂 -->
+  <!-- 智能採買 v1.2.26 (完美分享版) by 朵朵 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
 
   <!-- 🛡️ 【分享預覽黑科技：LINE/FB 顯示專屬 Icon 與標題】 -->
   <meta property="og:title" content="智能採買">
-  <meta property="og:description" content="推薦給你這個超好用的智能採買 APP！(請向建立者索取專屬頻道代號喔)">
+  <meta property="og:description" content="推薦給你這個超好用的智能採買 APP！">
   <meta property="og:image" content="https://fang5761-source.github.io/apple-touch-icon.png">
   <meta property="og:type" content="website">
   
@@ -407,7 +407,7 @@
       const handleShareApp = async () => {
         // 修正分享文字：加上專屬網址，讓 LINE 能成功抓取 OG 預覽標籤！
         const url = window.location.href.split('?')[0];
-        const shareText = `推薦給你這個超好用的智能採買 APP！\n(請向建立者索取專屬頻道代號喔)\n\n${url}`;
+        const shareText = `推薦給你這個超好用的智能採買 APP！\n\n${url}`;
         
         if (navigator.share) {
           try {
