@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+  <!-- 智能採買 v1.2.25 (友善老花放大版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -285,7 +286,6 @@
         const unsubConfig = onSnapshot(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `config_${prefix}`, 'settings'), snap => {
           if (snap.exists()) {
             const data = snap.data();
-            // 過濾舊的異常格式
             if (data.tags) {
               const fixedTags = data.tags.map(t => {
                 if (typeof t === 'string') return { n: t, c: 0 };
@@ -353,7 +353,6 @@
           const listRef = collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_room_${finalPath}`);
           const snap = await getDocs(listRef);
           
-          // 無論是否在 savedRooms 裡，只要雲端有資料就跳出警報
           if (!snap.empty) {
             setModalState({ type: 'channelConflict', data: { code: finalPath, note, count: snap.size } });
           } else {
@@ -412,7 +411,6 @@
             console.log('Share canceled', err);
           }
         } else {
-          // 加入防捲動保護的臨時複製區
           const tempIn = document.createElement('textarea'); 
           tempIn.value = shareText; 
           tempIn.style.position = 'fixed';
@@ -500,7 +498,7 @@
       return (
         <div className="w-full h-full flex justify-center bg-neutral-100 font-sans text-neutral-800">
           {msg && (
-            <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-6 py-2.5 rounded-full text-base font-bold shadow-2xl z-[200] animate-slide-up whitespace-nowrap font-serif-tc">
+            <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white px-6 py-2.5 rounded-full text-base sm:text-lg font-bold shadow-2xl z-[200] animate-slide-up whitespace-nowrap font-serif-tc">
               {msg}
             </div>
           )}
@@ -510,16 +508,16 @@
               <div className="px-4 py-3 sm:py-4 flex justify-between items-center h-auto min-h-[64px]">
                 <div className="flex items-center gap-2 font-bold">
                   <Icons.Cart />
-                  <h1 className="text-xl sm:text-2xl tracking-tight font-serif-tc">智能採買</h1>
-                  <button onClick={() => setModalState({ type: 'about' })} className="px-3 py-1.5 bg-blue-500 text-white rounded-xl text-sm sm:text-base font-bold shadow-md ml-1 flex items-center gap-1.5 active:scale-90 transition-all">
-                    <Icons.Info size={16} /> 使用說明
+                  <h1 className="text-2xl sm:text-3xl tracking-tight font-serif-tc">智能採買</h1>
+                  <button onClick={() => setModalState({ type: 'about' })} className="px-3 py-1.5 bg-blue-500 text-white rounded-xl text-base sm:text-lg font-bold shadow-md ml-1 flex items-center gap-1.5 active:scale-90 transition-all">
+                    <Icons.Info size={18} /> 使用說明
                   </button>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => { 
                     setModalInput(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setRoomPrefix(personalBaseId); setRoomSuffix('');
                     setModalState({ type: 'room' }); 
-                  }} className={`px-2.5 py-1.5 rounded-lg text-sm sm:text-base font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
+                  }} className={`px-2.5 py-1.5 rounded-lg text-base sm:text-lg font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
                     {headerRoomTitle}
                   </button>
                 </div>
@@ -529,44 +527,44 @@
             {!isShoppingMode && (
               <div className="bg-white px-3 pt-2 pb-1.5 shadow-sm relative z-10 shrink-0 border-b border-emerald-100">
                 <form onSubmit={handleAdd} className="flex gap-2 items-center mb-1">
-                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買或要做什麼？" className="flex-1 min-w-0 p-3.5 rounded-2xl border border-neutral-200 shadow-sm outline-none text-base sm:text-lg font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
-                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-16 sm:w-20 p-3.5 rounded-2xl border border-neutral-200 shadow-sm text-center outline-none text-base font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
+                  <input type="text" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="要買或要做什麼？" className="flex-1 min-w-0 p-3.5 rounded-2xl border border-neutral-200 shadow-sm outline-none text-lg sm:text-xl font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
+                  <input type="text" value={qtyValue} onChange={e => setQtyValue(e.target.value)} placeholder="數量" className="w-16 sm:w-20 p-3.5 rounded-2xl border border-neutral-200 shadow-sm text-center outline-none text-lg font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400" />
                 </form>
                 
                 <div className={`flex items-center gap-2 relative ${scrollContainerClass('quick')} py-0.5 mt-0.5`}>
                   <div className="sticky left-0 bg-white pr-1 z-10 flex items-center justify-center">
-                    <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-700 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={18} /></button>
+                    <button type="button" onClick={() => setModalState({ type: 'manageQuick' })} className="shrink-0 text-emerald-700 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={20} /></button>
                   </div>
                   {quickItems && quickItems.map((qa, i) => {
                     if(!qa || !qa.n) return null;
                     return (
-                    <button key={i} data-h-quick-idx={i} onTouchStart={(e) => onTouchStartH(e, i, 'quick')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-quick-idx')} onTouchEnd={() => onTouchEndH('quick')} onTouchCancel={() => onTouchEndH('quick')} onClick={() => { if(!dragDidHappen.current) handleQuickSelect(qa); }} className={`shrink-0 draggable-pill whitespace-nowrap px-3.5 py-1 rounded-full text-sm font-bold transition-all shadow-sm bg-orange-50 border border-orange-200 text-orange-600 active:scale-95 ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-orange-500' : ''}`}>+ {qa.n || qa.name}</button>
+                    <button key={i} data-h-quick-idx={i} onTouchStart={(e) => onTouchStartH(e, i, 'quick')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-quick-idx')} onTouchEnd={() => onTouchEndH('quick')} onTouchCancel={() => onTouchEndH('quick')} onClick={() => { if(!dragDidHappen.current) handleQuickSelect(qa); }} className={`shrink-0 draggable-pill whitespace-nowrap px-4 py-1.5 rounded-full text-base font-bold transition-all shadow-sm bg-orange-50 border border-orange-200 text-orange-600 active:scale-95 ${hDragIdx === i && hDragType === 'quick' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === i && hDragType === 'quick' ? 'border-2 border-dashed border-orange-500' : ''}`}>+ {qa.n || qa.name}</button>
                     )
                   })}
-                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-3.5 py-1 rounded-full text-sm font-bold text-orange-500 bg-white border border-dashed border-orange-300 active:scale-95 whitespace-nowrap">+ 自訂</button>
+                  <button type="button" onClick={() => { setModalInput(''); setModalState({ type: 'addQuick' }); }} className="shrink-0 px-4 py-1.5 rounded-full text-base font-bold text-orange-500 bg-white border border-dashed border-orange-300 active:scale-95 whitespace-nowrap">+ 自訂</button>
                 </div>
                 
                 <div className={`flex items-center gap-2 relative ${scrollContainerClass('tag')} py-0.5 mt-0.5`}>
                   <div className="sticky left-0 bg-white pr-1 z-10 flex items-center justify-center">
-                    <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-700 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={18} /></button>
+                    <button type="button" onClick={() => setModalState({ type: 'manageTag' })} className="shrink-0 text-emerald-700 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-neutral-100 active:scale-95"><Icons.Settings size={20} /></button>
                   </div>
                   {customTags && customTags.map((t, idx) => {
                     if(!t || !t.n) return null;
                     const isSelected = activeTag === t.n;
                     const style = getTagInlineStyles(t.n, false);
                     return (
-                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-3.5 py-1 rounded-full text-sm font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm ${isSelected ? 'scale-105 shadow-inner' : 'opacity-80'} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={isSelected ? style : { ...style, borderColor: 'transparent' }}>{t.n}</button>
+                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-4 py-1.5 rounded-full text-base font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm ${isSelected ? 'scale-105 border-neutral-800' : 'border-transparent opacity-90'} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={style}>{t.n}</button>
                     )
                   })}
-                  <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3 py-1 rounded-full text-sm font-bold text-emerald-600 bg-white border border-dashed border-emerald-300 active:scale-95 flex items-center justify-center"><Icons.Plus size={16} /></button>
+                  <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3.5 py-1.5 rounded-full text-base font-bold text-emerald-600 bg-white border border-dashed border-emerald-300 active:scale-95 flex items-center justify-center"><Icons.Plus size={18} /></button>
                 </div>
                 
                 <div className="flex gap-2 mt-2 mb-1 px-1">
-                  <button onClick={() => setIsShoppingMode(true)} className="flex-[0.8] py-2.5 bg-emerald-50 text-emerald-700 font-bold rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform text-sm shadow-sm border border-emerald-100">
-                    <Icons.ChevronUp size={18} /> 收起
+                  <button onClick={() => setIsShoppingMode(true)} className="flex-[0.8] py-3 bg-emerald-50 text-emerald-700 font-bold rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform text-base sm:text-lg shadow-sm border border-emerald-100">
+                    <Icons.ChevronUp size={20} /> 收起
                   </button>
-                  <button onClick={handleAdd} className="flex-[1.2] py-2.5 bg-emerald-800 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-transform text-sm">
-                    <Icons.Plus size={18} /> 新增
+                  <button onClick={handleAdd} className="flex-[1.2] py-3 bg-emerald-800 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-transform text-base sm:text-lg">
+                    <Icons.Plus size={20} /> 新增
                   </button>
                 </div>
               </div>
@@ -574,8 +572,8 @@
 
             {isShoppingMode && (
               <div className="bg-white px-4 py-2 shadow-sm relative z-10 shrink-0 flex justify-center border-b border-neutral-100">
-                 <button onClick={() => setIsShoppingMode(false)} className="flex items-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-6 py-2 rounded-full active:scale-95 transition-transform border border-emerald-200 shadow-sm text-sm">
-                     <Icons.ChevronDown size={18}/> 展開新增清單
+                 <button onClick={() => setIsShoppingMode(false)} className="flex items-center gap-2 text-emerald-700 font-bold bg-emerald-50 px-6 py-2 rounded-full active:scale-95 transition-transform border border-emerald-200 shadow-sm text-base">
+                     <Icons.ChevronDown size={20}/> 展開新增清單
                  </button>
               </div>
             )}
@@ -593,7 +591,7 @@
                     <button 
                       key={`filter-${tagName}`} 
                       onClick={() => setFilterTag(tagName)} 
-                      className={`relative px-4 py-2 text-base sm:text-lg font-bold transition-all rounded-t-xl whitespace-nowrap border-x-2 border-t-2 ${isSelected ? 'shadow-sm z-20' : 'opacity-80 hover:opacity-100 mt-1'}`}
+                      className={`relative px-4 py-2 text-lg sm:text-xl font-bold transition-all rounded-t-xl whitespace-nowrap border-x-2 border-t-2 ${isSelected ? 'shadow-sm z-20' : 'opacity-80 hover:opacity-100 mt-1'}`}
                       style={isSelected ? activeStyle : inactiveStyle}
                     >
                       {tagName}
@@ -610,58 +608,57 @@
               {isLoading && (
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[1px] animate-pulse-slow">
                   <div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
-                  <p className="text-emerald-700 font-bold text-base tracking-widest font-serif-tc">載入中...</p>
+                  <p className="text-emerald-700 font-bold text-lg tracking-widest font-serif-tc">載入中...</p>
                 </div>
               )}
               
               {filteredItems.map(item => (
                 <div key={item.id} className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`} style={{ borderLeftWidth: '8px', borderLeftColor: (!item.completed && !item.postponed) ? (getTagConfig(item.tag)?.border || '#d1d5db') : undefined }}>
-                  <div className="flex flex-col items-center gap-3 shrink-0 mt-0.5">
+                  <div className="flex flex-col items-center gap-3 shrink-0 mt-1">
                     <div onClick={() => handleComplete(item)} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer active:scale-90 ${item.completed ? 'bg-emerald-600 border-emerald-600 text-white shadow-inner' : 'border-neutral-300 bg-white'}`}>{item.completed && <Icons.Check size={20} />}</div>
-                    {!item.completed && <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50/50'}`}><Icons.Clock size={18} /></button>}
+                    {!item.completed && <button onClick={(e) => handlePostpone(e, item)} className={`p-1.5 rounded-lg transition-colors active:scale-75 ${item.postponed ? 'text-amber-500 bg-amber-100' : 'text-neutral-400 bg-neutral-50/50'}`}><Icons.Clock size={20} /></button>}
                   </div>
                   <div className="flex flex-col min-w-0 flex-1 gap-1.5 w-full">
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <span onClick={() => handleComplete(item)} className={`text-xl sm:text-2xl font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
-                        {item.qty && <span className="text-base px-2 py-0.5 rounded font-bold whitespace-nowrap shrink-0 bg-white/50 text-neutral-600 shadow-sm border border-black/5">{item.qty}</span>}
+                        <span onClick={() => handleComplete(item)} className={`text-2xl sm:text-3xl font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`}>{item.name}</span>
+                        {item.qty && <span className="text-lg px-2.5 py-0.5 rounded font-bold whitespace-nowrap shrink-0 bg-white/50 text-neutral-600 shadow-sm border border-black/5">{item.qty}</span>}
                       </div>
-                      {!item.completed && <button onClick={(e) => { e.stopPropagation(); setModalInput(item.currentPrice || ''); setModalState({ type: 'recordingPrice', data: item }); }} className={`px-2.5 py-1 rounded-lg text-sm font-bold active:scale-90 shrink-0 whitespace-nowrap shadow-sm ${item.currentPrice ? 'bg-white text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700'}`}>{item.currentPrice ? `$${item.currentPrice}` : '記 $'}</button>}
+                      {!item.completed && <button onClick={(e) => { e.stopPropagation(); setModalInput(item.currentPrice || ''); setModalState({ type: 'recordingPrice', data: item }); }} className={`px-3 py-1 rounded-lg text-base font-bold active:scale-90 shrink-0 whitespace-nowrap shadow-sm ${item.currentPrice ? 'bg-white text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700'}`}>{item.currentPrice ? `$${item.currentPrice}` : '記 $'}</button>}
                     </div>
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag, false) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
-                        {history[item.name] && !item.completed && <span className="text-xs font-bold truncate text-right whitespace-nowrap font-serif-tc" style={{ color: getTagConfig(item.tag)?.text || '#9f1239' }}>上次：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
+                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-3 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag, false) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
+                        {history[item.name] && !item.completed && <span className="text-sm font-bold truncate text-right whitespace-nowrap font-serif-tc" style={{ color: getTagConfig(item.tag)?.text || '#9f1239' }}>上次：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
                       </div>
-                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={20} /></button>
+                      <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={22} /></button>
                     </div>
                   </div>
                 </div>
               ))}
               {items.some(i => i.completed) && (
                 <div className="pt-4 flex justify-center w-full">
-                  <button onClick={clearCompleted} className="flex items-center gap-2 px-8 py-3 text-red-500 bg-white border border-red-100 rounded-full font-bold active:scale-95 shadow-sm text-base"><Icons.Trash size={18} /> 清除已買項目</button>
+                  <button onClick={clearCompleted} className="flex items-center gap-2 px-8 py-3 text-red-500 bg-white border border-red-100 rounded-full font-bold active:scale-95 shadow-sm text-lg"><Icons.Trash size={20} /> 清除已買項目</button>
                 </div>
               )}
             </main>
 
             {modalState.type && (
               <div className="fixed inset-0 bg-black/70 z-[120] flex items-end sm:items-center justify-center backdrop-blur-md" onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }}>
-                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-4 pb-6 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden mt-12 safe-pb" onClick={e => e.stopPropagation()}>
+                <div className="bg-white w-full max-w-md rounded-t-[32px] sm:rounded-3xl p-5 pb-10 shadow-2xl animate-slide-up flex flex-col max-h-[85vh] overflow-hidden mt-12 safe-pb" onClick={e => e.stopPropagation()}>
                   <div className="flex justify-between items-center mb-4 border-b border-neutral-100 pb-3 shrink-0">
-                    <h3 className="text-xl font-bold text-emerald-800 font-serif-tc">
+                    <h3 className="text-2xl font-bold text-emerald-800 font-serif-tc">
                       {modalState.type === 'editingTag' ? '更換地點' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'addQuick' ? '自訂常用品項' : modalState.type === 'addTag' ? '新增地點' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'about' ? '使用說明書' : modalState.type === 'manageTag' ? '地點設定中心' : modalState.type === 'manageQuick' ? '常用品項設定' : modalState.type === 'channelConflict' ? '偵測到舊資料' : modalState.type === 'donate' ? '請我喝咖啡' : '設定'}
                     </h3>
-                    <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-2 hover:bg-neutral-100 rounded-full transition-colors"><Icons.X size={24} /></button>
+                    <button onClick={() => { setModalState({ type: null, data: null }); setExpandedSection(''); }} className="p-2 hover:bg-neutral-100 rounded-full transition-colors"><Icons.X size={26} /></button>
                   </div>
-                  {/* 使用 key={modalState.type} 確保切換視窗時捲軸重置到最上方 */}
                   <div key={modalState.type} className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-8">
                     
                     {modalState.type === 'addQuick' && (
                       <div className="space-y-6 py-4 px-1 font-bold">
                         <input type="text" id="mSingleAddQuick" placeholder="輸入品項名稱..." className="w-full p-5 rounded-2xl border-2 border-amber-200 outline-none text-2xl font-bold text-center bg-amber-50/30 shadow-inner" />
                         <div className="space-y-4">
-                          <p className="text-lg font-bold text-neutral-600 px-1 font-serif-tc">選擇預設地點 (可選)：</p>
+                          <p className="text-xl font-bold text-neutral-600 px-1 font-serif-tc">選擇預設地點 (可選)：</p>
                           <select id="mSingleAddQuickTag" className="w-full p-5 bg-white rounded-2xl border-2 border-amber-200 font-bold text-xl outline-none shadow-sm">
                             <option value="">無地點</option>
                             {(customTags || []).map(t => t ? <option key={t.n} value={t.n}>{t.n}</option> : null)}
@@ -674,13 +671,13 @@
                     {modalState.type === 'channelConflict' && modalState.data && (
                       <div className="space-y-6 py-2 text-center font-bold">
                         <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200">
-                          <p className="text-lg text-amber-900 mb-3 flex items-center justify-center gap-2">⚠️ 警告：頻道非空白</p>
-                          <p className="text-base text-amber-800 leading-relaxed font-bold font-serif-tc">代號「{modalState.data.code}」已有資料。這可能是以前用過的代號。</p>
+                          <p className="text-xl text-amber-900 mb-3 flex items-center justify-center gap-2">⚠️ 警告：頻道非空白</p>
+                          <p className="text-lg text-amber-800 leading-relaxed font-bold font-serif-tc">代號「{modalState.data.code}」已有資料。這可能是以前用過的代號。</p>
                         </div>
                         <div className="flex flex-col gap-3">
-                          <button onClick={() => handleTuneRoom(modalState.data.code, modalState.data.note)} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-md active:scale-95">我要承接舊資料</button>
-                          <button onClick={() => handleClearChannelData(modalState.data.code)} className="w-full bg-white text-red-600 border-2 border-red-200 py-4 rounded-xl font-bold text-lg active:scale-95">全部清空重來</button>
-                          <button onClick={() => setModalState({type: 'room'})} className="w-full bg-neutral-100 text-neutral-500 border-2 border-neutral-200 py-3.5 rounded-xl font-bold text-base active:scale-95 mt-2">先不要，我要返回</button>
+                          <button onClick={() => handleTuneRoom(modalState.data.code, modalState.data.note)} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-md active:scale-95">我要承接舊資料</button>
+                          <button onClick={() => handleClearChannelData(modalState.data.code)} className="w-full bg-white text-red-600 border-2 border-red-200 py-4 rounded-xl font-bold text-xl active:scale-95">全部清空重來</button>
+                          <button onClick={() => setModalState({type: 'room'})} className="w-full bg-neutral-100 text-neutral-500 border-2 border-neutral-200 py-3.5 rounded-xl font-bold text-lg active:scale-95 mt-2">先不要，我要返回</button>
                         </div>
                       </div>
                     )}
@@ -688,49 +685,49 @@
                     {modalState.type === 'about' && (
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
-                          <h4 className="font-bold text-emerald-900 text-lg font-serif-tc">智能採買</h4>
-                          <p className="text-xs text-emerald-700 mt-0.5 font-bold">版本 v1.2.24 (全螢幕精巧版)</p>
-                          <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-xs px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={14} /> 檢查載入新版本</button>
+                          <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.2.25 (友善老花放大版)</p>
+                          <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
                         </div>
 
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
-                          <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-3 py-2 flex justify-between items-center font-bold text-sm text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2 text-blue-600"><Icons.Cart className="text-blue-500" size={16} /> 基礎教學：如何開始？</span><Icons.ChevronDown size={16} className={expandedSection === 'manual' ? 'rotate-180' : ''} /></button>
+                          <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-3 py-2.5 flex justify-between items-center font-bold text-base text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2 text-blue-600"><Icons.Cart className="text-blue-500" size={18} /> 基礎教學：如何開始？</span><Icons.ChevronDown size={18} className={expandedSection === 'manual' ? 'rotate-180' : ''} /></button>
                           {expandedSection === 'manual' && ( 
-                            <div className="px-3 pb-3 pt-1 text-xs text-neutral-700 space-y-2 border-t border-neutral-50 bg-neutral-50/40 leading-tight font-bold">
+                            <div className="px-3 pb-3 pt-1 text-sm text-neutral-700 space-y-2 border-t border-neutral-50 bg-neutral-50/40 leading-tight font-bold">
                               <div className="bg-white p-2 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-0.5">【新增品項】</p><p>在上方打入名稱按「+」即可。</p></div>
                               <div className="bg-white p-2 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-0.5">【地點與顏色】</p><p>點擊地點按鈕分類。點 ⚙️ 進入設定即可自訂馬卡龍色。</p></div>
                               <div className="bg-white p-2 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-0.5">【拖曳與延後】</p><p>長按「常用品項/地點」標籤或清單的「六點符號」，震動後可自由拖曳排序。點擊清單上的「時鐘」可將品項標示為延後。</p></div>
                               <div className="bg-white p-2 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-0.5">【記$ 黑科技】</p><p>點擊「記 $」錄入價格，系統會記憶，下次買會提醒你。</p></div>
                               <div className="bg-white p-2 rounded-xl border border-blue-100 shadow-sm"><p className="text-blue-700 mb-0.5">【專注模式】</p><p>點擊「收起」，隱藏輸入區，清單視野更開闊。</p></div>
-                              <button onClick={() => setExpandedSection('')} className="w-full py-1.5 bg-white text-blue-600 rounded-lg border border-blue-200 font-bold mt-1 shadow-sm">收起教學 ↑</button>
+                              <button onClick={() => setExpandedSection('')} className="w-full py-2 bg-white text-blue-600 rounded-lg border border-blue-200 font-bold mt-1 shadow-sm text-base">收起教學 ↑</button>
                             </div> 
                           )}
                         </div>
 
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
-                          <button onClick={() => setExpandedSection(expandedSection === 'channels' ? '' : 'channels')} className="w-full px-3 py-2 flex justify-between items-center font-bold text-sm text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2 text-emerald-600"><Icons.Refresh className="text-emerald-500" size={16} /> 共享頻道：多人同步</span><Icons.ChevronDown size={16} className={expandedSection === 'channels' ? 'rotate-180' : ''} /></button>
+                          <button onClick={() => setExpandedSection(expandedSection === 'channels' ? '' : 'channels')} className="w-full px-3 py-2.5 flex justify-between items-center font-bold text-base text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2 text-emerald-600"><Icons.Refresh className="text-emerald-500" size={18} /> 共享頻道：多人同步</span><Icons.ChevronDown size={18} className={expandedSection === 'channels' ? 'rotate-180' : ''} /></button>
                           {expandedSection === 'channels' && ( 
-                            <div className="px-3 pb-3 pt-1 text-xs text-neutral-700 space-y-2 border-t border-neutral-50 bg-neutral-50/40 leading-tight text-left font-bold">
-                              <p className="font-bold text-emerald-800 underline underline-offset-4 text-sm mb-1">📡 無線電原理</p>
+                            <div className="px-3 pb-3 pt-1 text-sm text-neutral-700 space-y-2 border-t border-neutral-50 bg-neutral-50/40 leading-tight text-left font-bold">
+                              <p className="font-bold text-emerald-800 underline underline-offset-4 text-base mb-1">📡 無線電原理</p>
                               <p className="mb-2">代碼就像頻率。多台手機調到同一個數字，清單就會同步！</p>
                               <div className="space-y-2">
-                                <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm font-bold"><p className="text-emerald-700 mb-0.5 text-xs">【烤肉採購實例】</p><p>大家分頭買，有人買炭打勾，其他人手機同步劃掉！</p></div>
-                                <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm font-bold"><p className="text-emerald-700 mb-0.5 text-xs">【夫妻同步實例】</p><p>在家新增品項，另一人在外面打開 APP 就能看到。</p></div>
-                                <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm font-bold"><p className="text-emerald-700 mb-0.5 text-xs">【多頻道管理】</p><p>個人可以建多個頻道，分開管理家庭、公司或個人私物。</p></div>
-                                <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm font-bold"><p className="text-emerald-700 mb-0.5 text-xs">【生活應用推薦】</p><p>除了採買，還能當作待辦事項、行李打包清單、露營表！</p></div>
+                                <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm font-bold"><p className="text-emerald-700 mb-0.5 text-sm">【烤肉採購實例】</p><p>大家分頭買，有人買炭打勾，其他人手機同步劃掉！</p></div>
+                                <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm font-bold"><p className="text-emerald-700 mb-0.5 text-sm">【夫妻同步實例】</p><p>在家新增品項，另一人在外面打開 APP 就能看到。</p></div>
+                                <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm font-bold"><p className="text-emerald-700 mb-0.5 text-sm">【多頻道管理】</p><p>個人可以建多個頻道，分開管理家庭、公司或個人私物。</p></div>
+                                <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm font-bold"><p className="text-emerald-700 mb-0.5 text-sm">【生活應用推薦】</p><p>除了採買，還能當作待辦事項、行李打包清單、露營表！</p></div>
                               </div>
-                              <button onClick={() => setExpandedSection('')} className="w-full py-1.5 bg-white text-emerald-600 rounded-lg border border-emerald-200 font-bold mt-1 shadow-sm">收起教學 ↑</button>
+                              <button onClick={() => setExpandedSection('')} className="w-full py-2 bg-white text-emerald-600 rounded-lg border border-emerald-200 font-bold mt-1 shadow-sm text-base">收起教學 ↑</button>
                             </div> 
                           )}
                         </div>
 
                         <div className="flex flex-col gap-2 mt-2 px-1 pb-4">
-                          <button onClick={handleShareApp} className="w-full bg-white border-2 border-emerald-500 text-emerald-700 py-3 rounded-xl font-bold active:scale-95 text-sm flex items-center justify-center gap-2 shadow-sm">
-                            <Icons.Share size={18}/> 分享 APP 給親友
+                          <button onClick={handleShareApp} className="w-full bg-white border-2 border-emerald-500 text-emerald-700 py-3 rounded-xl font-bold active:scale-95 text-base flex items-center justify-center gap-2 shadow-sm">
+                            <Icons.Share size={20}/> 分享 APP 給親友
                           </button>
-                          <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-bold active:scale-95 text-sm shadow-sm">💬 想跟我說些什麼嗎？</button>
-                          <button onClick={() => setModalState({ type: 'donate' })} className="w-full bg-[#FFDD00] text-amber-900 py-2.5 px-4 rounded-xl active:scale-95 shadow-md font-bold text-sm flex flex-col items-center gap-0.5">
-                            <span className="flex items-center gap-1.5"><Icons.Coffee size={18}/> 喜歡這 APP 嗎？</span>
+                          <button onClick={() => window.open('https://forms.gle/UVFSXsidHYMMtZwR9', '_blank')} className="w-full bg-white border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-bold active:scale-95 text-base shadow-sm">💬 想跟我說些什麼嗎？</button>
+                          <button onClick={() => setModalState({ type: 'donate' })} className="w-full bg-[#FFDD00] text-amber-900 py-2.5 px-4 rounded-xl active:scale-95 shadow-md font-bold text-base flex flex-col items-center gap-0.5">
+                            <span className="flex items-center gap-1.5"><Icons.Coffee size={20}/> 喜歡這 APP 嗎？</span>
                             <span>歡迎請我喝咖啡</span>
                           </button>
                         </div>
@@ -741,14 +738,14 @@
                       <div className="space-y-5 py-2 px-1">
                         {savedRooms.length > 0 && (
                           <div className="space-y-3 font-bold">
-                            <h3 className="text-lg font-bold text-neutral-600 flex items-center gap-2 px-1"><Icons.History size={20}/> 頻道列表 (長按圖示拖曳)</h3>
+                            <h3 className="text-xl font-bold text-neutral-600 flex items-center gap-2 px-1"><Icons.History size={24}/> 頻道列表 (長按圖示拖曳)</h3>
                             <div className="space-y-2.5" onTouchMove={(e) => onVMove(e, 'data-v-room-idx')}>
                               {savedRooms.map((room, idx) => (
                                 <div key={idx} data-v-room-idx={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-400 shadow-md' : 'bg-white border-neutral-200 shadow-sm'} ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative' : ''} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`}>
-                                  <div className="p-2 -ml-2 text-neutral-400 drag-handle" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { e.stopPropagation(); onVStart(idx); }} onTouchEnd={(e) => { e.stopPropagation(); onVEnd('room'); }} onTouchCancel={(e) => { e.stopPropagation(); onVEnd('room'); }}><Icons.GripVertical size={20}/></div>
+                                  <div className="p-2 -ml-2 text-neutral-400 drag-handle" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { e.stopPropagation(); onVStart(idx); }} onTouchEnd={(e) => { e.stopPropagation(); onVEnd('room'); }} onTouchCancel={(e) => { e.stopPropagation(); onVEnd('room'); }}><Icons.GripVertical size={24}/></div>
                                   <div className="flex flex-col flex-1 min-w-0">
-                                    <span className={`font-bold text-base truncate ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
-                                    <span className="text-[10px] text-neutral-400 font-mono italic truncate">{room.code}</span>
+                                    <span className={`font-bold text-lg truncate ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
+                                    <span className="text-xs text-neutral-400 font-mono italic truncate">{room.code}</span>
                                   </div>
                                   <button onClick={(e) => {
                                     e.stopPropagation();
@@ -760,12 +757,12 @@
                                     document.execCommand('copy'); 
                                     document.body.removeChild(temp);
                                     setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000);
-                                  }} className="bg-[#FFDD00] text-amber-900 p-2.5 rounded-lg active:scale-90 shadow-sm border border-amber-400" title="複製代號"><Icons.Copy size={20}/></button>
+                                  }} className="bg-[#FFDD00] text-amber-900 p-2.5 rounded-lg active:scale-90 shadow-sm border border-amber-400" title="複製代號"><Icons.Copy size={22}/></button>
                                   <button onClick={(e) => {
                                     e.stopPropagation();
                                     const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); try{localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(n));}catch(e){}
                                     if (roomPath === room.code) { setRoomPath(''); try{localStorage.removeItem('smart_buy_room');}catch(e){} }
-                                  }} className="p-2.5 text-neutral-300 active:scale-90 bg-neutral-50 rounded-lg border border-neutral-100"><Icons.Trash size={20}/></button>
+                                  }} className="p-2.5 text-neutral-300 active:scale-90 bg-neutral-50 rounded-lg border border-neutral-100"><Icons.Trash size={22}/></button>
                                 </div>
                               ))}
                             </div>
@@ -773,23 +770,22 @@
                         )}
 
                         <div className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100 shadow-inner text-center font-bold">
-                          <div className="flex justify-between items-center mb-1"><p className="text-xs font-bold text-emerald-800">🪪 個人 ID (基地台號碼)</p><button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-600 flex items-center gap-1 text-xs bg-white px-2 py-1 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={12}/>修改</button></div>
+                          <div className="flex justify-between items-center mb-1"><p className="text-sm font-bold text-emerald-800">🪪 個人 ID (基地台號碼)</p><button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-600 flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={14}/>修改</button></div>
                           {isEditingBaseId ? (
-                            <div className="flex flex-col gap-2"><input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-2.5 bg-white rounded-xl border-2 border-emerald-300 text-lg text-center font-bold outline-none" /><button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold shadow-md active:scale-95"><Icons.CheckCircle size={18} className="inline mr-1" /> 確定鎖定</button></div>
+                            <div className="flex flex-col gap-2"><input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-300 text-xl text-center font-bold outline-none" /><button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 text-lg"><Icons.CheckCircle size={20} className="inline mr-1" /> 確定鎖定</button></div>
                           ) : (
-                            <p className="text-2xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>
+                            <p className="text-3xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>
                           )}
                         </div>
 
                         <div className="pt-5 border-t border-dashed border-neutral-300 font-bold">
                           <div className="mb-3 px-1">
-                            <h3 className="text-base sm:text-lg font-bold text-neutral-700 font-serif-tc">建立新頻道</h3>
-                            <p className="text-xs sm:text-sm font-bold text-neutral-400 mt-1">個人專屬 ID / 親友 ID</p>
+                            <h3 className="text-lg sm:text-xl font-bold text-neutral-700 font-serif-tc tracking-tighter whitespace-nowrap">建立新頻道(自己ID) / 連線共同頻道(親友ID)</h3>
                           </div>
                           <div className="space-y-3">
                             <div className="flex items-center gap-2 w-full">
-                               <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="flex-1 shrink-0 min-w-0 p-3.5 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base text-center font-bold tracking-wider text-emerald-900 outline-none shadow-inner" placeholder="ID" />
-                               <span className="text-emerald-300 font-bold text-xl shrink-0">-</span>
+                               <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="flex-1 shrink-0 min-w-0 p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-inner" placeholder="ID" />
+                               <span className="text-emerald-300 font-bold text-2xl shrink-0">-</span>
                                <input type="text" value={roomSuffix} onChange={e => {
                                   const val = e.target.value;
                                   if (val.includes('-')) {
@@ -799,9 +795,9 @@
                                   } else {
                                       setRoomSuffix(val);
                                   }
-                               }} className="flex-1 min-w-0 p-3.5 bg-white rounded-xl border-2 border-emerald-200 text-base text-center font-bold tracking-wider text-emerald-900 outline-none shadow-sm" placeholder="名稱" />
+                               }} className="flex-1 min-w-0 p-4 bg-white rounded-xl border-2 border-emerald-200 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-sm" placeholder="名稱" />
                             </div>
-                            <input type="text" id="mRoomNote" placeholder="頻道備註 (如：全家用、公司)" className="w-full p-3.5 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-sm font-bold outline-none font-bold" />
+                            <input type="text" id="mRoomNote" placeholder="頻道備註 (如：全家用、公司)" className="w-full p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base font-bold outline-none font-bold" />
                             <div className="flex gap-2">
                               <button onClick={async () => { 
                                 try { 
@@ -817,18 +813,18 @@
                                     } 
                                   } 
                                 } catch (err) { setMsg('請手動輸入'); setTimeout(() => setMsg(''), 2000); } 
-                              }} className="w-1/3 bg-emerald-50 text-emerald-800 py-3.5 rounded-xl font-bold border border-emerald-200 active:scale-95 text-base">貼上</button>
-                              <button onClick={() => handleTuneRoomAttempt(roomPrefix, roomSuffix, document.getElementById('mRoomNote').value)} className="w-2/3 bg-emerald-700 text-white py-3.5 rounded-xl font-bold active:scale-95 text-base shadow-lg">建立/連線頻道</button>
+                              }} className="w-1/3 bg-emerald-50 text-emerald-800 py-4 rounded-xl font-bold border border-emerald-200 active:scale-95 text-lg">貼上</button>
+                              <button onClick={() => handleTuneRoomAttempt(roomPrefix, roomSuffix, document.getElementById('mRoomNote').value)} className="w-2/3 bg-emerald-700 text-white py-4 rounded-xl font-bold active:scale-95 text-lg shadow-lg">建立/連線頻道</button>
                             </div>
                           </div>
                         </div>
 
                         <div className="bg-blue-50 p-5 rounded-2xl border-2 border-blue-200 mt-2 font-bold leading-relaxed shadow-sm">
-                          <p className="text-lg font-bold text-blue-900 mb-3">📡 快速連線步驟：</p>
-                          <div className="text-sm text-blue-800 space-y-4 font-bold leading-relaxed">
+                          <p className="text-xl font-bold text-blue-900 mb-3">📡 快速連線步驟：</p>
+                          <div className="text-base text-blue-800 space-y-4 font-bold leading-relaxed">
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">1.</span>
-                                <p style={{ textIndent: '-2px' }}>點選頻道列表的 <span className="bg-[#FFDD00] text-amber-900 px-1.5 py-0.5 rounded-md shadow-sm inline-flex items-center align-middle mx-1"><Icons.Copy size={16}/></span>複製代號。</p>
+                                <p style={{ textIndent: '-2px' }}>點選頻道列表的 <span className="bg-[#FFDD00] text-amber-900 px-1.5 py-0.5 rounded-md shadow-sm inline-flex items-center align-middle mx-1"><Icons.Copy size={18}/></span>複製代號。</p>
                             </div>
                             <div className="flex items-start gap-2">
                                 <span className="flex-shrink-0">2.</span>
@@ -839,8 +835,8 @@
                                 <p>家人在此頁面按貼上，全家就能同步採買。</p>
                             </div>
                             <div className="pt-3 border-t border-blue-100">
-                              <button onClick={handleShareApp} className="w-full bg-blue-600 text-white py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-95 shadow-md text-base">
-                                <Icons.Share size={20}/> 分享 APP 連結給親友
+                              <button onClick={handleShareApp} className="w-full bg-blue-600 text-white py-4 rounded-xl flex items-center justify-center gap-2 active:scale-95 shadow-md text-lg">
+                                <Icons.Share size={22}/> 分享 APP 連結給親友
                               </button>
                             </div>
                           </div>
@@ -852,52 +848,52 @@
                       <div className="space-y-6 py-4 px-1 font-bold">
                         <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入新地點名稱..." className="w-full p-5 rounded-2xl border-2 border-emerald-200 outline-none text-2xl font-bold text-center bg-emerald-50/30 shadow-inner" />
                         <div className="space-y-4">
-                          <p className="text-lg font-bold text-neutral-600 px-1 font-serif-tc">挑選顏色：</p>
+                          <p className="text-xl font-bold text-neutral-600 px-1 font-serif-tc">挑選顏色：</p>
                           <div className="flex gap-3 items-center overflow-x-auto scrollbar-hide py-3 px-2">
                             {MACARON_COLORS.map((cfg, i) => (
-                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-11 h-11 rounded-full transition-transform ${modalColorIdx === i ? 'macaron-ring-active' : 'border border-black/10'}`} style={{ backgroundColor: cfg.bg, color: cfg.border }}></button>
+                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-12 h-12 rounded-full transition-transform ${modalColorIdx === i ? 'macaron-ring-active' : 'border border-black/10'}`} style={{ backgroundColor: cfg.bg, color: cfg.border }}></button>
                             ))}
                           </div>
                         </div>
-                        <button onClick={() => handleAddNewTag(modalInput, modalColorIdx, true)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-xl shadow-lg active:scale-95">確認新增</button>
+                        <button onClick={() => handleAddNewTag(modalInput, modalColorIdx, true)} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-2xl shadow-lg active:scale-95">確認新增</button>
                       </div>
                     )}
 
                     {modalState.type === 'manageTag' && (
                       <div className="flex flex-col h-full gap-4 px-1 font-bold">
-                        <div className="flex flex-col gap-3 mb-4 shrink-0 bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100 shadow-sm relative">
+                        <div className="flex flex-col gap-3 mb-4 shrink-0 bg-emerald-50 p-5 rounded-2xl border-2 border-emerald-100 shadow-sm relative">
                           <div className="flex justify-between items-center mb-1">
-                            <p className="text-lg font-bold text-emerald-900 font-serif-tc">新增地點與顏色</p>
-                            <button onClick={resetAllTagsColor} className="text-xs bg-white px-2 py-1 rounded-lg border border-emerald-300 text-emerald-700 font-bold active:scale-90 shadow-sm">一鍵還原</button>
+                            <p className="text-xl font-bold text-emerald-900 font-serif-tc">新增地點與顏色</p>
+                            <button onClick={resetAllTagsColor} className="text-sm bg-white px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 font-bold active:scale-90 shadow-sm">一鍵還原</button>
                           </div>
-                          <input type="text" id="mAddTag" placeholder="地點名稱..." className="w-full p-3.5 rounded-xl border-2 border-emerald-200 outline-none text-xl font-bold bg-white" />
+                          <input type="text" id="mAddTag" placeholder="地點名稱..." className="w-full p-4 rounded-xl border-2 border-emerald-200 outline-none text-2xl font-bold bg-white" />
                           
                           <div className="flex gap-3 items-center overflow-x-auto scrollbar-hide py-3 px-2">
                             {MACARON_COLORS.map((cfg, i) => (
-                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-10 h-10 rounded-full transition-transform ${modalColorIdx === i ? 'macaron-ring-active' : 'border border-black/10'}`} style={{ backgroundColor: cfg.bg, color: cfg.border }}></button>
+                              <button key={i} onClick={() => setModalColorIdx(i)} className={`shrink-0 w-12 h-12 rounded-full transition-transform ${modalColorIdx === i ? 'macaron-ring-active' : 'border border-black/10'}`} style={{ backgroundColor: cfg.bg, color: cfg.border }}></button>
                             ))}
                           </div>
 
-                          <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-700 text-white py-3.5 rounded-xl font-bold text-xl active:scale-95 shadow-md mt-2">新增地點</button>
+                          <button onClick={() => { const v = document.getElementById('mAddTag').value; if (v) { handleAddNewTag(v, modalColorIdx, false); document.getElementById('mAddTag').value = ''; } }} className="w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-2xl active:scale-95 shadow-md mt-2">新增地點</button>
                         </div>
                         <div className="space-y-3 pb-10 px-1 font-bold" onTouchMove={(e) => onVMove(e, 'data-v-tag-idx')}>
-                          <p className="text-sm font-bold text-neutral-500 px-1">已存地點 (長按圖示拖曳)：</p>
+                          <p className="text-base font-bold text-neutral-500 px-1">已存地點 (長按圖示拖曳)：</p>
                           {(customTags || []).map((item, idx) => {
                             if(!item) return null;
                             return (
                             <div key={idx} data-v-tag-idx={idx} className={`flex justify-between items-center p-3 rounded-2xl shadow-sm transition-all ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative bg-white' : 'border-2'} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`} style={vDragIdx !== idx ? getTagInlineStyles(item.n) : { ...getTagInlineStyles(item.n), outline: '2px solid #fff' }}>
                               <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                <div className="p-2 text-neutral-500 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical size={20}/></div>
+                                <div className="p-2 text-neutral-500 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical size={24}/></div>
                                 <div className="flex flex-col flex-1 min-w-0 px-1 py-1">
-                                  <span className="font-bold text-xl truncate mb-2" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
+                                  <span className="font-bold text-2xl truncate mb-2" onClick={() => { setModalColorIdx(item.c); document.getElementById('mAddTag').value = item.n; }}>{item.n}</span>
                                   <div className="flex gap-2 overflow-x-auto scrollbar-hide py-2 px-2">
                                     {MACARON_COLORS.map((cfg, ci) => (
-                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-8 h-8 shrink-0 rounded-full transition-all`} style={{ backgroundColor: cfg.bg, boxShadow: item.c === ci ? `0 0 0 2px #fff, 0 0 0 4px ${cfg.border}` : 'inset 0 0 0 1px rgba(0,0,0,0.1)' }} />
+                                      <div key={ci} onClick={async () => { const next = [...customTags]; next[idx].c = ci; setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true }); }} className={`w-10 h-10 shrink-0 rounded-full transition-all`} style={{ backgroundColor: cfg.bg, boxShadow: item.c === ci ? `0 0 0 2px #fff, 0 0 0 4px ${cfg.border}` : 'inset 0 0 0 1px rgba(0,0,0,0.1)' }} />
                                     ))}
                                   </div>
                                 </div>
                               </div>
-                              <button onClick={() => delTag(item.n)} className="p-3 active:scale-75 opacity-60"><Icons.Trash size={24} /></button>
+                              <button onClick={() => delTag(item.n)} className="p-3 active:scale-75 opacity-60"><Icons.Trash size={28} /></button>
                             </div>
                           )})}
                         </div>
@@ -906,28 +902,28 @@
                     
                     {modalState.type === 'manageQuick' && (
                       <div className="flex flex-col h-full gap-4 px-1 font-bold">
-                        <div className="flex flex-col gap-3 mb-4 shrink-0 bg-amber-50 p-4 rounded-2xl border-2 border-amber-100 shadow-sm relative font-bold">
-                          <p className="text-lg font-bold text-amber-900 font-serif-tc">快速新增常用品項</p>
-                          <input type="text" id="mAddQuick" placeholder="物品名稱..." className="w-full p-3.5 rounded-xl border-2 border-amber-200 outline-none text-xl font-bold bg-white shadow-inner font-bold" />
+                        <div className="flex flex-col gap-3 mb-4 shrink-0 bg-amber-50 p-5 rounded-2xl border-2 border-amber-100 shadow-sm relative font-bold">
+                          <p className="text-xl font-bold text-amber-900 font-serif-tc">快速新增常用品項</p>
+                          <input type="text" id="mAddQuick" placeholder="物品名稱..." className="w-full p-4 rounded-xl border-2 border-amber-200 outline-none text-2xl font-bold bg-white shadow-inner font-bold" />
                           <div className="flex gap-3 font-bold">
-                            <select id="mAddQuickTag" className="flex-1 min-w-0 p-3.5 bg-white rounded-xl border-2 border-amber-200 font-bold text-lg outline-none shadow-sm">
+                            <select id="mAddQuickTag" className="flex-1 min-w-0 p-4 bg-white rounded-xl border-2 border-amber-200 font-bold text-xl outline-none shadow-sm">
                               <option value="">無地點</option>
                               {(customTags || []).map(t => t ? <option key={t.n} value={t.n}>{t.n}</option> : null)}
                             </select>
-                            <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-8 rounded-xl font-bold text-xl active:scale-95 shadow-md font-bold">新增</button>
+                            <button onClick={() => { const n = document.getElementById('mAddQuick').value; const t = document.getElementById('mAddQuickTag').value; if (n) { handleAddNewQuick(n, t, false); document.getElementById('mAddQuick').value = ''; } }} className="shrink-0 bg-amber-600 text-white px-8 rounded-xl font-bold text-2xl active:scale-95 shadow-md font-bold">新增</button>
                           </div>
                         </div>
                         <div className="space-y-2 pb-10 px-1 font-bold" onTouchMove={(e) => onVMove(e, 'data-v-quick-idx')}>
-                           <p className="text-sm font-bold text-neutral-500 px-1">已存品項 (長按圖示拖曳)：</p>
+                           <p className="text-base font-bold text-neutral-500 px-1">已存品項 (長按圖示拖曳)：</p>
                           {(quickItems || []).map((item, idx) => {
                             if(!item) return null;
                             return (
-                            <div key={idx} data-v-quick-idx={idx} className={`flex justify-between items-center p-3.5 rounded-2xl border-2 bg-neutral-50 shadow-sm border-neutral-100 ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative' : ''} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`}>
+                            <div key={idx} data-v-quick-idx={idx} className={`flex justify-between items-center p-4 rounded-2xl border-2 bg-neutral-50 shadow-sm border-neutral-100 ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative' : ''} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`}>
                               <div className="flex items-center gap-2 flex-1">
-                                <div className="p-3 text-neutral-400 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('quick')} onTouchCancel={() => onVEnd('quick')}><Icons.GripVertical size={20}/></div>
-                                <span className="font-bold text-xl px-1">{item.n || item.name}</span>
+                                <div className="p-3 text-neutral-400 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('quick')} onTouchCancel={() => onVEnd('quick')}><Icons.GripVertical size={24}/></div>
+                                <span className="font-bold text-2xl px-1">{item.n || item.name}</span>
                               </div>
-                              <button onClick={() => delQuick(idx)} className="p-3 active:scale-75 opacity-50"><Icons.Trash size={24} /></button>
+                              <button onClick={() => delQuick(idx)} className="p-3 active:scale-75 opacity-50"><Icons.Trash size={28} /></button>
                             </div>
                           )})}
                         </div>
@@ -936,24 +932,24 @@
 
                     {modalState.type === 'recordingPrice' && modalState.data && (
                       <div className="space-y-6 py-4 text-center font-bold px-1 font-serif-tc">
-                        <div className="mb-2"><span className="text-xl font-bold text-amber-900 bg-[#FFDD00] px-10 py-4 rounded-full shadow-lg tracking-widest font-serif-tc">💰 {modalState.data.name}</span></div>
-                        <p className="text-lg text-neutral-600 font-bold px-4 leading-relaxed underline underline-offset-4 decoration-amber-300 decoration-2">錄入本次價格，系統自動記憶。下次再買同樣東西，會告訴你上次買多少，讓你買得更聰明。</p>
+                        <div className="mb-2"><span className="text-2xl font-bold text-amber-900 bg-[#FFDD00] px-10 py-4 rounded-full shadow-lg tracking-widest font-serif-tc">💰 {modalState.data.name}</span></div>
+                        <p className="text-xl text-neutral-600 font-bold px-4 leading-relaxed underline underline-offset-4 decoration-amber-300 decoration-2">錄入本次價格，系統自動記憶。下次再買同樣東西，會告訴你上次買多少，讓你買得更聰明。</p>
                         <input type="number" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="輸入金額..." className="w-full p-6 rounded-2xl border-4 border-amber-200 outline-none text-4xl text-center bg-amber-50/30 shadow-inner font-bold text-amber-900" />
-                        <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-amber-600 text-white py-5 rounded-2xl font-bold text-xl shadow-lg active:scale-95 transition-all">確定錄入</button>
+                        <button onClick={async () => { await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id); setModalState({ type: null }); }} className="w-full bg-amber-600 text-white py-5 rounded-2xl font-bold text-2xl shadow-lg active:scale-95 transition-all">確定錄入</button>
                       </div>
                     )}
                     
                     {modalState.type === 'donate' && (
                       <div className="space-y-8 py-6 text-center font-bold px-1">
-                        <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-inner font-serif-tc">
-                          <Icons.Coffee size={32} className="mx-auto mb-2 text-amber-700" />
-                          <p className="text-xl text-amber-900 font-bold mb-4">謝謝你的心意！ 🥰</p>
-                          <div className="inline-block bg-amber-500 text-white text-base px-6 py-2.5 rounded-full font-bold shadow-md shadow-amber-200 leading-tight">
-                            一杯咖啡 $50<br/><span className="text-xs opacity-90 font-sans">(杯數隨喜)</span>
+                        <div className="bg-amber-50 p-6 rounded-3xl border-2 border-amber-200 shadow-inner font-serif-tc">
+                          <Icons.Coffee size={48} className="mx-auto mb-3 text-amber-700" />
+                          <p className="text-2xl text-amber-900 font-bold mb-4">謝謝你的心意！ 🥰</p>
+                          <div className="inline-block bg-amber-500 text-white text-lg px-6 py-3 rounded-full font-bold shadow-md shadow-amber-200 leading-tight">
+                            一杯咖啡 $50<br/><span className="text-sm opacity-90 font-sans">(杯數隨喜)</span>
                           </div>
                         </div>
-                        <div className="bg-neutral-50 p-6 rounded-2xl border-2 border-neutral-100 space-y-4 shadow-sm font-bold">
-                          <p className="text-xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
+                        <div className="bg-neutral-50 p-6 rounded-3xl border-2 border-neutral-100 space-y-4 shadow-sm font-bold">
+                          <p className="text-2xl font-bold text-neutral-800 tracking-wider font-mono">永豐銀行 (807)<br />204-018-0025253-1</p>
                           <button onClick={() => { 
                             const temp = document.createElement('input'); 
                             temp.style.position = 'fixed'; temp.style.top = '0';
@@ -963,7 +959,7 @@
                             document.execCommand('copy'); 
                             document.body.removeChild(temp); 
                             setMsg('帳號已複製！'); setTimeout(() => setMsg(''), 2000); 
-                          }} className="w-full bg-amber-500 text-white py-5 rounded-2xl text-xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
+                          }} className="w-full bg-amber-500 text-white py-5 rounded-2xl text-2xl font-bold active:scale-95 shadow-xl flex justify-center items-center gap-2">📋 一鍵複製帳號</button>
                         </div>
                       </div>
                     )}
