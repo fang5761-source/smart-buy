@@ -231,13 +231,10 @@
         return null;
       };
 
-      const getTagInlineStyles = (tagName, isOutline = false) => {
+      const getTagInlineStyles = (tagName, isSelected = false) => {
         const cfg = getTagConfig(tagName);
-        if (!cfg) return { backgroundColor: isOutline ? '#fff' : '#f9fafb', color: '#374151', borderColor: isOutline ? '#d1d5db' : 'transparent', borderWidth: '2px' };
-        if (isOutline) {
-          return { backgroundColor: '#ffffff', color: cfg.text, borderColor: cfg.border, borderWidth: '2px' };
-        }
-        return { backgroundColor: cfg.bg, color: cfg.text, borderColor: cfg.border, borderWidth: '2px' };
+        if (!cfg) return { backgroundColor: '#f9fafb', color: '#374151', borderColor: isSelected ? '#d1d5db' : 'transparent', borderWidth: '2px' };
+        return { backgroundColor: cfg.bg, color: cfg.text, borderColor: isSelected ? cfg.border : 'transparent', borderWidth: '2px' };
       };
       
       const [savedRooms, setSavedRooms] = useState(() => {
@@ -551,9 +548,9 @@
                   {customTags && customTags.map((t, idx) => {
                     if(!t || !t.n) return null;
                     const isSelected = activeTag === t.n;
-                    const style = getTagInlineStyles(t.n, false);
+                    const style = getTagInlineStyles(t.n, isSelected);
                     return (
-                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-4 py-1.5 rounded-full text-base font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm ${isSelected ? 'scale-105 border-neutral-800' : 'border-transparent opacity-90'} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={style}>{t.n}</button>
+                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-4 py-1.5 rounded-full text-base font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm ${isSelected ? 'scale-105 shadow-inner' : 'opacity-90'} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={style}>{t.n}</button>
                     )
                   })}
                   <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3.5 py-1.5 rounded-full text-base font-bold text-emerald-600 bg-white border border-dashed border-emerald-300 active:scale-95 flex items-center justify-center"><Icons.Plus size={18} /></button>
