@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.2.26 (完美分享版) by 朵朵 -->
+  <!-- 智能採買 v1.3.1 (全功能修復完美版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -14,14 +14,11 @@
   
   <script>
     // 🛡️ 【輕量防護：專屬網域綁定鎖】
-    // 只要程式碼離開了姊姊的專屬網域，就會自動進入癱瘓狀態！
     (function() {
-      // 這裡設定允許運行的網址 (加入 localhost 和空字串是為了讓姊姊可以在本地端測試)
       const allowedDomains = ['fang5761-source.github.io', 'localhost', '127.0.0.1', '']; 
       const currentDomain = window.location.hostname;
       
       if (!allowedDomains.includes(currentDomain)) {
-        // 如果偵測到被盜用到其他網域，直接顯示死亡畫面並停止運行
         document.write('<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#f5f5f5;color:#047857;font-family:sans-serif;font-weight:bold;font-size:18px;text-align:center;padding:20px;line-height:1.6;">⚠️ 系統警告：未經授權的網域。<br/><br/>此系統受到版權保護，請至原創作者提供之官方連結使用。</div>');
         window.stop(); 
       }
@@ -120,30 +117,30 @@
     
     // 24 色馬卡龍色系 (淺色底、深色字、優雅邊框)
     const MACARON_COLORS = [
-      { bg: '#fce7f3', text: '#9f1239', border: '#f472b6' }, // 櫻花粉
-      { bg: '#fdf2f8', text: '#831843', border: '#f43f5e' }, // 玫瑰粉
-      { bg: '#fff1f2', text: '#881337', border: '#fb7185' }, // 蜜桃紅
-      { bg: '#ffedd5', text: '#7c2d12', border: '#fdba74' }, // 暖橘色
-      { bg: '#fff7ed', text: '#9a3412', border: '#fb923c' }, // 杏桃色
-      { bg: '#fef3c7', text: '#713f12', border: '#fcd34d' }, // 奶油黃
-      { bg: '#fef9c3', text: '#854d0e', border: '#fde047' }, // 檸檬黃
-      { bg: '#ecfccb', text: '#3f6212', border: '#bef264' }, // 蘋果綠
-      { bg: '#dcfce7', text: '#14532d', border: '#86efac' }, // 薄荷綠
-      { bg: '#d1fae5', text: '#064e3b', border: '#6ee7b7' }, // 翡翠綠
-      { bg: '#ecfdf5', text: '#065f46', border: '#34d399' }, // 湖水綠
-      { bg: '#ccfbf1', text: '#134e4a', border: '#5eead4' }, // 淺湖藍
-      { bg: '#cffafe', text: '#164e63', border: '#67e8f9' }, // 冰晶藍
-      { bg: '#e0f2fe', text: '#0c4a6e', border: '#7dd3fc' }, // 晴空藍
-      { bg: '#dbeafe', text: '#1e3a8a', border: '#93c5fd' }, // 寶寶藍
-      { bg: '#eff6ff', text: '#1e40af', border: '#60a5fa' }, // 柔和藍
-      { bg: '#e0e7ff', text: '#312e81', border: '#a5b4fc' }, // 勿忘草
-      { bg: '#ede9fe', text: '#4c1d95', border: '#c4b5fd' }, // 薰衣草紫
-      { bg: '#f3e8ff', text: '#581c87', border: '#d8b4fe' }, // 紫丁香
-      { bg: '#fae8ff', text: '#701a75', border: '#f0abfc' }, // 蘭花紫
-      { bg: '#fdf4ff', text: '#86198f', border: '#f5d0fe' }, // 芋泥紫
-      { bg: '#f1f5f9', text: '#334155', border: '#cbd5e1' }, // 寧靜灰藍
-      { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' }, // 雲朵灰
-      { bg: '#fafaf9', text: '#44403c', border: '#d6d3d1' }, // 燕麥奶
+      { bg: '#fce7f3', text: '#9f1239', border: '#f472b6' }, 
+      { bg: '#fdf2f8', text: '#831843', border: '#f43f5e' }, 
+      { bg: '#fff1f2', text: '#881337', border: '#fb7185' }, 
+      { bg: '#ffedd5', text: '#7c2d12', border: '#fdba74' }, 
+      { bg: '#fff7ed', text: '#9a3412', border: '#fb923c' }, 
+      { bg: '#fef3c7', text: '#713f12', border: '#fcd34d' }, 
+      { bg: '#fef9c3', text: '#854d0e', border: '#fde047' }, 
+      { bg: '#ecfccb', text: '#3f6212', border: '#bef264' }, 
+      { bg: '#dcfce7', text: '#14532d', border: '#86efac' }, 
+      { bg: '#d1fae5', text: '#064e3b', border: '#6ee7b7' }, 
+      { bg: '#ecfdf5', text: '#065f46', border: '#34d399' }, 
+      { bg: '#ccfbf1', text: '#134e4a', border: '#5eead4' }, 
+      { bg: '#cffafe', text: '#164e63', border: '#67e8f9' }, 
+      { bg: '#e0f2fe', text: '#0c4a6e', border: '#7dd3fc' }, 
+      { bg: '#dbeafe', text: '#1e3a8a', border: '#93c5fd' }, 
+      { bg: '#eff6ff', text: '#1e40af', border: '#60a5fa' }, 
+      { bg: '#e0e7ff', text: '#312e81', border: '#a5b4fc' }, 
+      { bg: '#ede9fe', text: '#4c1d95', border: '#c4b5fd' }, 
+      { bg: '#f3e8ff', text: '#581c87', border: '#d8b4fe' }, 
+      { bg: '#fae8ff', text: '#701a75', border: '#f0abfc' }, 
+      { bg: '#fdf4ff', text: '#86198f', border: '#f5d0fe' }, 
+      { bg: '#f1f5f9', text: '#334155', border: '#cbd5e1' }, 
+      { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' }, 
+      { bg: '#fafaf9', text: '#44403c', border: '#d6d3d1' }, 
     ];
 
     const DEFAULT_TAGS = [
@@ -237,10 +234,10 @@
         return null;
       };
 
-      const getTagInlineStyles = (tagName, isSelected = false) => {
-        const cfg = getTagConfig(tagName);
-        if (!cfg) return { backgroundColor: '#f9fafb', color: '#374151', borderColor: isSelected ? '#d1d5db' : 'transparent', borderWidth: '2px' };
-        return { backgroundColor: cfg.bg, color: cfg.text, borderColor: isSelected ? cfg.border : 'transparent', borderWidth: '2px' };
+      // 統一由這個引擎輸出標籤的顏色與邊框：沒選中就無邊框，選中就有邊框
+      const getTagStyle = (tagName, showBorder = true) => {
+        const cfg = getTagConfig(tagName) || { bg: '#f9fafb', text: '#374151', border: '#d1d5db' };
+        return { backgroundColor: cfg.bg, color: cfg.text, borderColor: showBorder ? cfg.border : 'transparent', borderWidth: '2px' };
       };
       
       const [savedRooms, setSavedRooms] = useState(() => {
@@ -289,7 +286,6 @@
         const unsubConfig = onSnapshot(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `config_${prefix}`, 'settings'), snap => {
           if (snap.exists()) {
             const data = snap.data();
-            // 過濾舊的異常格式
             if (data.tags) {
               const fixedTags = data.tags.map(t => {
                 if (typeof t === 'string') return { n: t, c: 0 };
@@ -357,7 +353,6 @@
           const listRef = collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_room_${finalPath}`);
           const snap = await getDocs(listRef);
           
-          // 無論是否在 savedRooms 裡，只要雲端有資料就跳出警報
           if (!snap.empty) {
             setModalState({ type: 'channelConflict', data: { code: finalPath, note, count: snap.size } });
           } else {
@@ -405,7 +400,6 @@
       };
       
       const handleShareApp = async () => {
-        // 修正分享文字：加上專屬網址，讓 LINE 能成功抓取 OG 預覽標籤！
         const url = window.location.href.split('?')[0];
         const shareText = `推薦給你這個超好用的智能採買 APP！\n\n${url}`;
         
@@ -419,7 +413,6 @@
             console.log('Share canceled', err);
           }
         } else {
-          // 加入防捲動保護的臨時複製區
           const tempIn = document.createElement('textarea'); 
           tempIn.value = shareText; 
           tempIn.style.position = 'fixed';
@@ -560,9 +553,12 @@
                   {customTags && customTags.map((t, idx) => {
                     if(!t || !t.n) return null;
                     const isSelected = activeTag === t.n;
-                    const style = getTagInlineStyles(t.n, false);
+                    const style = getTagStyle(t.n, isSelected);
                     return (
-                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-4 py-1.5 rounded-full text-base font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm ${isSelected ? 'scale-105 border-neutral-800' : 'border-transparent opacity-90'} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={style}>{t.n}</button>
+                      <button key={t.n} data-h-tag-idx={idx} onTouchStart={(e) => onTouchStartH(e, idx, 'tag')} onTouchMove={(e) => onTouchMoveH(e, 'data-h-tag-idx')} onTouchEnd={() => onTouchEndH('tag')} onTouchCancel={() => onTouchEndH('tag')} onClick={() => { if(!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n); }} className={`shrink-0 draggable-pill px-4 py-1.5 rounded-full text-base font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm flex items-center gap-1 ${isSelected ? 'scale-105 shadow-inner' : 'opacity-80'} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`} style={style}>
+                        {isSelected && <Icons.Check size={18} />}
+                        {t.n}
+                      </button>
                     )
                   })}
                   <button type="button" onClick={() => { setModalInput(''); setModalColorIdx(0); setModalState({ type: 'addTag' }); }} className="shrink-0 px-3.5 py-1.5 rounded-full text-base font-bold text-emerald-600 bg-white border border-dashed border-emerald-300 active:scale-95 flex items-center justify-center"><Icons.Plus size={18} /></button>
@@ -637,7 +633,7 @@
                     </div>
                     <div className="flex items-center justify-between gap-1 w-full">
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-3 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagInlineStyles(item.tag, false) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
+                        <button onClick={(e) => { e.stopPropagation(); setModalState({ type: 'editingTag', data: item }); }} className={`shrink-0 text-sm px-3 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`} style={!item.completed ? getTagStyle(item.tag, true) : {}}>{item.tag && item.tag !== '無' ? item.tag : '+地點'}</button>
                         {history[item.name] && !item.completed && <span className="text-sm font-bold truncate text-right whitespace-nowrap font-serif-tc" style={{ color: getTagConfig(item.tag)?.text || '#9f1239' }}>上次：${history[item.name].price} {history[item.name].tag ? `(${history[item.name].tag})` : ''}</span>}
                       </div>
                       <button onClick={() => deleteDoc(getItemRef(item.id))} className="p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"><Icons.Trash size={22} /></button>
@@ -663,6 +659,31 @@
                   </div>
                   <div key={modalState.type} className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-8">
                     
+                    {modalState.type === 'editingTag' && modalState.data && (
+                      <div className="flex flex-col gap-5 py-4 px-1 font-bold">
+                        <div className="text-center mb-2">
+                          <p className="text-sm text-neutral-500 mb-1">為此品項選擇地點：</p>
+                          <span className="text-3xl font-bold text-emerald-900 font-serif-tc">{modalState.data.name}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 font-bold">
+                          {(customTags || []).map(t => {
+                            if(!t || !t.n) return null;
+                            const isCurrent = modalState.data.tag === t.n;
+                            return (
+                              <button key={t.n} onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: t.n }); setModalState({ type: null }); }} className={`py-4 rounded-2xl font-bold text-xl border-2 shadow-sm active:scale-95 flex items-center justify-center gap-1 ${isCurrent ? 'scale-105 shadow-inner' : ''}`} style={getTagStyle(t.n, true)}>
+                                {isCurrent && <Icons.Check size={20} />}
+                                {t.n}
+                              </button> 
+                            )
+                          })}
+                          <button onClick={async () => { await updateDoc(getItemRef(modalState.data.id), { tag: '' }); setModalState({ type: null }); }} className={`py-4 rounded-2xl font-bold text-xl border-2 active:scale-95 flex items-center justify-center gap-1 ${!modalState.data.tag || modalState.data.tag === '無' ? 'bg-neutral-200 text-neutral-700 border-neutral-400 scale-105 shadow-inner' : 'bg-neutral-100 text-neutral-500 border-neutral-200'}`}>
+                            {(!modalState.data.tag || modalState.data.tag === '無') && <Icons.Check size={20} />}
+                            無地點
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {modalState.type === 'addQuick' && (
                       <div className="space-y-6 py-4 px-1 font-bold">
                         <input type="text" id="mSingleAddQuick" placeholder="輸入品項名稱..." className="w-full p-5 rounded-2xl border-2 border-amber-200 outline-none text-2xl font-bold text-center bg-amber-50/30 shadow-inner" />
@@ -695,7 +716,7 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.2.26 (完美分享版)</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.3.1 (全功能修復完美版)</p>
                           <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
                         </div>
 
@@ -890,7 +911,7 @@
                           {(customTags || []).map((item, idx) => {
                             if(!item) return null;
                             return (
-                            <div key={idx} data-v-tag-idx={idx} className={`flex justify-between items-center p-3 rounded-2xl shadow-sm transition-all ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative bg-white' : 'border-2'} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`} style={vDragIdx !== idx ? getTagInlineStyles(item.n) : { ...getTagInlineStyles(item.n), outline: '2px solid #fff' }}>
+                            <div key={idx} data-v-tag-idx={idx} className={`flex justify-between items-center p-3 rounded-2xl shadow-sm transition-all ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative bg-white' : 'border-2'} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`} style={vDragIdx !== idx ? getTagStyle(item.n, true) : { ...getTagStyle(item.n, true), outline: '2px solid #fff' }}>
                               <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                 <div className="p-2 text-neutral-500 drag-handle" onTouchStart={(e) => onVStart(idx)} onTouchEnd={() => onVEnd('tag')} onTouchCancel={() => onVEnd('tag')}><Icons.GripVertical size={24}/></div>
                                 <div className="flex flex-col flex-1 min-w-0 px-1 py-1">
