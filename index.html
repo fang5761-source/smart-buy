@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.4.2 (行動端防當機穩定版) by 大樂 -->
+  <!-- 智能採買 v1.4.3 (雲端路徑修復版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -79,7 +79,6 @@
   <script type="text/babel" data-type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    // 🛡️ 新增 signInWithRedirect 和 getRedirectResult 以解決手機端白畫面當機問題
     import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const { useState, useEffect, useRef, useMemo } = React;
@@ -316,8 +315,8 @@
 
       useEffect(() => {
         if (user && !user.isAnonymous) {
-          const syncRoomsRef = doc(db, 'artifacts', APP_ID_PATH, 'users', user.uid, 'settings');
-          // 🛡️ 新增 error callback 防撞網
+          // 🛡️ 重大 Bug 修復：修正了 5 個網域節點導致的「同步崩潰死機」問題 (改為 private_data)
+          const syncRoomsRef = doc(db, 'artifacts', APP_ID_PATH, 'users', user.uid, 'private_data', 'settings');
           const unsubSync = onSnapshot(syncRoomsRef, (snap) => {
             if (snap.exists() && snap.data().savedRooms) {
               const cloudRooms = snap.data().savedRooms;
@@ -333,7 +332,7 @@
 
       useEffect(() => {
         if (user && !user.isAnonymous && savedRooms.length > 0) {
-          const syncRoomsRef = doc(db, 'artifacts', APP_ID_PATH, 'users', user.uid, 'settings');
+          const syncRoomsRef = doc(db, 'artifacts', APP_ID_PATH, 'users', user.uid, 'private_data', 'settings');
           setDoc(syncRoomsRef, { savedRooms: savedRooms }, { merge: true }).catch(console.error);
         }
       }, [savedRooms, user]);
@@ -343,7 +342,6 @@
         setIsLoading(true);
         const prefix = roomPath ? `room_${roomPath}` : `user_${user.uid}`;
         
-        // 🛡️ 為所有 onSnapshot 加上 error callback 防護網，解決身分切換時拋出異常導致白畫面的致命 Bug
         const unsubItems = onSnapshot(query(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${prefix}`), orderBy('createdAt', 'desc')), snap => {
           setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
           setIsLoading(false);
@@ -734,7 +732,7 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.4.2 (行動端防當機穩定版)</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.4.3 (雲端路徑修復版)</p>
                           <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
                         </div>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
