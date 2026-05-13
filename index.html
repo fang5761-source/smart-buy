@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.5.1 (細節微調與鬧鐘瘦身版) by 大樂 -->
+  <!-- 智能採買 v1.5.2 (頻道命名與鬧鐘瘦身版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -348,6 +348,21 @@
         setMsg('Buy ID 已更新並永久記憶！');
       };
 
+      // 🛡️ 新增：處理頻道重新命名
+      const handleRenameRoom = async () => {
+        const newNote = modalInput.trim();
+        const codeToEdit = modalState.data.code;
+        const newSavedRooms = savedRooms.map(r => r.code === codeToEdit ? { ...r, note: newNote } : r);
+        setSavedRooms(newSavedRooms);
+        try { localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(newSavedRooms)); } catch(e){}
+        if (user && !user.isAnonymous) {
+          const syncRoomsRef = doc(db, 'artifacts', APP_ID_PATH, 'users', user.uid, 'private_data', 'settings');
+          await setDoc(syncRoomsRef, { savedRooms: newSavedRooms }, { merge: true }).catch(console.error);
+        }
+        setModalState({ type: 'room' });
+        setMsg('頻道名稱已更新！');
+      };
+
       useEffect(() => {
         if (!user) return;
         setIsLoading(true);
@@ -672,6 +687,7 @@
                        modalState.type === 'addQuick' ? '自訂常用品項' : 
                        modalState.type === 'addTag' ? '新增地點' : 
                        modalState.type === 'room' ? '共享頻道管理' : 
+                       modalState.type === 'renameRoom' ? '頻道重新命名' : 
                        modalState.type === 'about' ? '使用說明書' : 
                        modalState.type === 'manageTag' ? '地點設定中心' : 
                        modalState.type === 'manageQuick' ? '常用品項設定' : 
@@ -684,16 +700,46 @@
                   <div key={modalState.type} className="overflow-y-auto pr-1 flex-1 scrollbar-hide pb-8">
                     
                     {modalState.type === 'setAlarm' && modalState.data && (
-                      <div className="space-y-4 py-2 px-1 font-bold">
+                      <div className="space-y-4 py-2 px-1 font-bold w-full">
                         <div className="text-center">
                           <p className="text-base text-neutral-500 mb-1">為此品項設定提醒：</p>
                           <span className="text-3xl font-bold text-yellow-600 font-serif-tc">🛒 {modalState.data.name}</span>
                         </div>
-                        <div className="space-y-2 mt-2">
+                        <div className="space-y-2 mt-2 w-full">
                           <p className="text-lg font-bold text-neutral-600 px-1 font-serif-tc">選擇提醒時間：</p>
-                          <input type="datetime-local" value={modalInput} onChange={e => setModalInput(e.target.value)} className="w-full max-w-full box-border py-3 px-2 rounded-xl border-2 border-yellow-300 outline-none text-base sm:text-lg font-bold text-center bg-yellow-50 shadow-inner appearance-none" />
+                          <div className="w-full overflow-hidden flex rounded-xl border-2 border-yellow-300 shadow-inner bg-yellow-50">
+                            <input 
+                              type="datetime-local" 
+                              value={modalInput} 
+                              onChange={e => setModalInput(e.target.value)} 
+                              className="flex-1 min-w-0 block w-full py-3 px-2 outline-none text-base sm:text-lg font-bold text-center bg-transparent appearance-none" 
+                              style={{ maxWidth: '100%', boxSizing: 'border-box' }}
+                            />
+                          </div>
                         </div>
                         <button onClick={() => { generateICS(modalState.data, modalInput); setModalState({ type: null }); setMsg('已產生行事曆，請允許加入！'); }} className="w-full box-border bg-yellow-500 text-white py-3 mt-2 rounded-xl font-bold text-xl shadow-lg active:scale-95 flex justify-center items-center gap-2"><Icons.Bell size={24} /> 加入手機行事曆</button>
+                      </div>
+                    )}
+
+                    {modalState.type === 'renameRoom' && modalState.data && (
+                      <div className="space-y-5 py-4 px-1 font-bold">
+                        <div className="text-center">
+                          <p className="text-sm text-neutral-500 mb-1">正在為此頻道重新命名：</p>
+                          <p className="text-lg font-mono text-neutral-400 bg-neutral-100 inline-block px-3 py-1 rounded-md">{modalState.data.code}</p>
+                        </div>
+                        <input 
+                          type="text" 
+                          value={modalInput} 
+                          onChange={e => setModalInput(e.target.value)} 
+                          placeholder="輸入新的頻道名稱..." 
+                          className="w-full p-4 rounded-xl border-2 border-emerald-300 outline-none text-xl font-bold text-center bg-white shadow-inner" 
+                        />
+                        <button 
+                          onClick={handleRenameRoom} 
+                          className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          <Icons.Check size={24} /> 確認修改名稱
+                        </button>
                       </div>
                     )}
 
@@ -737,7 +783,7 @@
                       <div className="space-y-6 py-2 text-center font-bold">
                         <div className="bg-amber-50 p-6 rounded-2xl border-2 border-amber-200">
                           <p className="text-xl text-amber-900 mb-3 flex items-center justify-center gap-2">⚠️ 警告：頻道非空白</p>
-                          <p className="text-lg text-amber-800 leading-relaxed font-bold font-serif-tc">代號「{modalState.data.code}」已有資料。這可能是以前用過的代號。</p>
+                          <p className="text-lg text-amber-800 leading-relaxed font-bold font-serif-tc">代號「{modalState.data.code}」已有舊資料。這可能是以前用過的代號。</p>
                         </div>
                         <div className="flex flex-col gap-3">
                           <button onClick={() => handleTuneRoom(modalState.data.code, modalState.data.note)} className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-xl shadow-md active:scale-95">我要承接舊資料</button>
@@ -751,7 +797,7 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.5.1 (防撞網與瘦身優化版)</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.5.2 (頻道命名與瘦身版)</p>
                           <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
                         </div>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
@@ -814,7 +860,17 @@
                                   <div className="p-1 -ml-2 mt-1 text-neutral-400 drag-handle" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { e.stopPropagation(); onVStart(idx); }} onTouchEnd={(e) => { e.stopPropagation(); onVEnd('room'); }} onTouchCancel={(e) => { e.stopPropagation(); onVEnd('room'); }}><Icons.GripVertical size={24}/></div>
                                   <div className="flex flex-col flex-1 min-w-0 gap-1.5 w-full">
                                     <div className="flex justify-between items-start w-full gap-2">
-                                      <span className={`font-bold text-lg leading-tight truncate flex-1 pt-0.5 ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
+                                      <span 
+                                        className={`font-bold text-lg leading-tight truncate flex-1 pt-0.5 cursor-pointer flex items-center gap-1.5 underline decoration-dashed decoration-neutral-300 underline-offset-4 ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setModalInput(room.note || '');
+                                          setModalState({ type: 'renameRoom', data: room });
+                                        }}
+                                        title="點擊修改頻道名稱"
+                                      >
+                                        {room.note || '未命名'} <Icons.Edit size={14} className="text-neutral-400 shrink-0 mb-1" />
+                                      </span>
                                       <div className="flex gap-1.5 shrink-0">
                                         <button onClick={(e) => handleShareRoom(e, room.code)} className="bg-blue-50 text-blue-600 p-2 rounded-lg active:scale-90 border border-blue-200" title="分享頻道"><Icons.Share size={16}/></button>
                                         <button onClick={(e) => { e.stopPropagation(); const temp = document.createElement('input'); temp.value = room.code; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-[#FFDD00] text-amber-900 p-2 rounded-lg active:scale-90 shadow-sm border border-amber-400" title="複製代號"><Icons.Copy size={16}/></button>
