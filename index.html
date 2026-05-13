@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.4.8 (直覺分享與提示優化版) by 大樂 -->
+  <!-- 智能採買 v1.4.9 (排版與記憶核心優化版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -254,6 +254,7 @@
         const unsubscribe = onAuthStateChanged(auth, u => {
           if (u) {
             setUser(u);
+            // 🚨 移除此處的強迫覆蓋 ID 邏輯，改由下方 onSnapshot 接管，確保自訂 ID 不會消失
           }
           else signInAnonymously(auth).catch(console.error);
         });
@@ -449,7 +450,7 @@
           try{localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(next));}catch(e){}
           return next;
         });
-        setModalState({ type: null }); setMsg(`連線成功`);
+        setModalState({ type: null }); setMsg(`連線成功`); setTimeout(() => setMsg(''), 1500);
       };
       const handleClearChannelData = async (code) => {
         const snap = await getDocs(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_room_${code}`));
@@ -474,7 +475,6 @@
         else { const tempIn = document.createElement('textarea'); tempIn.value = shareText; tempIn.style.position = 'fixed'; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn); setMsg('推薦文字與連結已複製！'); }
       };
 
-      // 🛡️ 新增單一頻道專用一鍵分享功能
       const handleShareRoom = async (e, roomCode) => {
         e.stopPropagation();
         const url = window.location.href.split('?')[0];
@@ -482,7 +482,7 @@
         if (navigator.share) {
           try { await navigator.share({ title: '智能採買頻道邀請', text: shareText }); } catch(err) {}
         } else {
-          const tempIn = document.createElement('textarea'); tempIn.value = shareText; tempIn.style.position = 'fixed'; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn); setMsg('頻道邀請文字已複製！');
+          const tempIn = document.createElement('textarea'); tempIn.value = shareText; tempIn.style.position = 'fixed'; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn); setMsg('頻道邀請文字已複製！'); setTimeout(() => setMsg(''), 2000);
         }
       };
 
@@ -549,19 +549,19 @@
 
           <div className="w-full max-w-md bg-white h-full flex flex-col relative shadow-2xl sm:border-x border-neutral-200 z-0 overflow-hidden">
             <header className="bg-emerald-700 text-white shrink-0 shadow-lg z-20 safe-pt">
-              <div className="px-4 py-3 sm:py-4 flex justify-between items-center h-auto min-h-[64px]">
-                <div className="flex items-center gap-2 font-bold">
-                  <Icons.Cart />
-                  <h1 className="text-2xl sm:text-3xl tracking-tight font-serif-tc">智能採買</h1>
-                  <button onClick={() => setModalState({ type: 'about' })} className="px-3 py-1.5 bg-blue-500 text-white rounded-xl text-base sm:text-lg font-bold shadow-md ml-1 flex items-center gap-1.5 active:scale-90 transition-all">
-                    <Icons.Info size={18} /> 使用說明
+              <div className="px-3 py-2.5 sm:py-3 flex justify-between items-center gap-2 h-auto min-h-[60px]">
+                <div className="flex items-center gap-1 sm:gap-1.5 font-bold min-w-0">
+                  <Icons.Cart size={20} className="shrink-0" />
+                  <h1 className="text-lg sm:text-xl tracking-tight font-serif-tc shrink-0">智能採買</h1>
+                  <button onClick={() => setModalState({ type: 'about' })} className="px-2 py-1 sm:px-2.5 sm:py-1.5 bg-blue-500 text-white rounded-lg text-xs sm:text-sm font-bold shadow-md ml-1 flex items-center gap-1 active:scale-90 transition-all shrink-0">
+                    <Icons.Info size={14} /> 說明
                   </button>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex shrink-0 min-w-0">
                   <button onClick={() => { 
                     setModalInput(''); setIsEditingBaseId(false); setBaseIdEditValue(personalBaseId); setRoomPrefix(personalBaseId); setRoomSuffix('');
                     setModalState({ type: 'room' }); 
-                  }} className={`px-2.5 py-1.5 rounded-lg text-base sm:text-lg font-bold transition-all active:scale-95 shadow-sm ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
+                  }} className={`px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-sm sm:text-base font-bold transition-all active:scale-95 shadow-sm truncate max-w-[140px] sm:max-w-[180px] ${roomPath ? 'bg-amber-400 text-amber-900' : 'bg-emerald-600 text-white border border-emerald-500'}`}>
                     {headerRoomTitle}
                   </button>
                 </div>
@@ -751,7 +751,7 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.4.8 (直覺分享與提示版)</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.4.9 (排版與記憶核心優化版)</p>
                           <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
                         </div>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
@@ -810,16 +810,18 @@
                             <h3 className="text-xl font-bold text-neutral-600 flex items-center gap-2 px-1"><Icons.History size={24}/> 頻道列表 (長按圖示拖曳)</h3>
                             <div className="space-y-2.5" onTouchMove={(e) => onVMove(e, 'data-v-room-idx')}>
                               {savedRooms.map((room, idx) => (
-                                <div key={idx} data-v-room-idx={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-400 shadow-md' : 'bg-white border-neutral-200 shadow-sm'} ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative' : ''} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`}>
-                                  <div className="p-2 -ml-2 text-neutral-400 drag-handle" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { e.stopPropagation(); onVStart(idx); }} onTouchEnd={(e) => { e.stopPropagation(); onVEnd('room'); }} onTouchCancel={(e) => { e.stopPropagation(); onVEnd('room'); }}><Icons.GripVertical size={24}/></div>
-                                  <div className="flex flex-col flex-1 min-w-0">
-                                    <span className={`font-bold text-lg truncate ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
-                                    <span className="text-xs text-neutral-400 font-mono italic truncate">{room.code}</span>
-                                  </div>
-                                  <div className="flex gap-1.5 shrink-0">
-                                    <button onClick={(e) => handleShareRoom(e, room.code)} className="bg-blue-50 text-blue-600 p-2 rounded-lg active:scale-90 border border-blue-200" title="分享頻道"><Icons.Share size={20}/></button>
-                                    <button onClick={(e) => { e.stopPropagation(); const temp = document.createElement('input'); temp.value = room.code; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); }} className="bg-[#FFDD00] text-amber-900 p-2 rounded-lg active:scale-90 border border-amber-400" title="複製代號"><Icons.Copy size={20}/></button>
-                                    <button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); if (roomPath === room.code) setRoomPath(''); }} className="p-2 text-neutral-400 active:scale-90 bg-neutral-50 rounded-lg border border-neutral-100" title="刪除頻道"><Icons.Trash size={20}/></button>
+                                <div key={idx} data-v-room-idx={idx} onClick={() => handleTuneRoom(room.code, room.note)} className={`flex items-start gap-3 p-3.5 rounded-2xl border-2 transition-all active:scale-95 ${roomPath === room.code ? 'bg-amber-50 border-amber-400 shadow-md' : 'bg-white border-neutral-200 shadow-sm'} ${vDragIdx === idx ? 'opacity-90 scale-105 shadow-xl z-50 relative' : ''} ${vDragOverIdx === idx && vDragIdx !== idx ? 'border-dashed scale-95 opacity-70 border-emerald-500' : ''}`}>
+                                  <div className="p-1 -ml-2 mt-1 text-neutral-400 drag-handle" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { e.stopPropagation(); onVStart(idx); }} onTouchEnd={(e) => { e.stopPropagation(); onVEnd('room'); }} onTouchCancel={(e) => { e.stopPropagation(); onVEnd('room'); }}><Icons.GripVertical size={24}/></div>
+                                  <div className="flex flex-col flex-1 min-w-0 gap-1.5 w-full">
+                                    <div className="flex justify-between items-center w-full gap-2">
+                                      <span className={`font-bold text-lg truncate flex-1 ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
+                                      <div className="flex gap-1.5 shrink-0">
+                                        <button onClick={(e) => handleShareRoom(e, room.code)} className="bg-blue-50 text-blue-600 p-1.5 rounded-lg active:scale-90 border border-blue-200" title="分享頻道"><Icons.Share size={16}/></button>
+                                        <button onClick={(e) => { e.stopPropagation(); const temp = document.createElement('input'); temp.value = room.code; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-[#FFDD00] text-amber-900 p-1.5 rounded-lg active:scale-90 shadow-sm border border-amber-400" title="複製代號"><Icons.Copy size={16}/></button>
+                                        <button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); if (roomPath === room.code) { setRoomPath(''); try{localStorage.removeItem('smart_buy_room');}catch(e){}} }} className="p-1.5 text-neutral-400 active:scale-90 bg-neutral-50 rounded-lg border border-neutral-100" title="刪除頻道"><Icons.Trash size={16}/></button>
+                                      </div>
+                                    </div>
+                                    <span className="text-sm text-neutral-500 font-mono bg-neutral-50/80 px-2 py-1 rounded border border-neutral-100 break-all leading-tight">{room.code}</span>
                                   </div>
                                 </div>
                               ))}
@@ -848,7 +850,7 @@
                                   <>
                                     <div className="flex justify-center items-center gap-2 mb-2">
                                       <p className="text-3xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>
-                                      <button onClick={() => { const temp = document.createElement('input'); temp.value = personalBaseId; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('Buy ID 已複製！'); }} className="bg-emerald-100 text-emerald-700 p-2 rounded-lg active:scale-90 shadow-sm border border-emerald-200"><Icons.Copy size={20}/></button>
+                                      <button onClick={() => { const temp = document.createElement('input'); temp.value = personalBaseId; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('Buy ID 已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-emerald-100 text-emerald-700 p-2 rounded-lg active:scale-90 shadow-sm border border-emerald-200"><Icons.Copy size={20}/></button>
                                     </div>
                                     <button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="mx-auto text-emerald-600 flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={14}/>自訂修改</button>
                                   </>
@@ -871,7 +873,7 @@
                                 <div className="flex flex-col items-center gap-2">
                                   <div className="flex justify-center items-center gap-2">
                                     <p className="text-3xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>
-                                    <button onClick={() => { const temp = document.createElement('input'); temp.value = personalBaseId; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('Buy ID 已複製！'); }} className="bg-emerald-100 text-emerald-700 p-2 rounded-lg active:scale-90 shadow-sm border border-emerald-200"><Icons.Copy size={20}/></button>
+                                    <button onClick={() => { const temp = document.createElement('input'); temp.value = personalBaseId; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('Buy ID 已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-emerald-100 text-emerald-700 p-2 rounded-lg active:scale-90 shadow-sm border border-emerald-200"><Icons.Copy size={20}/></button>
                                   </div>
                                   <button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-600 flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={14}/>自訂修改</button>
                                 </div>
@@ -1031,11 +1033,11 @@
                         <div className="bg-neutral-50 p-4 rounded-2xl border-2 border-neutral-100 space-y-3 shadow-sm font-bold text-left">
                           <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-neutral-200">
                             <div className="min-w-0 flex-1 pr-2"><p className="text-xs text-neutral-500 font-bold mb-0.5">郵局 (700) 戶名: 吳佩芳</p><p className="text-lg font-bold text-neutral-800 tracking-wider font-mono">2441500-0144326</p></div>
-                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '24415000144326'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('郵局帳號已複製！'); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
+                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '24415000144326'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('郵局帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
                           </div>
                           <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-neutral-200">
                             <div className="min-w-0 flex-1 pr-2"><p className="text-xs text-neutral-500 font-bold mb-0.5">永豐銀行 (807) 戶名: 吳佩芳</p><p className="text-lg font-bold text-neutral-800 tracking-wider font-mono">204-018-0025253-1</p></div>
-                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('永豐帳號已複製！'); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
+                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('永豐帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
                           </div>
                         </div>
                       </div>
