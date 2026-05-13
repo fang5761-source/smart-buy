@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.4.7 (雲端 Buy ID 同步記憶版) by 大樂 -->
+  <!-- 智能採買 v1.4.8 (直覺分享與提示優化版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -241,7 +241,6 @@
         return ['全部', ...(customTags || []).filter(tag => tag && tagsInUse.includes(tag.n)).map(t => t.n)];
       }, [items, customTags]);
 
-      // 🛡️ Auth State Listener (只綁定一次)
       useEffect(() => {
         getRedirectResult(auth).then(result => {
           if (result) {
@@ -261,12 +260,10 @@
         return () => unsubscribe();
       }, []);
 
-      // 當 personalBaseId 改變時，備份到 localStorage
       useEffect(() => {
         try { localStorage.setItem('smart_buy_base_id', personalBaseId); } catch(e){}
       }, [personalBaseId]);
 
-      // 🛡️ 雲端設定檔同步 (負責載入與自動設定 Buy ID)
       useEffect(() => {
         if (user && !user.isAnonymous) {
           const syncRoomsRef = doc(db, 'artifacts', APP_ID_PATH, 'users', user.uid, 'private_data', 'settings');
@@ -278,18 +275,15 @@
                 try { localStorage.setItem('smart_buy_saved_rooms', JSON.stringify(data.savedRooms)); } catch(e){}
               }
               if (data.customBuyId) {
-                // 如果雲端有自訂的 Buy ID，強制覆蓋本地
                 setPersonalBaseId(data.customBuyId);
                 setRoomPrefix(data.customBuyId);
               } else {
-                // 如果雲端沒有存過，用 Google ID 前 8 碼當作初始預設值，並寫入雲端
                 const initialId = user.uid.substring(0, 8).toUpperCase();
                 setPersonalBaseId(initialId);
                 setRoomPrefix(initialId);
                 setDoc(syncRoomsRef, { customBuyId: initialId }, { merge: true });
               }
             } else {
-              // 第一次登入，建立設定檔
               const initialId = user.uid.substring(0, 8).toUpperCase();
               setPersonalBaseId(initialId);
               setRoomPrefix(initialId);
@@ -298,7 +292,7 @@
           }, err => console.warn('雲端同步延遲:', err));
           return () => unsubSync();
         }
-      }, [user]); // 不將 savedRooms 放進 dependency，避免死迴圈
+      }, [user]);
 
       useEffect(() => {
         if (user && !user.isAnonymous && savedRooms.length > 0) {
@@ -341,7 +335,6 @@
         } catch (error) { console.error("登出失敗", error); }
       };
 
-      // 修改 Buy ID，同時寫入 Google 雲端永久保存
       const handleUpdateBaseId = async (newVal) => {
         const val = newVal.trim(); if (!val) return;
         setPersonalBaseId(val); setBaseIdEditValue(val); setRoomPrefix(val);
@@ -474,11 +467,25 @@
         setCustomTags(next); await setDoc(getConfigRef(), { tags: next }, { merge: true });
         setMsg('已還原預設色');
       };
+
       const handleShareApp = async () => {
         const shareText = `推薦給你這個超好用的智能採買 APP！\n\n${window.location.href.split('?')[0]}`;
         if (navigator.share) try { await navigator.share({ title: '智能採買', text: shareText }); } catch(err) {}
         else { const tempIn = document.createElement('textarea'); tempIn.value = shareText; tempIn.style.position = 'fixed'; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn); setMsg('推薦文字與連結已複製！'); }
       };
+
+      // 🛡️ 新增單一頻道專用一鍵分享功能
+      const handleShareRoom = async (e, roomCode) => {
+        e.stopPropagation();
+        const url = window.location.href.split('?')[0];
+        const shareText = `邀請你加入我的採買頻道！\n\n🗝️ 專屬鑰匙：${roomCode}\n\n請在「智能採買」設定中貼上此鑰匙即可連線同步！\n👉 ${url}`;
+        if (navigator.share) {
+          try { await navigator.share({ title: '智能採買頻道邀請', text: shareText }); } catch(err) {}
+        } else {
+          const tempIn = document.createElement('textarea'); tempIn.value = shareText; tempIn.style.position = 'fixed'; document.body.appendChild(tempIn); tempIn.select(); document.execCommand('copy'); document.body.removeChild(tempIn); setMsg('頻道邀請文字已複製！');
+        }
+      };
+
       const handleForceUpdate = () => {
         setMsg('重整中...'); if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(r => { for (let rg of r) rg.unregister(); });
         setTimeout(() => { window.location.reload(true); }, 1500);
@@ -744,7 +751,7 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.4.7 (雲端 ID 同步記憶版)</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.4.8 (直覺分享與提示版)</p>
                           <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
                         </div>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
@@ -809,8 +816,11 @@
                                     <span className={`font-bold text-lg truncate ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
                                     <span className="text-xs text-neutral-400 font-mono italic truncate">{room.code}</span>
                                   </div>
-                                  <button onClick={(e) => { e.stopPropagation(); const temp = document.createElement('input'); temp.value = room.code; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); }} className="bg-[#FFDD00] text-amber-900 p-2.5 rounded-lg active:scale-90 shadow-sm border border-amber-400"><Icons.Copy size={22}/></button>
-                                  <button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); if (roomPath === room.code) setRoomPath(''); }} className="p-2.5 text-neutral-300 active:scale-90 bg-neutral-50 rounded-lg border border-neutral-100"><Icons.Trash size={22}/></button>
+                                  <div className="flex gap-1.5 shrink-0">
+                                    <button onClick={(e) => handleShareRoom(e, room.code)} className="bg-blue-50 text-blue-600 p-2 rounded-lg active:scale-90 border border-blue-200" title="分享頻道"><Icons.Share size={20}/></button>
+                                    <button onClick={(e) => { e.stopPropagation(); const temp = document.createElement('input'); temp.value = room.code; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); }} className="bg-[#FFDD00] text-amber-900 p-2 rounded-lg active:scale-90 border border-amber-400" title="複製代號"><Icons.Copy size={20}/></button>
+                                    <button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); if (roomPath === room.code) setRoomPath(''); }} className="p-2 text-neutral-400 active:scale-90 bg-neutral-50 rounded-lg border border-neutral-100" title="刪除頻道"><Icons.Trash size={20}/></button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -878,12 +888,13 @@
                         {/* 🛡️ 新增頻道區塊 */}
                         <div className="pt-5 border-t border-dashed border-neutral-300 font-bold">
                           <h3 className="text-lg sm:text-xl font-bold text-neutral-700 font-serif-tc">建立新頻道 / 加入親友頻道</h3>
+                          <p className="text-sm font-bold text-neutral-400 mt-1 mb-3">輸入完整鑰匙 (如: A1B2-公司)<br/><span className="text-xs text-emerald-600">*頻道名稱可自訂中文、英文或數字</span></p>
                           
                           <div className="space-y-3 mt-3">
                             <div className="flex items-center gap-2 w-full">
                                <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="flex-1 shrink-0 min-w-0 p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-inner" placeholder="Buy ID" />
                                <span className="text-emerald-300 font-bold text-2xl shrink-0">-</span>
-                               <input type="text" value={roomSuffix} onChange={e => setRoomSuffix(e.target.value)} className="flex-1 min-w-0 p-4 bg-white rounded-xl border-2 border-emerald-200 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-sm" placeholder="頻道名稱" />
+                               <input type="text" value={roomSuffix} onChange={e => setRoomSuffix(e.target.value)} className="flex-1 min-w-0 p-4 bg-white rounded-xl border-2 border-emerald-200 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-sm" placeholder="頻道名(可中文)" />
                             </div>
                             <input type="text" id="mRoomNote" placeholder="頻道備註 (如：全家用、婆家)" className="w-full p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base font-bold outline-none font-bold" />
                             <div className="flex gap-2">
@@ -901,7 +912,7 @@
                               <span className="text-blue-600 font-bold">1. 觀念：</span>「Buy ID」是你的門牌，「頻道」是你開的房間。兩者組合 (例: A1B2-公司) 就是這份清單的專屬鑰匙。
                             </p>
                             <p className="bg-white p-2 rounded-lg border border-blue-100 shadow-sm">
-                              <span className="text-blue-600 font-bold">2. 分享：</span>從上方頻道列表點選 <span className="bg-[#FFDD00] text-amber-900 px-1 py-0.5 rounded shadow-sm inline-flex items-center align-middle mx-0.5"><Icons.Copy size={14}/></span> 複製鑰匙，傳 LINE 給家人。
+                              <span className="text-blue-600 font-bold">2. 分享：</span>從上方頻道列表點選 <span className="bg-blue-100 text-blue-700 px-1 py-0.5 rounded shadow-sm inline-flex items-center align-middle mx-0.5"><Icons.Share size={14}/></span> 一鍵分享給家人。
                             </p>
                             <p className="bg-white p-2 rounded-lg border border-blue-100 shadow-sm">
                               <span className="text-blue-600 font-bold">3. 連線：</span>家人在此頁面點擊「貼上」並連線，全家就能同步採買！
