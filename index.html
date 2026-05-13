@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.5.0 (版面瘦身與雲端綁定版) by 大樂 -->
+  <!-- 智能採買 v1.5.1 (細節微調與鬧鐘瘦身版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -691,9 +691,9 @@
                         </div>
                         <div className="space-y-2 mt-2">
                           <p className="text-lg font-bold text-neutral-600 px-1 font-serif-tc">選擇提醒時間：</p>
-                          <input type="datetime-local" value={modalInput} onChange={e => setModalInput(e.target.value)} className="w-full py-3 px-4 rounded-xl border-2 border-yellow-300 outline-none text-lg font-bold text-center bg-yellow-50 shadow-inner" />
+                          <input type="datetime-local" value={modalInput} onChange={e => setModalInput(e.target.value)} className="w-full max-w-full box-border py-3 px-2 rounded-xl border-2 border-yellow-300 outline-none text-base sm:text-lg font-bold text-center bg-yellow-50 shadow-inner appearance-none" />
                         </div>
-                        <button onClick={() => { generateICS(modalState.data, modalInput); setModalState({ type: null }); setMsg('已產生行事曆，請允許加入！'); }} className="w-full bg-yellow-500 text-white py-3 mt-2 rounded-xl font-bold text-xl shadow-lg active:scale-95 flex justify-center items-center gap-2"><Icons.Bell size={24} /> 加入手機行事曆</button>
+                        <button onClick={() => { generateICS(modalState.data, modalInput); setModalState({ type: null }); setMsg('已產生行事曆，請允許加入！'); }} className="w-full box-border bg-yellow-500 text-white py-3 mt-2 rounded-xl font-bold text-xl shadow-lg active:scale-95 flex justify-center items-center gap-2"><Icons.Bell size={24} /> 加入手機行事曆</button>
                       </div>
                     )}
 
@@ -751,7 +751,7 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.5.0 (版面瘦身與雲端綁定版)</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.5.1 (防撞網與瘦身優化版)</p>
                           <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
                         </div>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
@@ -788,7 +788,7 @@
                           {expandedSection === 'faq' && ( 
                             <div className="px-3 pb-3 pt-1 text-sm text-neutral-700 space-y-2 border-t border-neutral-50 bg-neutral-50/40 leading-tight text-left font-bold">
                               <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：什麼是 Buy ID？</p><p>A：就像你專屬的「門牌號碼」。系統會隨機配發一組，你也可以點擊「自訂修改」設成好記的英文或數字（如 LINE ID）。</p></div>
-                              <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：什麼是 頻道？</p><p>A：就像門牌裡的「各個房間」。例如「全家用」、「公司用」，將【Buy ID - 頻道名】分享給親友，大家就能進到同房間共用清單。</p></div>
+                              <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：什麼是 頻道？</p><p>A：就像門牌裡的「各個房間」。例如「001」、「公司用」，將【Buy ID - 頻道名】分享給親友，大家就能進到同房間共用清單。</p></div>
                               <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：別人知道我的 Buy ID，會看到我的隱藏頻道嗎？</p><p>A：絕對不會！別人必須同時知道「Buy ID」和「頻道名」（完整的鑰匙），才能進入該頻道。你個人的其他清單是絕對安全的！</p></div>
                               <button onClick={() => setExpandedSection('')} className="w-full py-2 bg-white text-purple-600 rounded-lg border border-purple-200 font-bold mt-1 shadow-sm text-base">收起 Q&A ↑</button>
                             </div> 
@@ -817,7 +817,7 @@
                                       <span className={`font-bold text-lg leading-tight truncate flex-1 pt-0.5 ${roomPath === room.code ? 'text-amber-800' : 'text-neutral-800'}`}>{room.note || '未命名'}</span>
                                       <div className="flex gap-1.5 shrink-0">
                                         <button onClick={(e) => handleShareRoom(e, room.code)} className="bg-blue-50 text-blue-600 p-2 rounded-lg active:scale-90 border border-blue-200" title="分享頻道"><Icons.Share size={16}/></button>
-                                        <button onClick={(e) => { e.stopPropagation(); const temp = document.createElement('input'); temp.value = room.code; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); }} className="bg-[#FFDD00] text-amber-900 p-2 rounded-lg active:scale-90 shadow-sm border border-amber-400" title="複製代號"><Icons.Copy size={16}/></button>
+                                        <button onClick={(e) => { e.stopPropagation(); const temp = document.createElement('input'); temp.value = room.code; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('代號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-[#FFDD00] text-amber-900 p-2 rounded-lg active:scale-90 shadow-sm border border-amber-400" title="複製代號"><Icons.Copy size={16}/></button>
                                         <button onClick={(e) => { e.stopPropagation(); const n = savedRooms.filter(r => r.code !== room.code); setSavedRooms(n); if (roomPath === room.code) { setRoomPath(''); try{localStorage.removeItem('smart_buy_room');}catch(e){}} }} className="p-2 text-neutral-400 active:scale-90 bg-neutral-50 rounded-lg border border-neutral-100" title="刪除頻道"><Icons.Trash size={16}/></button>
                                       </div>
                                     </div>
@@ -850,7 +850,7 @@
                                   <>
                                     <div className="flex justify-center items-center gap-2 mb-2">
                                       <p className="text-3xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>
-                                      <button onClick={() => { const temp = document.createElement('input'); temp.value = personalBaseId; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('Buy ID 已複製！'); }} className="bg-emerald-100 text-emerald-700 p-2 rounded-lg active:scale-90 shadow-sm border border-emerald-200"><Icons.Copy size={20}/></button>
+                                      <button onClick={() => { const temp = document.createElement('input'); temp.value = personalBaseId; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('Buy ID 已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-emerald-100 text-emerald-700 p-2 rounded-lg active:scale-90 shadow-sm border border-emerald-200"><Icons.Copy size={20}/></button>
                                     </div>
                                     <button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="mx-auto text-emerald-600 flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={14}/>自訂修改</button>
                                   </>
@@ -873,7 +873,7 @@
                                 <div className="flex flex-col items-center gap-2">
                                   <div className="flex justify-center items-center gap-2">
                                     <p className="text-3xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>
-                                    <button onClick={() => { const temp = document.createElement('input'); temp.value = personalBaseId; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('Buy ID 已複製！'); }} className="bg-emerald-100 text-emerald-700 p-2 rounded-lg active:scale-90 shadow-sm border border-emerald-200"><Icons.Copy size={20}/></button>
+                                    <button onClick={() => { const temp = document.createElement('input'); temp.value = personalBaseId; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('Buy ID 已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-emerald-100 text-emerald-700 p-2 rounded-lg active:scale-90 shadow-sm border border-emerald-200"><Icons.Copy size={20}/></button>
                                   </div>
                                   <button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-600 flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={14}/>自訂修改</button>
                                 </div>
@@ -890,7 +890,7 @@
                         {/* 🛡️ 新增頻道區塊 */}
                         <div className="pt-5 border-t border-dashed border-neutral-300 font-bold">
                           <h3 className="text-lg sm:text-xl font-bold text-neutral-700 font-serif-tc">建立新頻道 / 加入親友頻道</h3>
-                          <p className="text-sm font-bold text-neutral-400 mt-1 mb-3">輸入完整鑰匙 (如: A1B2-公司)<br/><span className="text-xs text-emerald-600">*頻道名稱可自訂中文、英文或數字</span></p>
+                          <p className="text-sm font-bold text-neutral-400 mt-1 mb-3">輸入完整鑰匙 (如: A1B2-001)<br/><span className="text-xs text-emerald-600">*頻道名稱可自訂中文、英文或數字</span></p>
                           
                           <div className="space-y-3 mt-3">
                             <div className="flex items-center gap-2 w-full">
@@ -911,7 +911,7 @@
                           <p className="text-lg font-bold text-blue-900 mb-2 flex items-center gap-1.5"><Icons.Info size={20}/> 頻道觀念與連線步驟</p>
                           <div className="text-sm text-blue-800 space-y-2 leading-relaxed">
                             <p className="bg-white p-2 rounded-lg border border-blue-100 shadow-sm">
-                              <span className="text-blue-600 font-bold">1. 觀念：</span>「Buy ID」是你的門牌，「頻道」是你開的房間。兩者組合 (例: A1B2-公司) 就是這份清單的專屬鑰匙。
+                              <span className="text-blue-600 font-bold">1. 觀念：</span>「Buy ID」是你的門牌，「頻道」是你開的房間。兩者組合 (例: A1B2-001) 就是這份清單的專屬鑰匙。
                             </p>
                             <p className="bg-white p-2 rounded-lg border border-blue-100 shadow-sm">
                               <span className="text-blue-600 font-bold">2. 分享：</span>從上方頻道列表點選 <span className="bg-blue-100 text-blue-700 px-1 py-0.5 rounded shadow-sm inline-flex items-center align-middle mx-0.5"><Icons.Share size={14}/></span> 一鍵分享給家人。
@@ -1033,11 +1033,11 @@
                         <div className="bg-neutral-50 p-4 rounded-2xl border-2 border-neutral-100 space-y-3 shadow-sm font-bold text-left">
                           <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-neutral-200">
                             <div className="min-w-0 flex-1 pr-2"><p className="text-xs text-neutral-500 font-bold mb-0.5">郵局 (700) 戶名: 吳佩芳</p><p className="text-lg font-bold text-neutral-800 tracking-wider font-mono">2441500-0144326</p></div>
-                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '24415000144326'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('郵局帳號已複製！'); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
+                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '24415000144326'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('郵局帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
                           </div>
                           <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-neutral-200">
                             <div className="min-w-0 flex-1 pr-2"><p className="text-xs text-neutral-500 font-bold mb-0.5">永豐銀行 (807) 戶名: 吳佩芳</p><p className="text-lg font-bold text-neutral-800 tracking-wider font-mono">204-018-0025253-1</p></div>
-                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('永豐帳號已複製！'); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
+                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('永豐帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
                           </div>
                         </div>
                       </div>
