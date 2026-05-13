@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.4.3 (雲端路徑修復版) by 大樂 -->
+  <!-- 智能採買 v1.4.4 (Google登入狀態與頻道觀念優化版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -241,9 +241,7 @@
         return ['全部', ...(customTags || []).filter(tag => tag && tagsInUse.includes(tag.n)).map(t => t.n)];
       }, [items, customTags]);
 
-      // 🛡️ Google 登入黑科技 (行動端防當機升級版)
       useEffect(() => {
-        // 在元件載入時，優先捕捉轉址登入的結果 (防止手機 PWA 彈出視窗被阻擋)
         getRedirectResult(auth).then(result => {
           if (result) {
             const loggedInUser = result.user;
@@ -274,13 +272,11 @@
       const handleGoogleLogin = async () => {
         try {
           setMsg('正在連接 Google 總部...');
-          // 偵測是否為手機或平板，行動裝置一律採用「轉址」以避免白畫面或視窗阻擋
           const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
           
           if (isMobile) {
             await signInWithRedirect(auth, googleProvider);
           } else {
-            // 電腦版繼續使用彈出視窗
             const result = await signInWithPopup(auth, googleProvider);
             const loggedInUser = result.user;
             const newBaseId = loggedInUser.uid.substring(0, 8).toUpperCase();
@@ -315,7 +311,6 @@
 
       useEffect(() => {
         if (user && !user.isAnonymous) {
-          // 🛡️ 重大 Bug 修復：修正了 5 個網域節點導致的「同步崩潰死機」問題 (改為 private_data)
           const syncRoomsRef = doc(db, 'artifacts', APP_ID_PATH, 'users', user.uid, 'private_data', 'settings');
           const unsubSync = onSnapshot(syncRoomsRef, (snap) => {
             if (snap.exists() && snap.data().savedRooms) {
@@ -732,7 +727,7 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.4.3 (雲端路徑修復版)</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.4.4 (登入與觀念優化版)</p>
                           <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
                         </div>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
@@ -791,27 +786,88 @@
                             </div>
                           </div>
                         )}
+                        
+                        {/* 🛡️ 基地代碼區塊 (Google 身分證) */}
                         <div className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-100 shadow-inner font-bold relative text-center">
-                          {user && !user.isAnonymous && (<button onClick={handleLogout} className="absolute top-3 right-3 text-emerald-600 bg-white border border-emerald-200 p-1.5 rounded-lg shadow-sm active:scale-95"><Icons.LogOut size={16} /></button>)}
-                          <p className="text-sm font-bold text-emerald-800 mb-1">🪪 個人 ID (基地台號碼)</p>
-                          {isEditingBaseId ? (<div className="flex flex-col gap-2 w-full"><input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-300 text-xl text-center font-bold outline-none" /><button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 text-lg"><Icons.CheckCircle size={20} className="inline mr-1" /> 確定鎖定</button></div>) : (
-                            <div className="flex flex-col items-center gap-2"><p className="text-3xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>{(!user || user.isAnonymous) && (<button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-600 flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={14}/>修改 ID</button>)}</div>
+                          {user && !user.isAnonymous ? (
+                            <div className="flex flex-col items-center">
+                              <div className="flex justify-center items-center gap-1.5 mb-1">
+                                <Icons.Google size={18} className="text-emerald-600" />
+                                <span className="text-sm font-bold text-emerald-800">已綁定 Google 帳號</span>
+                              </div>
+                              <p className="text-base text-emerald-900 mb-3">{user.displayName || user.email || 'Google 使用者'}</p>
+                              
+                              <div className="w-full border-t border-emerald-200/50 pt-3 mb-3">
+                                <p className="text-sm font-bold text-emerald-700 mb-1">🪪 你的專屬基地代碼</p>
+                                <p className="text-3xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>
+                              </div>
+                              
+                              <button onClick={handleLogout} className="w-full bg-white text-emerald-700 border border-emerald-200 py-2.5 rounded-xl font-bold active:scale-95 text-sm shadow-sm flex justify-center items-center gap-2">
+                                <Icons.LogOut size={16} /> 登出帳號
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-sm font-bold text-emerald-800 mb-1">🪪 你的專屬基地代碼</p>
+                              {isEditingBaseId ? (
+                                <div className="flex flex-col gap-2 w-full">
+                                  <input type="text" value={baseIdEditValue} onChange={e => setBaseIdEditValue(e.target.value)} className="w-full p-3 bg-white rounded-xl border-2 border-emerald-300 text-xl text-center font-bold outline-none" />
+                                  <button onClick={() => { handleUpdateBaseId(baseIdEditValue); setIsEditingBaseId(false); }} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-md active:scale-95 text-lg"><Icons.CheckCircle size={20} className="inline mr-1" /> 確定鎖定</button>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                  <p className="text-3xl font-bold tracking-[0.1em] text-emerald-900 break-all">{personalBaseId}</p>
+                                  <button onClick={() => { setIsEditingBaseId(!isEditingBaseId); setBaseIdEditValue(personalBaseId); }} className="text-emerald-600 flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded shadow-sm font-bold active:scale-95"><Icons.Edit size={14}/>修改 ID</button>
+                                </div>
+                              )}
+                              <div className="mt-4 pt-3 border-t border-emerald-200/50">
+                                <button onClick={handleGoogleLogin} className="w-full bg-white text-emerald-800 border-2 border-emerald-600 py-3 rounded-xl font-bold active:scale-95 text-base shadow-sm flex justify-center items-center gap-2">
+                                  <Icons.Google size={20} /> 綁定 Google 帳號 (推薦)
+                                </button>
+                              </div>
+                            </>
                           )}
-                          {(!user || user.isAnonymous) && (<div className="mt-4 pt-3 border-t border-emerald-200/50"><button onClick={handleGoogleLogin} className="w-full bg-white text-emerald-800 border-2 border-emerald-600 py-3 rounded-xl font-bold active:scale-95 text-base shadow-sm flex justify-center items-center gap-2"><Icons.Google size={20} /> 綁定 Google 帳號</button></div>)}
                         </div>
+
+                        {/* 🛡️ 新增頻道區塊 */}
                         <div className="pt-5 border-t border-dashed border-neutral-300 font-bold">
-                          <h3 className="text-lg sm:text-xl font-bold text-neutral-700 font-serif-tc">建立/連線新頻道</h3>
-                          <p className="text-sm sm:text-base font-bold text-neutral-400 mt-1 mb-3">(自己ID/親友分享ID)</p>
-                          <div className="space-y-3">
+                          <h3 className="text-lg sm:text-xl font-bold text-neutral-700 font-serif-tc">建立新頻道 / 加入親友頻道</h3>
+                          
+                          <div className="space-y-3 mt-3">
                             <div className="flex items-center gap-2 w-full">
-                               <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="flex-1 shrink-0 min-w-0 p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-inner" placeholder="ID" />
+                               <input type="text" value={roomPrefix} onChange={e => setRoomPrefix(e.target.value)} className="flex-1 shrink-0 min-w-0 p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-inner" placeholder="基地代碼" />
                                <span className="text-emerald-300 font-bold text-2xl shrink-0">-</span>
-                               <input type="text" value={roomSuffix} onChange={e => setRoomSuffix(e.target.value)} className="flex-1 min-w-0 p-4 bg-white rounded-xl border-2 border-emerald-200 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-sm" placeholder="名稱" />
+                               <input type="text" value={roomSuffix} onChange={e => setRoomSuffix(e.target.value)} className="flex-1 min-w-0 p-4 bg-white rounded-xl border-2 border-emerald-200 text-lg text-center font-bold tracking-wider text-emerald-900 outline-none shadow-sm" placeholder="頻道名稱" />
                             </div>
                             <input type="text" id="mRoomNote" placeholder="頻道備註 (如：全家用、公司)" className="w-full p-4 bg-neutral-100 rounded-xl border-2 border-emerald-100 text-base font-bold outline-none font-bold" />
-                            <div className="flex gap-2"><button onClick={async () => { try { const text = await navigator.clipboard.readText(); if (text) { const parts = text.trim().split('-'); if (parts.length > 1) { setRoomPrefix(parts[0]); setRoomSuffix(parts.slice(1).join('-')); } else setRoomSuffix(text.trim()); } } catch (err) { setMsg('請手動輸入'); } }} className="w-1/3 bg-emerald-50 text-emerald-800 py-4 rounded-xl font-bold border border-emerald-200 active:scale-95 text-lg">貼上</button><button onClick={() => handleTuneRoomAttempt(roomPrefix, roomSuffix, document.getElementById('mRoomNote').value)} className="w-2/3 bg-emerald-700 text-white py-4 rounded-xl font-bold active:scale-95 text-lg shadow-lg">建立/連線</button></div>
+                            <div className="flex gap-2">
+                              <button onClick={async () => { try { const text = await navigator.clipboard.readText(); if (text) { const parts = text.trim().split('-'); if (parts.length > 1) { setRoomPrefix(parts[0]); setRoomSuffix(parts.slice(1).join('-')); } else setRoomSuffix(text.trim()); } } catch (err) { setMsg('請手動輸入'); } }} className="w-1/3 bg-emerald-50 text-emerald-800 py-4 rounded-xl font-bold border border-emerald-200 active:scale-95 text-lg">貼上</button>
+                              <button onClick={() => handleTuneRoomAttempt(roomPrefix, roomSuffix, document.getElementById('mRoomNote').value)} className="w-2/3 bg-emerald-700 text-white py-4 rounded-xl font-bold active:scale-95 text-lg shadow-lg">建立/連線</button>
+                            </div>
                           </div>
                         </div>
+
+                        {/* 🛡️ 觀念小教室與分享 */}
+                        <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200 mt-3 font-bold shadow-sm">
+                          <p className="text-lg font-bold text-blue-900 mb-2 flex items-center gap-1.5"><Icons.Info size={20}/> 頻道觀念與連線步驟</p>
+                          <div className="text-sm text-blue-800 space-y-2 leading-relaxed">
+                            <p className="bg-white p-2 rounded-lg border border-blue-100 shadow-sm">
+                              <span className="text-blue-600 font-bold">1. 觀念：</span>「基地代碼」是你的門牌，「頻道」是你開的房間。兩者組合 (例: A1B2-全聯) 就是這份清單的專屬鑰匙。
+                            </p>
+                            <p className="bg-white p-2 rounded-lg border border-blue-100 shadow-sm">
+                              <span className="text-blue-600 font-bold">2. 分享：</span>從上方頻道列表點選 <span className="bg-[#FFDD00] text-amber-900 px-1 py-0.5 rounded shadow-sm inline-flex items-center align-middle mx-0.5"><Icons.Copy size={14}/></span> 複製鑰匙，傳 LINE 給家人。
+                            </p>
+                            <p className="bg-white p-2 rounded-lg border border-blue-100 shadow-sm">
+                              <span className="text-blue-600 font-bold">3. 連線：</span>家人在此頁面點擊「貼上」並連線，全家就能同步採買！
+                            </p>
+                          </div>
+                          <div className="pt-3 mt-3 border-t border-blue-200/60">
+                            <button onClick={handleShareApp} className="w-full bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 shadow-md text-base">
+                              <Icons.Share size={20}/> 分享 APP 連結給親友
+                            </button>
+                          </div>
+                        </div>
+
                       </div>
                     )}
 
