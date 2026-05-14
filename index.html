@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.6.1 (安裝引導升級版) by 大樂 -->
+  <!-- 智能採買 v1.6.2 (安裝教學詳解版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -219,7 +219,7 @@
         return () => window.removeEventListener('beforeinstallprompt', handler);
       }, []);
 
-      // 🛡️ 升級版：強制顯示按鈕，並對蘋果與電腦給予對應的教學提示
+      // 🛡️ 升級版：點擊安裝時，自動展開說明書中的「安裝教學」區塊
       const handleInstallApp = async () => {
         if (deferredPrompt) {
           deferredPrompt.prompt();
@@ -228,19 +228,14 @@
             setDeferredPrompt(null);
           }
         } else {
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-          if (isIOS) {
-            setMsg('🍎 iPhone 請點擊下方「分享」圖示 ➡️「加入主畫面」');
-          } else {
-            setMsg('💡 請點擊網址列右側圖示，或瀏覽器選單的「加入主畫面」');
-          }
-          setTimeout(() => setMsg(''), 3500);
+          setExpandedSection('install');
+          setMsg('請參考下方的安裝教學 👇');
         }
       };
 
       useEffect(() => {
         if (msg) {
-          const timer = setTimeout(() => setMsg(''), 2000);
+          const timer = setTimeout(() => setMsg(''), 2000); // 維持 2 秒消失，因為教學已經被永久展開了
           return () => clearTimeout(timer);
         }
       }, [msg]);
@@ -825,12 +820,43 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.6.1 (安裝引導升級版)</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.6.2 (安裝教學詳解版)</p>
                           <div className="flex justify-center gap-2 mt-2">
                             <button onClick={handleForceUpdate} className="bg-white text-emerald-700 text-sm px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查更新</button>
                             <button onClick={handleInstallApp} className="bg-emerald-600 text-white text-sm px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 shadow-sm active:scale-95 border border-emerald-600"><Icons.InstallApp size={16} /> 安裝 APP</button>
                           </div>
                         </div>
+
+                        {/* 🛡️ 新增：安裝教學專區 */}
+                        <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
+                          <button onClick={() => setExpandedSection(expandedSection === 'install' ? '' : 'install')} className="w-full px-3 py-2.5 flex justify-between items-center font-bold text-base text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2 text-rose-600"><Icons.InstallApp className="text-rose-500" size={18} /> 將捷徑加入主畫面</span><Icons.ChevronDown size={18} className={expandedSection === 'install' ? 'rotate-180' : ''} /></button>
+                          {expandedSection === 'install' && ( 
+                            <div className="px-3 pb-3 pt-1 text-sm text-neutral-700 space-y-3 border-t border-neutral-50 bg-neutral-50/40 leading-tight font-bold">
+                               <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-sm">
+                                 <p className="text-rose-700 mb-1 text-base">🤖 Android 版</p>
+                                 <ol className="list-decimal list-inside space-y-1.5 ml-1 text-neutral-600">
+                                   <li>點開連結（可直接從 LINE 開啟）</li>
+                                   <li>點選畫面右下角的「⋮」</li>
+                                   <li>選擇「使用預設瀏覽器開啟」</li>
+                                   <li>在畫面右上角點選「⋮」</li>
+                                   <li>往下滑，選擇「加到主畫面」</li>
+                                   <li>點選「新增」，即可將捷徑加到主畫面</li>
+                                 </ol>
+                               </div>
+                               <div className="bg-white p-2 rounded-xl border border-rose-100 shadow-sm">
+                                 <p className="text-rose-700 mb-1 text-base">🍎 iOS (iPhone) 版</p>
+                                 <ol className="list-decimal list-inside space-y-1.5 ml-1 text-neutral-600">
+                                   <li>點開連結（建議用 Safari 開啟）</li>
+                                   <li>點選下方的「分享」圖示 <Icons.Share size={14} className="inline" />，往下滑</li>
+                                   <li>選擇「加入主畫面」</li>
+                                   <li>點選「加入」，即可將捷徑加到主畫面</li>
+                                 </ol>
+                               </div>
+                              <button onClick={() => setExpandedSection('')} className="w-full py-2 bg-white text-rose-600 rounded-lg border border-rose-200 font-bold mt-1 shadow-sm text-base">收起教學 ↑</button>
+                            </div> 
+                          )}
+                        </div>
+
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
                           <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-3 py-2.5 flex justify-between items-center font-bold text-base text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2 text-blue-600"><Icons.Cart className="text-blue-500" size={18} /> 基礎教學：如何開始？</span><Icons.ChevronDown size={18} className={expandedSection === 'manual' ? 'rotate-180' : ''} /></button>
                           {expandedSection === 'manual' && ( 
@@ -866,7 +892,7 @@
                             <div className="px-3 pb-3 pt-1 text-sm text-neutral-700 space-y-2 border-t border-neutral-50 bg-neutral-50/40 leading-tight text-left font-bold">
                               <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：什麼是 Buy ID？</p><p>A：就像你專屬的「門牌號碼」。系統會隨機配發一組，你也可以點擊「自訂修改」設成好記的英文或數字（如 LINE ID）。</p></div>
                               <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：什麼是 頻道？</p><p>A：就像門牌裡的「各個房間」。例如「001」、「公司用」，將【Buy ID - 頻道名】分享給親友，大家就能進到同房間共用清單。</p></div>
-                              <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：別人知道我的 Buy ID，會看到我的隱藏頻道嗎？</p><p>A：絕對不會！別人必須精準輸入完整的「Buy ID - 頻道名」，才能進入該頻道。你沒有分享出去的清單，對外人來說是絕對隱形且安全的！</p></div>
+                              <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：別人知道我的 Buy ID，會看到我的其他頻道嗎？</p><p>A：絕對不會！別人必須精準輸入完整的「Buy ID - 頻道名」，才能進入該頻道。你沒有分享出去的清單，對外人來說是絕對隱形且安全的！</p></div>
                               <button onClick={() => setExpandedSection('')} className="w-full py-2 bg-white text-purple-600 rounded-lg border border-purple-200 font-bold mt-1 shadow-sm text-base">收起 Q&A ↑</button>
                             </div> 
                           )}
