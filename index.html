@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.5.3 (正式發行版) by 大樂 -->
+  <!-- 智能採買 v1.6.1 (安裝引導升級版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -163,7 +163,8 @@
       History: ({size=16, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8m0-5v5h5"/><polyline points="12 7 12 12 16 14"/></svg>,
       Coffee: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>,
       Google: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>,
-      LogOut: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      LogOut: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
+      InstallApp: ({size=18, className=""}) => <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
     };
 
     const App = () => {
@@ -206,6 +207,36 @@
       const touchTimer = useRef(null);
       const touchStartPos = useRef({ x: 0, y: 0 });
       const isScrolling = useRef(false);
+
+      const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+      useEffect(() => {
+        const handler = (e) => {
+          e.preventDefault();
+          setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+      }, []);
+
+      // 🛡️ 升級版：強制顯示按鈕，並對蘋果與電腦給予對應的教學提示
+      const handleInstallApp = async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+          }
+        } else {
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          if (isIOS) {
+            setMsg('🍎 iPhone 請點擊下方「分享」圖示 ➡️「加入主畫面」');
+          } else {
+            setMsg('💡 請點擊網址列右側圖示，或瀏覽器選單的「加入主畫面」');
+          }
+          setTimeout(() => setMsg(''), 3500);
+        }
+      };
 
       useEffect(() => {
         if (msg) {
@@ -251,7 +282,7 @@
       useEffect(() => {
         getRedirectResult(auth).then(result => {
           if (result) {
-            setMsg(`歡迎指揮官！資料已綁定。`);
+            setMsg(`歡迎回來！資料已綁定。`);
           }
         }).catch(err => {
           console.error("轉址登入異常", err);
@@ -303,20 +334,22 @@
 
       const handleGoogleLogin = async () => {
         try {
-          setMsg('正在連接 Google 總部...');
+          setMsg('正在安全登入 Google...');
           const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
           
           if (isMobile) {
             await signInWithRedirect(auth, googleProvider);
           } else {
             await signInWithPopup(auth, googleProvider);
-            setMsg(`歡迎指揮官！資料已綁定。`);
+            setMsg(`歡迎回來！資料已綁定。`);
           }
         } catch (error) {
           console.error("Google 登入失敗", error);
           if (error.code === 'auth/popup-blocked') {
             setMsg('視窗被阻擋，改用轉址登入...');
             await signInWithRedirect(auth, googleProvider);
+          } else if (error.code === 'auth/unauthorized-domain') {
+            setMsg('預覽環境受限，請至 GitHub 專屬網址登入測試！');
           } else {
             setMsg('登入失敗，請檢查網路或稍後再試。');
           }
@@ -792,8 +825,11 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.5.3 (正式發行版)</p>
-                          <button onClick={handleForceUpdate} className="mt-2 bg-white text-emerald-700 text-sm px-4 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查載入新版本</button>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.6.1 (安裝引導升級版)</p>
+                          <div className="flex justify-center gap-2 mt-2">
+                            <button onClick={handleForceUpdate} className="bg-white text-emerald-700 text-sm px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查更新</button>
+                            <button onClick={handleInstallApp} className="bg-emerald-600 text-white text-sm px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 shadow-sm active:scale-95 border border-emerald-600"><Icons.InstallApp size={16} /> 安裝 APP</button>
+                          </div>
                         </div>
                         <div className="bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm">
                           <button onClick={() => setExpandedSection(expandedSection === 'manual' ? '' : 'manual')} className="w-full px-3 py-2.5 flex justify-between items-center font-bold text-base text-neutral-800 active:bg-neutral-50"><span className="flex items-center gap-2 text-blue-600"><Icons.Cart className="text-blue-500" size={18} /> 基礎教學：如何開始？</span><Icons.ChevronDown size={18} className={expandedSection === 'manual' ? 'rotate-180' : ''} /></button>
@@ -830,7 +866,7 @@
                             <div className="px-3 pb-3 pt-1 text-sm text-neutral-700 space-y-2 border-t border-neutral-50 bg-neutral-50/40 leading-tight text-left font-bold">
                               <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：什麼是 Buy ID？</p><p>A：就像你專屬的「門牌號碼」。系統會隨機配發一組，你也可以點擊「自訂修改」設成好記的英文或數字（如 LINE ID）。</p></div>
                               <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：什麼是 頻道？</p><p>A：就像門牌裡的「各個房間」。例如「001」、「公司用」，將【Buy ID - 頻道名】分享給親友，大家就能進到同房間共用清單。</p></div>
-                              <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：別人知道我的 Buy ID，會看到我的其他頻道嗎？</p><p>A：絕對不會！別人必須精準輸入完整的「Buy ID - 頻道名」，才能進入該頻道。你沒有分享出去的清單，對外人來說是絕對隱形且安全的！</p></div>
+                              <div className="bg-white p-2 rounded-xl border border-purple-100 shadow-sm"><p className="text-purple-700 mb-0.5 text-sm">Q：別人知道我的 Buy ID，會看到我的隱藏頻道嗎？</p><p>A：絕對不會！別人必須精準輸入完整的「Buy ID - 頻道名」，才能進入該頻道。你沒有分享出去的清單，對外人來說是絕對隱形且安全的！</p></div>
                               <button onClick={() => setExpandedSection('')} className="w-full py-2 bg-white text-purple-600 rounded-lg border border-purple-200 font-bold mt-1 shadow-sm text-base">收起 Q&A ↑</button>
                             </div> 
                           )}
