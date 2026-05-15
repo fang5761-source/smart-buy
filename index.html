@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+  <!-- 智能採買 v1.6.3 (索引回歸版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
 
+  <!-- 🛡️ 【分享預覽黑科技：LINE/FB 顯示專屬 Icon 與標題】 -->
   <meta property="og:title" content="智能採買">
   <meta property="og:description" content="推薦給你這個超好用的智能採買 APP！">
   <meta property="og:image" content="https://fang5761-source.github.io/apple-touch-icon.png">
   <meta property="og:type" content="website">
   
   <script>
+    // 🛡️ 【輕量防護：專屬網域綁定鎖】
     (function() {
       const allowedDomains = ['fang5761-source.github.io', 'localhost', '127.0.0.1', 'googleusercontent.com', 'google.com', '']; 
       const currentDomain = window.location.hostname;
@@ -653,6 +656,34 @@
               </div>
             )}
 
+            {/* 🛡️ 恢復被誤刪的「清單地點過濾索引」 */}
+            <div className="bg-white border-b border-neutral-200 flex items-center gap-2 overflow-x-auto scrollbar-hide px-3 py-2.5 shrink-0 z-10 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)]">
+              {dynamicFilterTags.map(tag => {
+                const isSelected = filterTag === tag;
+                let btnStyle = {};
+                if (tag === '全部') {
+                  btnStyle = isSelected 
+                    ? { backgroundColor: '#047857', color: '#fff', borderColor: '#047857' } 
+                    : { backgroundColor: '#ecfdf5', color: '#047857', borderColor: '#a7f3d0' };
+                } else {
+                  const cfg = getTagConfig(tag);
+                  btnStyle = isSelected 
+                    ? { backgroundColor: cfg?.bg || '#f3f4f6', color: cfg?.text || '#1f2937', borderColor: cfg?.border || '#9ca3af', borderWidth: '2px', fontWeight: 'bold' } 
+                    : { backgroundColor: '#ffffff', color: cfg?.text || '#4b5563', borderColor: cfg?.border || '#d1d5db', borderWidth: '2px', opacity: 0.7 };
+                }
+                return (
+                  <button 
+                    key={tag} 
+                    onClick={() => setFilterTag(tag)}
+                    className={`shrink-0 px-4 py-1.5 rounded-full text-base font-bold transition-all whitespace-nowrap active:scale-95 ${isSelected ? 'scale-105 shadow-sm' : ''}`}
+                    style={btnStyle}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+
             <main className="p-2 space-y-2.5 bg-neutral-50/50 flex-1 overflow-y-auto pb-24 relative">
               {isLoading && (
                 <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[1px] animate-pulse-slow">
@@ -816,7 +847,7 @@
                       <div className="space-y-3 py-1 px-1 font-bold">
                         <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-center relative shadow-inner">
                           <h4 className="font-bold text-emerald-900 text-xl font-serif-tc">智能採買</h4>
-                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.6.2</p>
+                          <p className="text-sm text-emerald-700 mt-0.5 font-bold">版本 v1.6.3 (索引回歸版)</p>
                           <div className="flex justify-center gap-2 mt-2">
                             <button onClick={handleForceUpdate} className="bg-white text-emerald-700 text-sm px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 mx-auto shadow-sm active:scale-95 border border-emerald-100"><Icons.Refresh size={16} /> 檢查更新</button>
                             <button onClick={handleInstallApp} className="bg-emerald-600 text-white text-sm px-3 py-1.5 rounded-full font-bold flex items-center justify-center gap-1 shadow-sm active:scale-95 border border-emerald-600"><Icons.InstallApp size={16} /> 安裝 APP</button>
