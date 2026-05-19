@@ -1190,25 +1190,30 @@
                       </div>
                     )}
                     
-                    {modalState.type === 'donate' && (
-                      <div className="space-y-4 py-2 text-center font-bold px-1">
-                        <div className="bg-amber-50 p-4 rounded-2xl border-2 border-amber-200 shadow-inner font-serif-tc">
-                          <Icons.Coffee size={36} className="mx-auto mb-2 text-amber-700" />
-                          <p className="text-xl text-amber-900 font-bold mb-3">謝謝你的心意！ 🥰</p>
-                          <div className="inline-block bg-amber-500 text-white text-base px-5 py-2 rounded-full font-bold shadow-md shadow-amber-200 leading-tight">一杯咖啡 $50<br/><span className="text-xs opacity-90 font-sans">(杯數隨喜)</span></div>
-                        </div>
-                        <div className="bg-neutral-50 p-4 rounded-2xl border-2 border-neutral-100 space-y-3 shadow-sm font-bold text-left">
-                          <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-neutral-200">
-                            <div className="min-w-0 flex-1 pr-2"><p className="text-xs text-neutral-500 font-bold mb-0.5">郵局 (700) 戶名: 吳佩芳</p><p className="text-lg font-bold text-neutral-800 tracking-wider font-mono">2441500-0144326</p></div>
-                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '24415000144326'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('郵局帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
-                          </div>
-                          <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-neutral-200">
-                            <div className="min-w-0 flex-1 pr-2"><p className="text-xs text-neutral-500 font-bold mb-0.5">永豐銀行 (807) 戶名: 吳佩芳</p><p className="text-lg font-bold text-neutral-800 tracking-wider font-mono">204-018-0025253-1</p></div>
-                            <button onClick={() => { const temp = document.createElement('input'); temp.value = '20401800252531'; temp.style.position = 'fixed'; document.body.appendChild(temp); temp.select(); document.execCommand('copy'); document.body.removeChild(temp); setMsg('永豐帳號已複製！'); setTimeout(() => setMsg(''), 2000); }} className="bg-amber-500 text-white p-2.5 rounded-xl active:scale-95 shadow-md"><Icons.Copy size={20} /></button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+{modalState.type === 'donate' && (
+                  <div className="space-y-4 py-2 text-center font-bold px-1">
+                    <div className="bg-amber-50 p-5 rounded-2xl border-2 border-amber-200 shadow-inner">
+                      <Icons.Coffee size={40} className="mx-auto mb-3 text-amber-700" />
+                      <p className="text-xl text-amber-900 font-bold mb-2 font-serif-tc">謝謝你的心意！ 🥰</p>
+                      <p className="text-base text-amber-800 leading-relaxed font-bold">
+                        為了提升資訊安全與保護隱私，朵朵已經將實體的隨喜帳號，全面升級為專屬的「數位工坊傳送門」囉！
+                      </p>
+                    </div>
+                    
+                    <div className="bg-white p-5 rounded-2xl border-2 border-neutral-100 space-y-4 shadow-sm text-left">
+                      <p className="text-neutral-700 leading-relaxed text-lg font-bold">
+                        ☕ 喜歡這款 APP 嗎？歡迎請我喝咖啡！<br/><br/>
+                        歡迎點擊下方連結，前往我們的無人咖啡廳，透過平台提供的高安全性線上刷卡機制給予支持：
+                      </p>
+                      <a href="https://portaly.cc/wpf610" target="_blank" rel="noopener noreferrer" className="flex justify-center items-center gap-2 w-full bg-amber-600 text-white py-4 rounded-xl font-bold text-xl shadow-lg active:scale-95 transition-all">
+                        前往無人咖啡廳 <Icons.Share size={20} />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+
+
                   </div>
                 </div>
               </div>
