@@ -102,8 +102,24 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+enableIndexedDbPersistence(db).catch(() => {});
 const googleProvider = new GoogleAuthProvider();
 const APP_ID_PATH = "smart-buy-final";
+const CACHE_PREFIX = "smart_buy_cache_v2";
+const cacheKey = (prefix, type) => `${CACHE_PREFIX}_${type}_${prefix}`;
+const readCache = (prefix, type, fallback) => {
+  try {
+    const raw = localStorage.getItem(cacheKey(prefix, type));
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+};
+const writeCache = (prefix, type, value) => {
+  try {
+    localStorage.setItem(cacheKey(prefix, type), JSON.stringify(value));
+  } catch (e) {}
+};
 const MACARON_COLORS = [{
   bg: '#fce7f3',
   text: '#9f1239',
@@ -978,13 +994,28 @@ const App = () => {
   };
   useEffect(() => {
     if (!user) return;
-    setIsLoading(true);
     const prefix = roomPath ? `room_${roomPath}` : `user_${user.uid}`;
+    const cachedItems = readCache(prefix, 'items', null);
+    const cachedHistory = readCache(prefix, 'history', null);
+    const cachedConfig = readCache(prefix, 'config', null);
+    if (cachedItems) {
+      setItems(cachedItems);
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
+    if (cachedHistory) setHistory(cachedHistory);
+    if (cachedConfig) {
+      if (cachedConfig.tags) setCustomTags(cachedConfig.tags);
+      if (cachedConfig.quick) setQuickItems(cachedConfig.quick);
+    }
     const unsubItems = onSnapshot(query(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${prefix}`), orderBy('createdAt', 'desc')), snap => {
-      setItems(snap.docs.map(d => ({
+      const nextItems = snap.docs.map(d => ({
         id: d.id,
         ...d.data()
-      })));
+      }));
+      setItems(nextItems);
+      writeCache(prefix, 'items', nextItems);
       setIsLoading(false);
     }, err => {
       console.warn('資料讀取中:', err);
@@ -997,16 +1028,19 @@ const App = () => {
         h[data.name] = data;
       });
       setHistory(h);
+      writeCache(prefix, 'history', h);
     }, err => console.warn('歷史紀錄讀取中:', err));
     const unsubConfig = onSnapshot(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `config_${prefix}`, 'settings'), snap => {
       if (snap.exists()) {
         const data = snap.data();
+        const nextConfig = {};
         if (data.tags) {
           const fixedTags = data.tags.map(t => typeof t === 'string' ? {
             n: t,
             c: 0
           } : t).filter(t => t && t.n);
           setCustomTags(fixedTags);
+          nextConfig.tags = fixedTags;
         }
         if (data.quick) {
           const fixedQuick = data.quick.map(q => typeof q === 'string' ? {
@@ -1014,7 +1048,9 @@ const App = () => {
             t: ''
           } : q).filter(q => q && (q.n || q.name));
           setQuickItems(fixedQuick);
+          nextConfig.quick = fixedQuick;
         }
+        writeCache(prefix, 'config', nextConfig);
       } else {
         setDoc(snap.ref, {
           tags: DEFAULT_TAGS,
