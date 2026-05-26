@@ -818,6 +818,19 @@ const App = () => {
       borderWidth: '2px'
     };
   };
+  const normalizeTags = value => {
+    if (Array.isArray(value)) return value.map(v => String(v || '').trim()).filter(Boolean);
+    if (typeof value === 'string') return value.split(/[、,，]/).map(v => v.trim()).filter(v => v && v !== '無');
+    return [];
+  };
+  const itemTags = item => normalizeTags(item?.tags && item.tags.length ? item.tags : item?.tag);
+  const primaryTag = value => normalizeTags(value)[0] || '';
+  const formatTags = value => normalizeTags(value).join('、');
+  const toggleTagValue = (value, tagName) => {
+    const next = normalizeTags(value);
+    return next.includes(tagName) ? next.filter(t => t !== tagName) : [...next, tagName];
+  };
+  const itemHasTag = (item, tagName) => itemTags(item).includes(tagName);
   const [savedRooms, setSavedRooms] = useState(() => {
     try {
       const raw = localStorage.getItem('smart_buy_saved_rooms');
@@ -839,7 +852,7 @@ const App = () => {
     return parts.length > 1 ? parts[1] : roomPath;
   }, [roomPath, savedRooms]);
   const dynamicFilterTags = useMemo(() => {
-    const tagsInUse = Array.from(new Set(items.map(item => item.tag))).filter(t => t && t !== '');
+    const tagsInUse = Array.from(new Set(items.flatMap(item => itemTags(item)))).filter(t => t && t !== '');
     return ['全部', ...(customTags || []).filter(tag => tag && tagsInUse.includes(tag.n)).map(t => t.n)];
   }, [items, customTags]);
   useEffect(() => {
@@ -1069,10 +1082,12 @@ const App = () => {
   const handleAdd = async e => {
     if (e) e.preventDefault();
     if (!inputValue.trim() || !user) return;
+    const selectedTags = normalizeTags(activeTag);
     await addDoc(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`), {
       name: inputValue.trim(),
       qty: qtyValue.trim(),
-      tag: activeTag || '',
+      tag: selectedTags[0] || '',
+      tags: selectedTags,
       completed: false,
       postponed: false,
       createdAt: Date.now()
@@ -1099,10 +1114,12 @@ const App = () => {
   };
   const savePrice = async (itemName, price, itemTag, itemId) => {
     const prefix = roomPath ? `room_${roomPath}` : `user_${user.uid}`;
+    const priceTags = normalizeTags(itemTag);
     await setDoc(doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `hist_${prefix}`, itemName), {
       name: itemName,
       price: price || '',
-      tag: itemTag || '',
+      tag: priceTags[0] || '',
+      tags: priceTags,
       updatedAt: Date.now()
     });
     if (itemId) await updateDoc(getItemRef(itemId), {
@@ -1430,7 +1447,7 @@ const App = () => {
     setVDragIdx(null);
     setVDragOverIdx(null);
   };
-  const filteredItems = items.filter(item => filterTag === '全部' ? true : item.tag === filterTag);
+  const filteredItems = items.filter(item => filterTag === '全部' ? true : itemHasTag(item, filterTag));
   const scrollContainerClass = type => hDragIdx !== null && hDragType === type ? 'lock-scroll' : 'overflow-x-auto scrollbar-hide';
   return React.createElement("div", {
     className: "w-full h-full flex justify-center bg-neutral-100 font-sans text-neutral-800"
@@ -1550,7 +1567,7 @@ const App = () => {
     size: 20
   }))), customTags && customTags.map((t, idx) => {
     if (!t || !t.n) return null;
-    const isSelected = activeTag === t.n;
+    const isSelected = normalizeTags(activeTag).includes(t.n);
     return React.createElement("button", {
       key: t.n,
       "data-h-tag-idx": idx,
@@ -1559,7 +1576,7 @@ const App = () => {
       onTouchEnd: () => onTouchEndH('tag'),
       onTouchCancel: () => onTouchEndH('tag'),
       onClick: () => {
-        if (!dragDidHappen.current) setActiveTag(isSelected ? '' : t.n);
+        if (!dragDidHappen.current) setActiveTag(prev => toggleTagValue(prev, t.n));
       },
       className: `shrink-0 draggable-pill px-4 py-1.5 rounded-full text-base font-bold whitespace-nowrap transition-all border-2 active:scale-95 shadow-sm flex items-center gap-1 ${isSelected ? 'scale-105 shadow-inner' : 'opacity-80'} ${hDragIdx === idx && hDragType === 'tag' ? 'scale-110 opacity-60 z-50 shadow-md' : ''} ${hDragOverIdx === idx && hDragType === 'tag' ? 'border-dashed' : ''}`,
       style: getTagStyle(t.n, isSelected)
@@ -1647,7 +1664,7 @@ const App = () => {
     className: `flex items-start gap-2.5 p-3 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`,
     style: {
       borderLeftWidth: '8px',
-      borderLeftColor: !item.completed && !item.postponed ? getTagConfig(item.tag)?.border || '#d1d5db' : undefined
+      borderLeftColor: !item.completed && !item.postponed ? getTagConfig(primaryTag(item.tags && item.tags.length ? item.tags : item.tag))?.border || '#d1d5db' : undefined
     }
   }, React.createElement("div", {
     className: "flex flex-col items-center gap-1.5 shrink-0 mt-1"
@@ -1702,13 +1719,13 @@ const App = () => {
       });
     },
     className: `shrink-0 text-sm px-3 py-1 rounded-full font-bold active:scale-95 transition-transform flex items-center gap-1 border-2 ${item.completed ? 'bg-neutral-200 text-neutral-400 border-neutral-300' : ''}`,
-    style: !item.completed ? getTagStyle(item.tag, true) : {}
-  }, item.tag && item.tag !== '無' ? item.tag : '+地點'), history[item.name] && !item.completed && React.createElement("span", {
+    style: !item.completed ? getTagStyle(primaryTag(item.tags && item.tags.length ? item.tags : item.tag), true) : {}
+  }, formatTags(item.tags && item.tags.length ? item.tags : item.tag) || '+地點'), history[item.name] && !item.completed && React.createElement("span", {
     className: "text-xs sm:text-sm font-bold truncate text-right whitespace-nowrap font-serif-tc",
     style: {
-      color: getTagConfig(item.tag)?.text || '#9f1239'
+      color: getTagConfig(primaryTag(item.tags && item.tags.length ? item.tags : item.tag))?.text || '#9f1239'
     }
-  }, "\u4E0A\u6B21\uFF1A$", history[item.name].price, " ", history[item.name].tag ? `(${history[item.name].tag})` : '')), React.createElement("button", {
+  }, "\u4E0A\u6B21\uFF1A$", history[item.name].price, " ", formatTags(history[item.name].tags && history[item.name].tags.length ? history[item.name].tags : history[item.name].tag) ? `(${formatTags(history[item.name].tags && history[item.name].tags.length ? history[item.name].tags : history[item.name].tag)})` : '')), React.createElement("button", {
     onClick: () => deleteDoc(getItemRef(item.id)),
     className: "p-2 text-neutral-300 hover:text-red-500 active:scale-75 shrink-0"
   }, React.createElement(Icons.Trash, {
@@ -1815,16 +1832,24 @@ const App = () => {
     className: "grid grid-cols-2 gap-3 font-bold"
   }, (customTags || []).map(t => {
     if (!t || !t.n) return null;
-    const isCurrent = modalState.data.tag === t.n;
+    const selectedTags = normalizeTags(modalState.data.tags && modalState.data.tags.length ? modalState.data.tags : modalState.data.tag);
+    const isCurrent = selectedTags.includes(t.n);
     return React.createElement("button", {
       key: t.n,
       onClick: async () => {
+        const nextTags = toggleTagValue(modalState.data.tags && modalState.data.tags.length ? modalState.data.tags : modalState.data.tag, t.n);
         await updateDoc(getItemRef(modalState.data.id), {
-          tag: t.n
+          tag: nextTags[0] || '',
+          tags: nextTags
         });
-        setModalState({
-          type: null
-        });
+        setModalState(prev => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            tag: nextTags[0] || '',
+            tags: nextTags
+          }
+        }));
       },
       className: `py-4 rounded-2xl font-bold text-xl border-2 shadow-sm active:scale-95 flex items-center justify-center gap-1 ${isCurrent ? 'scale-105 shadow-inner' : ''}`,
       style: getTagStyle(t.n, true)
@@ -1834,16 +1859,27 @@ const App = () => {
   }), React.createElement("button", {
     onClick: async () => {
       await updateDoc(getItemRef(modalState.data.id), {
-        tag: ''
+        tag: '',
+        tags: []
       });
-      setModalState({
-        type: null
-      });
+      setModalState(prev => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          tag: '',
+          tags: []
+        }
+      }));
     },
-    className: `py-4 rounded-2xl font-bold text-xl border-2 active:scale-95 flex items-center justify-center gap-1 ${!modalState.data.tag || modalState.data.tag === '無' ? 'bg-neutral-200 text-neutral-700 border-neutral-400 scale-105 shadow-inner' : 'bg-neutral-100 text-neutral-500 border-neutral-200'}`
-  }, (!modalState.data.tag || modalState.data.tag === '無') && React.createElement(Icons.Check, {
+    className: `py-4 rounded-2xl font-bold text-xl border-2 active:scale-95 flex items-center justify-center gap-1 ${normalizeTags(modalState.data.tags && modalState.data.tags.length ? modalState.data.tags : modalState.data.tag).length === 0 ? 'bg-neutral-200 text-neutral-700 border-neutral-400 scale-105 shadow-inner' : 'bg-neutral-100 text-neutral-500 border-neutral-200'}`
+  }, normalizeTags(modalState.data.tags && modalState.data.tags.length ? modalState.data.tags : modalState.data.tag).length === 0 && React.createElement(Icons.Check, {
     size: 20
-  }), "\u7121\u5730\u9EDE"))), modalState.type === 'addQuick' && React.createElement("div", {
+  }), "\u7121\u5730\u9EDE")), React.createElement("button", {
+    onClick: () => setModalState({
+      type: null
+    }),
+    className: "w-full bg-emerald-700 text-white py-4 rounded-xl font-bold text-xl shadow-lg active:scale-95"
+  }, "\u5B8C\u6210")), modalState.type === 'addQuick' && React.createElement("div", {
     className: "space-y-6 py-4 px-1 font-bold"
   }, React.createElement("input", {
     type: "text",
@@ -2590,7 +2626,7 @@ const App = () => {
     className: "w-full p-6 rounded-2xl border-4 border-amber-200 outline-none text-4xl text-center bg-amber-50/30 shadow-inner font-bold text-amber-900 placeholder-neutral-400 placeholder:text-xl sm:placeholder:text-2xl placeholder:font-normal"
   }), React.createElement("button", {
     onClick: async () => {
-      await savePrice(modalState.data.name, modalInput, modalState.data.tag, modalState.data.id);
+      await savePrice(modalState.data.name, modalInput, modalState.data.tags && modalState.data.tags.length ? modalState.data.tags : modalState.data.tag, modalState.data.id);
       setModalState({
         type: null
       });
