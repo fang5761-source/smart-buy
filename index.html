@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.7.1 (引擎修復純淨版) by 大樂 -->
+  <!-- 智能採買 v1.7.2 (體驗優化版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -743,7 +743,19 @@ const App = () => {
     data: null
   });
   const [msg, setMsg] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => {
+    try {
+      // Check if there's ANY cached items data to decide initial loading state
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(CACHE_PREFIX) && k.includes('_items_')) {
+          const val = localStorage.getItem(k);
+          if (val && val.length > 2) return false;
+        }
+      }
+    } catch(e) {}
+    return true;
+  });
   const [expandedSection, setExpandedSection] = useState('');
   const [modalInput, setModalInput] = useState('');
   const [modalColorIdx, setModalColorIdx] = useState(0);
@@ -771,6 +783,18 @@ const App = () => {
       return false;
     }
   });
+  const [itemFontSize, setItemFontSize] = useState(() => {
+    try {
+      return parseInt(localStorage.getItem('smart_buy_item_font_size') || '20', 10);
+    } catch (e) {
+      return 20;
+    }
+  });
+  const [nameTooltip, setNameTooltip] = useState(null);
+  const handleItemFontSize = (val) => {
+    setItemFontSize(val);
+    try { localStorage.setItem('smart_buy_item_font_size', String(val)); } catch(e) {}
+  };
   useEffect(() => {
     const handler = e => {
       e.preventDefault();
@@ -1654,12 +1678,12 @@ const App = () => {
   })), React.createElement("main", {
     className: "p-2 space-y-2.5 bg-neutral-50/50 flex-1 overflow-y-auto pb-24 relative"
   }, isLoading && React.createElement("div", {
-    className: "absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[1px] animate-pulse-slow"
+    className: "absolute top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-emerald-600/90 py-1.5 shadow"
   }, React.createElement("div", {
-    className: "w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"
+    className: "w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
   }), React.createElement("p", {
-    className: "text-emerald-700 font-bold text-lg tracking-widest font-serif-tc"
-  }, "\u8F09\u5165\u4E2D...")), filteredItems.map(item => React.createElement("div", {
+    className: "text-white font-bold text-sm tracking-wide"
+  }, "\u540C\u6B65\u4E2D...")), filteredItems.map(item => React.createElement("div", {
     key: item.id,
     className: `flex items-start gap-2.5 p-3 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`,
     style: {
@@ -1690,10 +1714,15 @@ const App = () => {
   }, React.createElement("div", {
     className: "flex items-center justify-between gap-1 w-full"
   }, React.createElement("div", {
-    className: "flex items-center gap-1.5 min-w-0 flex-1"
+    className: "flex items-center gap-1.5 min-w-0 flex-1 relative"
   }, React.createElement("span", {
-    onClick: () => handleComplete(item),
-    className: `text-xl sm:text-2xl font-bold truncate cursor-pointer ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`
+    onClick: () => setNameTooltip(nameTooltip === item.id ? null : item.id),
+    className: `font-bold truncate cursor-pointer select-none ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`,
+    style: { fontSize: `${itemFontSize}px` }
+  }, item.name), nameTooltip === item.id && React.createElement("div", {
+    onClick: () => setNameTooltip(null),
+    className: "absolute left-0 top-full mt-1 z-50 bg-neutral-900 text-white text-sm font-bold rounded-xl px-4 py-3 shadow-xl max-w-[calc(100vw-2rem)] break-all leading-relaxed",
+    style: { maxWidth: '320px' }
   }, item.name), item.qty && React.createElement("span", {
     className: "text-base px-2 py-0.5 rounded font-bold whitespace-nowrap shrink-0 bg-white/50 text-neutral-600 shadow-sm border border-black/5"
   }, item.qty)), !item.completed && React.createElement("button", {
@@ -1936,7 +1965,7 @@ const App = () => {
     className: "font-bold text-emerald-900 text-xl font-serif-tc"
   }, "\u667A\u80FD\u63A1\u8CB7"), React.createElement("p", {
     className: "text-sm text-emerald-700 mt-0.5 font-bold"
-  }, "\u7248\u672C v1.7.1 (\u5F15\u64CE\u4FEE\u5FA9\u7248)"), React.createElement("div", {
+  }, "\u7248\u672C v1.7.2 (\u5512\u754C\u512A\u5316\u7248)"), React.createElement("div", {
     className: "flex justify-center gap-2 mt-2"
   }, React.createElement("button", {
     onClick: handleForceUpdate,
@@ -1949,6 +1978,32 @@ const App = () => {
   }, React.createElement(Icons.InstallApp, {
     size: 16
   }), " \u5B89\u88DD APP"))), React.createElement("div", {
+    className: "bg-white border-2 border-emerald-100 rounded-xl overflow-hidden shadow-sm"
+  }, React.createElement("div", {
+    className: "px-4 py-3 flex flex-col gap-3"
+  }, React.createElement("div", {
+    className: "flex items-center justify-between"
+  }, React.createElement("span", {
+    className: "font-bold text-base text-emerald-800 flex items-center gap-2"
+  }, "\uD83D\uDD24 \u54C1\u9805\u5B57\u9AD4\u5927\u5C0F"), React.createElement("span", {
+    className: "text-sm font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full"
+  }, itemFontSize, "px")), React.createElement("div", {
+    className: "flex items-center gap-3"
+  }, React.createElement("span", {
+    className: "text-xs text-neutral-400 font-bold shrink-0"
+  }, "\u5C0F"), React.createElement("input", {
+    type: "range",
+    min: "14",
+    max: "28",
+    value: itemFontSize,
+    onChange: e => handleItemFontSize(parseInt(e.target.value, 10)),
+    className: "flex-1 accent-emerald-600",
+    style: { height: '6px' }
+  }), React.createElement("span", {
+    className: "text-xs text-neutral-400 font-bold shrink-0"
+  }, "\u5927")), React.createElement("p", {
+    className: "text-xs text-neutral-500 font-bold leading-relaxed"
+  }, "\u8ABF\u6574\u6E05\u55AE\u4E2D\u54C1\u9805\u540D\u7A31\u7684\u5B57\u9AD4\u5927\u5C0F\uFF0C\u5176\u4ED6\u5340\u57DF\u4E0D\u53D7\u5F71\u97FF\u3002"))), React.createElement("div", {
     className: "bg-white border-2 border-neutral-100 rounded-xl overflow-hidden shadow-sm"
   }, React.createElement("button", {
     onClick: () => setExpandedSection(expandedSection === 'install' ? '' : 'install'),
@@ -2615,7 +2670,7 @@ const App = () => {
   }, React.createElement("div", {
     className: "mb-2"
   }, React.createElement("span", {
-    className: "text-2xl font-bold text-amber-900 bg-[#FFDD00] px-10 py-4 rounded-full shadow-lg tracking-widest font-serif-tc"
+    className: "inline-flex items-center gap-2 text-lg font-bold text-amber-900 bg-[#FFDD00] px-5 py-3 rounded-2xl shadow-lg font-serif-tc break-all leading-snug"
   }, "\uD83D\uDCB0 ", modalState.data.name)), React.createElement("p", {
     className: "text-xl text-neutral-600 font-bold px-4 leading-relaxed underline underline-offset-4 decoration-amber-300 decoration-2"
   }, "\u9304\u5165\u672C\u6B21\u50F9\u683C\uFF0C\u7CFB\u7D71\u81EA\u52D5\u8A18\u61B6\u3002\u4E0B\u6B21\u518D\u8CB7\u540C\u6A23\u6771\u897F\uFF0C\u6703\u544A\u8A34\u4F60\u4E0A\u6B21\u8CB7\u591A\u5C11\uFF0C\u8B93\u4F60\u8CB7\u5F97\u66F4\u8070\u660E\u3002"), React.createElement("input", {
