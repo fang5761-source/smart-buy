@@ -1672,14 +1672,12 @@ const App = () => {
   }), React.createElement("p", {
     className: "text-white font-bold text-sm tracking-wide"
   }, "\u540C\u6B65\u4E2D...")), isLoading && filteredItems.length === 0 && React.createElement("div", {
-    className: "min-h-[45vh] flex flex-col items-center justify-center text-center px-6 pt-12 text-emerald-800"
+    className: "flex flex-col items-center justify-start text-center px-6 pt-16 pb-8 text-emerald-800"
   }, React.createElement("div", {
-    className: "w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-4"
+    className: "w-9 h-9 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-3"
   }), React.createElement("p", {
-    className: "text-xl font-bold font-serif-tc mb-2"
-  }, "\u8F09\u5165\u4E2D..."), React.createElement("p", {
-    className: "text-sm leading-relaxed text-neutral-500 font-bold"
-  }, "\u6B63\u5728\u53D6\u56DE\u54C1\u9805\u8A18\u9304\uFF0C\u8CC7\u6599\u9084\u5728\uFF0C\u8ACB\u7A0D\u7B49\u4E00\u4E0B\u3002")), filteredItems.map(item => React.createElement("div", {
+    className: "text-base font-bold font-serif-tc"
+  }, "\u8CC7\u6599\u8F09\u5165\u4E2D\uFF0C\u8ACB\u7A0D\u5019...")), filteredItems.map(item => React.createElement("div", {
     key: item.id,
     className: `flex items-start gap-2.5 p-3 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`,
     style: {
