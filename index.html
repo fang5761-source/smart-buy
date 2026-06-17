@@ -743,19 +743,7 @@ const App = () => {
     data: null
   });
   const [msg, setMsg] = useState('');
-  const [isLoading, setIsLoading] = useState(() => {
-    try {
-      // Check if there's ANY cached items data to decide initial loading state
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith(CACHE_PREFIX) && k.includes('_items_')) {
-          const val = localStorage.getItem(k);
-          if (val && val.length > 2) return false;
-        }
-      }
-    } catch(e) {}
-    return true;
-  });
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedSection, setExpandedSection] = useState('');
   const [modalInput, setModalInput] = useState('');
   const [modalColorIdx, setModalColorIdx] = useState(0);
@@ -1683,7 +1671,15 @@ const App = () => {
     className: "w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
   }), React.createElement("p", {
     className: "text-white font-bold text-sm tracking-wide"
-  }, "\u540C\u6B65\u4E2D...")), filteredItems.map(item => React.createElement("div", {
+  }, "\u540C\u6B65\u4E2D...")), isLoading && filteredItems.length === 0 && React.createElement("div", {
+    className: "min-h-[45vh] flex flex-col items-center justify-center text-center px-6 pt-12 text-emerald-800"
+  }, React.createElement("div", {
+    className: "w-10 h-10 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-4"
+  }), React.createElement("p", {
+    className: "text-xl font-bold font-serif-tc mb-2"
+  }, "\u8F09\u5165\u4E2D..."), React.createElement("p", {
+    className: "text-sm leading-relaxed text-neutral-500 font-bold"
+  }, "\u6B63\u5728\u53D6\u56DE\u54C1\u9805\u8A18\u9304\uFF0C\u8CC7\u6599\u9084\u5728\uFF0C\u8ACB\u7A0D\u7B49\u4E00\u4E0B\u3002")), filteredItems.map(item => React.createElement("div", {
     key: item.id,
     className: `flex items-start gap-2.5 p-3 rounded-xl border transition-all ${item.completed ? 'bg-neutral-100 border-neutral-200 opacity-60' : item.postponed ? 'bg-amber-50 border-amber-200 shadow-inner' : 'bg-white shadow-sm'}`,
     style: {
