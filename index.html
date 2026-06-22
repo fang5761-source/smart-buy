@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.7.3 (體驗優化版) by 大樂 -->
+  <!-- 智能採買 v1.7.4 (品項可修改版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -782,6 +782,44 @@ const App = () => {
   const handleItemFontSize = (val) => {
     setItemFontSize(val);
     try { localStorage.setItem('smart_buy_item_font_size', String(val)); } catch(e) {}
+  };
+  const [editNameValue, setEditNameValue] = useState('');
+  const [editQtyValue, setEditQtyValue] = useState('');
+  const longPressTimer = useRef(null);
+  const longPressTriggered = useRef(false);
+  const openEditItemModal = item => {
+    setEditNameValue(item.name || '');
+    setEditQtyValue(item.qty || '');
+    setModalState({
+      type: 'editingItem',
+      data: item
+    });
+  };
+  const handleItemPressStart = item => {
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      if (navigator.vibrate) navigator.vibrate(15);
+      openEditItemModal(item);
+    }, 500);
+  };
+  const handleItemPressEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+  const saveEditedItem = async () => {
+    const newName = editNameValue.trim();
+    if (!newName || !modalState.data) return;
+    await updateDoc(getItemRef(modalState.data.id), {
+      name: newName,
+      qty: editQtyValue.trim()
+    });
+    setModalState({
+      type: null,
+      data: null
+    });
   };
   useEffect(() => {
     const handler = e => {
@@ -1710,14 +1748,35 @@ const App = () => {
   }, React.createElement("div", {
     className: "flex items-center gap-1.5 min-w-0 flex-1 relative"
   }, React.createElement("span", {
-    onClick: () => setNameTooltip(nameTooltip === item.id ? null : item.id),
+    onClick: () => {
+      if (longPressTriggered.current) {
+        longPressTriggered.current = false;
+        return;
+      }
+      setNameTooltip(nameTooltip === item.id ? null : item.id);
+    },
+    onMouseDown: () => handleItemPressStart(item),
+    onMouseUp: handleItemPressEnd,
+    onMouseLeave: handleItemPressEnd,
+    onTouchStart: () => handleItemPressStart(item),
+    onTouchEnd: handleItemPressEnd,
+    onTouchCancel: handleItemPressEnd,
     className: `font-bold truncate cursor-pointer select-none ${item.completed ? 'line-through text-neutral-400' : item.postponed ? 'text-amber-800' : 'text-neutral-800'}`,
-    style: { fontSize: `${itemFontSize}px` }
+    style: { fontSize: `${itemFontSize}px`, WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }
   }, item.name), nameTooltip === item.id && React.createElement("div", {
-    onClick: () => setNameTooltip(null),
-    className: "absolute left-0 top-full mt-1 z-50 bg-neutral-900 text-white text-sm font-bold rounded-xl px-4 py-3 shadow-xl max-w-[calc(100vw-2rem)] break-all leading-relaxed",
+    className: "absolute left-0 top-full mt-1 z-50 bg-neutral-900 text-white rounded-xl shadow-xl max-w-[calc(100vw-2rem)] overflow-hidden",
     style: { maxWidth: '320px' }
-  }, item.name), item.qty && React.createElement("span", {
+  }, React.createElement("div", {
+    onClick: () => setNameTooltip(null),
+    className: "text-sm font-bold px-4 py-3 break-all leading-relaxed"
+  }, item.name), React.createElement("button", {
+    onClick: e => {
+      e.stopPropagation();
+      setNameTooltip(null);
+      openEditItemModal(item);
+    },
+    className: "w-full flex items-center justify-center gap-1.5 text-sm font-bold px-4 py-2.5 bg-white/10 active:bg-white/20 border-t border-white/10"
+  }, "\u270F\uFE0F \u4FEE\u6539\u54C1\u9805")), item.qty && React.createElement("span", {
     className: "text-base px-2 py-0.5 rounded font-bold whitespace-nowrap shrink-0 bg-white/50 text-neutral-600 shadow-sm border border-black/5"
   }, item.qty)), !item.completed && React.createElement("button", {
     onClick: e => {
@@ -1776,7 +1835,7 @@ const App = () => {
     className: "flex justify-between items-center mb-4 border-b border-neutral-100 pb-3 shrink-0"
   }, React.createElement("h3", {
     className: "text-2xl font-bold text-emerald-800 font-serif-tc"
-  }, modalState.type === 'editingTag' ? '更換地點/分類' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'addQuick' ? '自訂常用品項' : modalState.type === 'addTag' ? '新增地點/分類' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'renameRoom' ? '頻道重新命名' : modalState.type === 'about' ? '使用說明書' : modalState.type === 'manageTag' ? '地點/分類設定中心' : modalState.type === 'manageQuick' ? '常用品項設定' : modalState.type === 'channelConflict' ? '偵測到舊資料' : modalState.type === 'donate' ? '請我喝咖啡' : modalState.type === 'setAlarm' ? '行事曆鬧鐘提醒' : '設定'), React.createElement("button", {
+  }, modalState.type === 'editingTag' ? '更換地點/分類' : modalState.type === 'editingItem' ? '修改品項' : modalState.type === 'recordingPrice' ? '紀錄現價' : modalState.type === 'addQuick' ? '自訂常用品項' : modalState.type === 'addTag' ? '新增地點/分類' : modalState.type === 'room' ? '共享頻道管理' : modalState.type === 'renameRoom' ? '頻道重新命名' : modalState.type === 'about' ? '使用說明書' : modalState.type === 'manageTag' ? '地點/分類設定中心' : modalState.type === 'manageQuick' ? '常用品項設定' : modalState.type === 'channelConflict' ? '偵測到舊資料' : modalState.type === 'donate' ? '請我喝咖啡' : modalState.type === 'setAlarm' ? '行事曆鬧鐘提醒' : '設定'), React.createElement("button", {
     onClick: () => {
       setModalState({
         type: null,
@@ -1959,7 +2018,7 @@ const App = () => {
     className: "font-bold text-emerald-900 text-xl font-serif-tc"
   }, "\u667A\u80FD\u63A1\u8CB7"), React.createElement("p", {
     className: "text-sm text-emerald-700 mt-0.5 font-bold"
-  }, "\u7248\u672C v1.7.3 (\u9AD4\u9A57\u512A\u5316\u7248)"), React.createElement("div", {
+  }, "\u7248\u672C v1.7.4 (\u54C1\u9805\u53EF\u4FEE\u6539\u7248)"), React.createElement("div", {
     className: "flex justify-center gap-2 mt-2"
   }, React.createElement("button", {
     onClick: handleForceUpdate,
@@ -2659,7 +2718,44 @@ const App = () => {
     }, React.createElement(Icons.Trash, {
       size: 28
     })));
-  }))), modalState.type === 'recordingPrice' && modalState.data && React.createElement("div", {
+  }))), modalState.type === 'editingItem' && modalState.data && React.createElement("div", {
+    className: "space-y-5 py-2 text-center font-bold px-1 font-serif-tc"
+  }, React.createElement("p", {
+    className: "text-base text-neutral-500 font-bold leading-relaxed"
+  }, "\u4FEE\u6539\u54C1\u9805\u540D\u7A31\u8207\u6578\u91CF\uFF0C\u4FDD\u5B58\u5F8C\u7ACB\u5373\u751F\u6548\u3002"), React.createElement("div", {
+    className: "text-left"
+  }, React.createElement("label", {
+    className: "text-sm text-neutral-400 font-bold pl-1"
+  }, "\u54C1\u9805\u540D\u7A31"), React.createElement("input", {
+    type: "text",
+    value: editNameValue,
+    onChange: e => setEditNameValue(e.target.value),
+    autoFocus: true,
+    placeholder: "\u8F38\u5165\u54C1\u9805\u540D\u7A31...",
+    className: "w-full p-4 mt-1 rounded-2xl border-2 border-emerald-200 outline-none text-xl bg-emerald-50/30 shadow-inner font-bold text-neutral-800"
+  })), React.createElement("div", {
+    className: "text-left"
+  }, React.createElement("label", {
+    className: "text-sm text-neutral-400 font-bold pl-1"
+  }, "\u6578\u91CF\uFF08\u53EF\u7559\u7A7A\uFF09"), React.createElement("input", {
+    type: "text",
+    value: editQtyValue,
+    onChange: e => setEditQtyValue(e.target.value),
+    placeholder: "\u4F8B\uFF1A2\u500B\u3001500g...",
+    className: "w-full p-4 mt-1 rounded-2xl border-2 border-neutral-200 outline-none text-lg bg-neutral-50/50 shadow-inner font-bold text-neutral-700"
+  })), React.createElement("div", {
+    className: "flex gap-3 pt-2"
+  }, React.createElement("button", {
+    onClick: () => setModalState({
+      type: null,
+      data: null
+    }),
+    className: "flex-1 bg-neutral-100 text-neutral-600 py-4 rounded-2xl font-bold text-lg active:scale-95 transition-all"
+  }, "\u53D6\u6D88"), React.createElement("button", {
+    onClick: saveEditedItem,
+    disabled: !editNameValue.trim(),
+    className: `flex-1 py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all ${editNameValue.trim() ? 'bg-emerald-600 text-white' : 'bg-neutral-200 text-neutral-400'}`
+  }, "\u5132\u5B58\u4FEE\u6539"))), modalState.type === 'recordingPrice' && modalState.data && React.createElement("div", {
     className: "space-y-6 py-4 text-center font-bold px-1 font-serif-tc"
   }, React.createElement("div", {
     className: "mb-2"
