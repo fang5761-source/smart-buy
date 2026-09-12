@@ -744,6 +744,7 @@ const App = () => {
   });
   const [msg, setMsg] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [expandedSection, setExpandedSection] = useState('');
   const [modalInput, setModalInput] = useState('');
   const [modalColorIdx, setModalColorIdx] = useState(0);
@@ -1064,8 +1065,10 @@ const App = () => {
     if (cachedItems) {
       setItems(cachedItems);
       setIsLoading(false);
+      setIsSyncing(true);
     } else {
       setIsLoading(true);
+      setIsSyncing(false);
     }
     if (cachedHistory) setHistory(cachedHistory);
     if (cachedConfig) {
@@ -1080,9 +1083,11 @@ const App = () => {
       setItems(nextItems);
       writeCache(prefix, 'items', nextItems);
       setIsLoading(false);
+      setIsSyncing(false);
     }, err => {
       console.warn('資料讀取中:', err);
       setIsLoading(false);
+      setIsSyncing(false);
     });
     const unsubHist = onSnapshot(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `hist_${prefix}`), snap => {
       const h = {};
@@ -1703,13 +1708,13 @@ const App = () => {
     }, tag);
   })), React.createElement("main", {
     className: "p-2 space-y-2.5 bg-neutral-50/50 flex-1 overflow-y-auto pb-24 relative"
-  }, isLoading && React.createElement("div", {
+  }, (isLoading || isSyncing) && React.createElement("div", {
     className: "absolute top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-emerald-600/90 py-1.5 shadow"
   }, React.createElement("div", {
     className: "w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"
   }), React.createElement("p", {
     className: "text-white font-bold text-sm tracking-wide"
-  }, "\u540C\u6B65\u4E2D...")), isLoading && filteredItems.length === 0 && React.createElement("div", {
+  }, "清單同步更新中...")), isLoading && filteredItems.length === 0 && React.createElement("div", {
     className: "flex flex-col items-center justify-start text-center px-6 pt-16 pb-8 text-emerald-800"
   }, React.createElement("div", {
     className: "w-9 h-9 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-3"
