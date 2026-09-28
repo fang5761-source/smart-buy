@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.7.5 (頻道地點隔離修正版) by 大樂 -->
+  <!-- 智能採買 v1.7.6 (地點殘留修正版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -881,6 +881,11 @@ const App = () => {
     return next.includes(tagName) ? next.filter(t => t !== tagName) : [...next, tagName];
   };
   const itemHasTag = (item, tagName) => itemTags(item).includes(tagName);
+  // 只保留目前頻道實際存在的地點，避免其他頻道的地點被寫入
+  const keepValidTags = list => {
+    const valid = (customTags || []).filter(t => t && t.n).map(t => t.n);
+    return normalizeTags(list).filter(t => valid.includes(t));
+  };
   const [savedRooms, setSavedRooms] = useState(() => {
     try {
       const raw = localStorage.getItem('smart_buy_saved_rooms');
@@ -1066,6 +1071,8 @@ const App = () => {
     setHistory({});
     setCustomTags(DEFAULT_TAGS);
     setQuickItems(DEFAULT_QUICK);
+    setActiveTag('');
+    setFilterTag('全部');
     if (cachedItems) {
       setItems(cachedItems);
       setIsLoading(false);
@@ -1139,7 +1146,7 @@ const App = () => {
   const handleAdd = async e => {
     if (e) e.preventDefault();
     if (!inputValue.trim() || !user) return;
-    const selectedTags = normalizeTags(activeTag);
+    const selectedTags = keepValidTags(activeTag);
     await addDoc(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`), {
       name: inputValue.trim(),
       qty: qtyValue.trim(),
@@ -1926,7 +1933,7 @@ const App = () => {
     return React.createElement("button", {
       key: t.n,
       onClick: async () => {
-        const nextTags = toggleTagValue(modalState.data.tags && modalState.data.tags.length ? modalState.data.tags : modalState.data.tag, t.n);
+        const nextTags = keepValidTags(toggleTagValue(modalState.data.tags && modalState.data.tags.length ? modalState.data.tags : modalState.data.tag, t.n));
         await updateDoc(getItemRef(modalState.data.id), {
           tag: nextTags[0] || '',
           tags: nextTags
@@ -2025,7 +2032,7 @@ const App = () => {
     className: "font-bold text-emerald-900 text-xl font-serif-tc"
   }, "\u667A\u80FD\u63A1\u8CB7"), React.createElement("p", {
     className: "text-sm text-emerald-700 mt-0.5 font-bold"
-  }, "\u7248\u672C v1.7.5 (\u983B\u9053\u5730\u9EDE\u9694\u96E2\u4FEE\u6B63\u7248)"), React.createElement("div", {
+  }, "\u7248\u672C v1.7.6 (\u5730\u9EDE\u6B98\u7559\u4FEE\u6B63\u7248)"), React.createElement("div", {
     className: "flex justify-center gap-2 mt-2"
   }, React.createElement("button", {
     onClick: handleForceUpdate,
