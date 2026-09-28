@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.7.6 (地點殘留修正版) by 大樂 -->
+  <!-- 智能採買 v1.7.7 (秒開清單版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -120,6 +120,22 @@ const writeCache = (prefix, type, value) => {
     localStorage.setItem(cacheKey(prefix, type), JSON.stringify(value));
   } catch (e) {}
 };
+// ⚡ 啟動加速：不等登入/網路，直接用上次的本機快取立即顯示清單
+const BOOT = (() => {
+  try {
+    const room = localStorage.getItem('smart_buy_room') || '';
+    const uid = localStorage.getItem('smart_buy_last_uid') || '';
+    const prefix = room ? `room_${room}` : uid ? `user_${uid}` : '';
+    if (!prefix) return {};
+    return {
+      items: readCache(prefix, 'items', null),
+      history: readCache(prefix, 'history', null),
+      config: readCache(prefix, 'config', null)
+    };
+  } catch (e) {
+    return {};
+  }
+})();
 const MACARON_COLORS = [{
   bg: '#fce7f3',
   text: '#9f1239',
@@ -715,10 +731,10 @@ const Icons = {
 };
 const App = () => {
   const [user, setUser] = useState(null);
-  const [items, setItems] = useState([]);
-  const [history, setHistory] = useState({});
-  const [customTags, setCustomTags] = useState(DEFAULT_TAGS);
-  const [quickItems, setQuickItems] = useState(DEFAULT_QUICK);
+  const [items, setItems] = useState(() => BOOT.items || []);
+  const [history, setHistory] = useState(() => BOOT.history || {});
+  const [customTags, setCustomTags] = useState(() => BOOT.config && BOOT.config.tags || DEFAULT_TAGS);
+  const [quickItems, setQuickItems] = useState(() => BOOT.config && BOOT.config.quick || DEFAULT_QUICK);
   const [personalBaseId, setPersonalBaseId] = useState(() => {
     try {
       return localStorage.getItem('smart_buy_base_id') || generateId();
@@ -743,7 +759,7 @@ const App = () => {
     data: null
   });
   const [msg, setMsg] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!BOOT.items);
   const [expandedSection, setExpandedSection] = useState('');
   const [modalInput, setModalInput] = useState('');
   const [modalColorIdx, setModalColorIdx] = useState(0);
@@ -920,6 +936,9 @@ const App = () => {
     });
     const unsubscribe = onAuthStateChanged(auth, u => {
       if (u) {
+        try {
+          localStorage.setItem('smart_buy_last_uid', u.uid);
+        } catch (e) {}
         setUser(u);
       } else signInAnonymously(auth).catch(console.error);
     });
@@ -2032,7 +2051,7 @@ const App = () => {
     className: "font-bold text-emerald-900 text-xl font-serif-tc"
   }, "\u667A\u80FD\u63A1\u8CB7"), React.createElement("p", {
     className: "text-sm text-emerald-700 mt-0.5 font-bold"
-  }, "\u7248\u672C v1.7.6 (\u5730\u9EDE\u6B98\u7559\u4FEE\u6B63\u7248)"), React.createElement("div", {
+  }, "\u7248\u672C v1.7.7 (\u79D2\u958B\u6E05\u55AE\u7248)"), React.createElement("div", {
     className: "flex justify-center gap-2 mt-2"
   }, React.createElement("button", {
     onClick: handleForceUpdate,
