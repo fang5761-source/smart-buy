@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.7.4 (品項可修改版) by 大樂 -->
+  <!-- 智能採買 v1.7.5 (頻道地點隔離修正版) by 大樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -1061,6 +1061,11 @@ const App = () => {
     const cachedItems = readCache(prefix, 'items', null);
     const cachedHistory = readCache(prefix, 'history', null);
     const cachedConfig = readCache(prefix, 'config', null);
+    // 切換頻道時先清空上一個頻道的狀態，避免地點/常用品項跨頻道殘留
+    setItems([]);
+    setHistory({});
+    setCustomTags(DEFAULT_TAGS);
+    setQuickItems(DEFAULT_QUICK);
     if (cachedItems) {
       setItems(cachedItems);
       setIsLoading(false);
@@ -1113,6 +1118,8 @@ const App = () => {
           setQuickItems(fixedQuick);
           nextConfig.quick = fixedQuick;
         }
+        if (!data.tags) setCustomTags(DEFAULT_TAGS);
+        if (!data.quick) setQuickItems(DEFAULT_QUICK);
         writeCache(prefix, 'config', nextConfig);
       } else {
         setDoc(snap.ref, {
@@ -2018,7 +2025,7 @@ const App = () => {
     className: "font-bold text-emerald-900 text-xl font-serif-tc"
   }, "\u667A\u80FD\u63A1\u8CB7"), React.createElement("p", {
     className: "text-sm text-emerald-700 mt-0.5 font-bold"
-  }, "\u7248\u672C v1.7.4 (\u54C1\u9805\u53EF\u4FEE\u6539\u7248)"), React.createElement("div", {
+  }, "\u7248\u672C v1.7.5 (\u983B\u9053\u5730\u9EDE\u9694\u96E2\u4FEE\u6B63\u7248)"), React.createElement("div", {
     className: "flex justify-center gap-2 mt-2"
   }, React.createElement("button", {
     onClick: handleForceUpdate,
