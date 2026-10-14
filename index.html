@@ -1284,22 +1284,48 @@ const App = () => {
   const generateICS = (item, dateStr) => {
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return;
-    const pad = n => n < 10 ? '0' + n : n;
-    const toICSDate = d => d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + 'Z';
+    const pad = n => String(n).padStart(2, '0');
+    const toICSDate = d => String(d.getUTCFullYear()) + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + 'Z';
+    const esc = t => String(t == null ? '' : t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
     const start = toICSDate(date);
     const end = toICSDate(new Date(date.getTime() + 60 * 60 * 1000));
-    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//SmartBuy//TW\nCALSCALE:GREGORIAN\nBEGIN:VEVENT\nDTSTART:${start}\nDTEND:${end}\nSUMMARY:🛒 任務：${item.name} ${item.tag && item.tag !== '無' ? `(${item.tag})` : ''}\nDESCRIPTION:分類：${item.tag || '無'}\\n(由智能採買 APP 自動建立)\nBEGIN:VALARM\nTRIGGER:-PT0M\nACTION:DISPLAY\nDESCRIPTION:Reminder\nEND:VALARM\nEND:VEVENT\nEND:VCALENDAR`;
+    const tagText = item.tag && item.tag !== '無' ? ` (${item.tag})` : '';
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//SmartBuy//TW',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      'UID:smartbuy-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '@smartbuy',
+      'DTSTAMP:' + toICSDate(new Date()),
+      'DTSTART:' + start,
+      'DTEND:' + end,
+      'SUMMARY:' + esc('🛒 任務：' + item.name + tagText),
+      'DESCRIPTION:' + esc('分類：' + (item.tag || '無')) + '\\n' + esc('(由智能採買 APP 自動建立)'),
+      'BEGIN:VALARM',
+      'TRIGGER:-PT0M',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Reminder',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const safeName = String(item.name || 'task').replace(/[\\\/:*?"<>|\s]+/g, '_').slice(0, 30);
     const blob = new Blob([icsContent], {
       type: 'text/calendar;charset=utf-8'
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `任務提醒_${item.name}.ics`;
+    // iOS Safari：不帶 download 屬性，才會直接跳出「加入行事曆」；其他裝置維持下載檔案
+    if (!isIOS) a.download = `task_${safeName}.ics`;
+    a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // 不能立刻 revoke：iOS 是非同步讀取 blob，太早釋放就會出現「Safari 無法下載此檔案」
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
   const handleTuneRoomAttempt = async (prefix, suffix, note = '') => {
     try {
