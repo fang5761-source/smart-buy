@@ -1,7 +1,7 @@
 // 智能採買 Service Worker v5 (秒開版)
 // 頁面本體：先用快取立即開啟，背景再更新（弱網路/店內訊號差也不會卡住）
 // 外部函式庫：快取優先，並獨立存放，之後改版不會被清掉
-const APP_CACHE = 'smart-buy-app-v5';
+const APP_CACHE = 'smart-buy-app-v6';
 const CDN_CACHE = 'smart-buy-cdn-v1';
 const APP_SHELL = [
   './',

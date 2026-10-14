@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <!-- 智能採買 v1.7.7 (秒開清單版) by 大樂 -->
+  <!-- 智能採買 v1.7.8 (網址點擊版) by 小樂 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
   <title>智能採買</title>
@@ -801,11 +801,13 @@ const App = () => {
   };
   const [editNameValue, setEditNameValue] = useState('');
   const [editQtyValue, setEditQtyValue] = useState('');
+  const [editUrlValue, setEditUrlValue] = useState('');
   const longPressTimer = useRef(null);
   const longPressTriggered = useRef(false);
   const openEditItemModal = item => {
     setEditNameValue(item.name || '');
     setEditQtyValue(item.qty || '');
+    setEditUrlValue(item.url || '');
     setModalState({
       type: 'editingItem',
       data: item
@@ -826,11 +828,20 @@ const App = () => {
     }
   };
   const saveEditedItem = async () => {
-    const newName = editNameValue.trim();
+    const parsedName = extractUrl(editNameValue);
+    const newName = parsedName.name;
     if (!newName || !modalState.data) return;
+    let newUrl = '';
+    const fromField = (editUrlValue || '').trim();
+    if (fromField) {
+      const m = fromField.match(/https?:\/\/[^\s<>"'，。、；）)】」]+/i);
+      newUrl = m ? m[0] : /\s/.test(fromField) ? '' : 'https://' + fromField;
+    }
+    if (!newUrl && parsedName.url) newUrl = parsedName.url;
     await updateDoc(getItemRef(modalState.data.id), {
       name: newName,
-      qty: editQtyValue.trim()
+      qty: editQtyValue.trim(),
+      url: newUrl
     });
     setModalState({
       type: null,
@@ -1162,12 +1173,36 @@ const App = () => {
   }, [user, roomPath]);
   const getConfigRef = () => doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `config_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`, 'settings');
   const getItemRef = id => doc(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`, id);
+  const extractUrl = text => {
+    const raw = String(text || '');
+    const re = /https?:\/\/[^\s<>"'，。、；）)】」]+/gi;
+    const found = raw.match(re);
+    if (!found) return {
+      name: raw.trim(),
+      url: ''
+    };
+    const url = found[0];
+    let name = raw.replace(re, ' ').replace(/\s+/g, ' ').trim();
+    if (!name) {
+      let host = '';
+      try {
+        host = new URL(url).hostname.replace(/^www\./, '');
+      } catch (err) {}
+      name = /shopee|shp\.ee/i.test(host) ? '蝦皮連結' : /momo/i.test(host) ? 'momo連結' : /pchome/i.test(host) ? 'PChome連結' : host ? host + ' 連結' : '連結';
+    }
+    return {
+      name,
+      url
+    };
+  };
   const handleAdd = async e => {
     if (e) e.preventDefault();
     if (!inputValue.trim() || !user) return;
+    const parsedInput = extractUrl(inputValue);
     const selectedTags = keepValidTags(activeTag);
     await addDoc(collection(db, 'artifacts', APP_ID_PATH, 'public', 'data', `list_${roomPath ? `room_${roomPath}` : `user_${user.uid}`}`), {
-      name: inputValue.trim(),
+      name: parsedInput.name,
+      url: parsedInput.url,
       qty: qtyValue.trim(),
       tag: selectedTags[0] || '',
       tags: selectedTags,
@@ -1300,8 +1335,9 @@ const App = () => {
       'DTSTAMP:' + toICSDate(new Date()),
       'DTSTART:' + start,
       'DTEND:' + end,
+      item.url ? 'URL:' + item.url : '',
       'SUMMARY:' + esc('🛒 任務：' + item.name + tagText),
-      'DESCRIPTION:' + esc('分類：' + (item.tag || '無')) + '\\n' + esc('(由智能採買 APP 自動建立)'),
+      'DESCRIPTION:' + esc('分類：' + (item.tag || '無')) + '\\n' + esc('(由智能採買 APP 自動建立)') + (item.url ? '\\n' + esc('連結：' + item.url) : ''),
       'BEGIN:VALARM',
       'TRIGGER:-PT0M',
       'ACTION:DISPLAY',
@@ -1309,7 +1345,7 @@ const App = () => {
       'END:VALARM',
       'END:VEVENT',
       'END:VCALENDAR'
-    ].join('\r\n');
+    ].filter(Boolean).join('\r\n');
     const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const safeName = String(item.name || 'task').replace(/[\\\/:*?"<>|\s]+/g, '_').slice(0, 30);
     const blob = new Blob([icsContent], {
@@ -1630,7 +1666,9 @@ const App = () => {
     onChange: e => setQtyValue(e.target.value),
     placeholder: "\u6578\u91CF",
     className: "w-16 sm:w-20 p-3.5 rounded-2xl border border-neutral-200 shadow-sm text-center outline-none text-lg font-bold bg-white focus:border-emerald-500 text-neutral-700 placeholder-neutral-400 placeholder:text-sm sm:placeholder:text-base placeholder:font-normal"
-  })), React.createElement("div", {
+  })), extractUrl(inputValue).url && React.createElement("div", {
+    className: "text-xs font-bold text-emerald-600 px-2 pb-1"
+  }, "\uD83D\uDD17 \u5DF2\u5075\u6E2C\u5230\u9023\u7D50\uFF0C\u65B0\u589E\u5F8C\u53EF\u5F9E 🔗 \u6309\u9215\u958B\u555F"), React.createElement("div", {
     className: `flex items-center gap-2 relative ${scrollContainerClass('quick')} py-0.5 mt-0.5`
   }, React.createElement("div", {
     className: "sticky left-0 bg-white pr-1 z-10 flex items-center justify-center"
@@ -1837,7 +1875,14 @@ const App = () => {
     className: "w-full flex items-center justify-center gap-1.5 text-sm font-bold px-4 py-2.5 bg-white/10 active:bg-white/20 border-t border-white/10"
   }, "\u270F\uFE0F \u4FEE\u6539\u54C1\u9805")), item.qty && React.createElement("span", {
     className: "text-base px-2 py-0.5 rounded font-bold whitespace-nowrap shrink-0 bg-white/50 text-neutral-600 shadow-sm border border-black/5"
-  }, item.qty)), !item.completed && React.createElement("button", {
+  }, item.qty), item.url && /^https?:\/\//i.test(item.url) && React.createElement("a", {
+    href: item.url,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: e => e.stopPropagation(),
+    title: "\u958B\u555F\u9023\u7D50",
+    className: "shrink-0 text-base px-2 py-0.5 rounded font-bold bg-white/70 text-blue-600 shadow-sm border border-blue-200 active:scale-90 no-underline"
+  }, "\uD83D\uDD17")), !item.completed && React.createElement("button", {
     onClick: e => {
       e.stopPropagation();
       setModalInput(item.currentPrice || '');
@@ -2802,6 +2847,17 @@ const App = () => {
     onChange: e => setEditQtyValue(e.target.value),
     placeholder: "\u4F8B\uFF1A2\u500B\u3001500g...",
     className: "w-full p-4 mt-1 rounded-2xl border-2 border-neutral-200 outline-none text-lg bg-neutral-50/50 shadow-inner font-bold text-neutral-700"
+  })), React.createElement("div", {
+    className: "text-left"
+  }, React.createElement("label", {
+    className: "text-sm text-neutral-400 font-bold pl-1"
+  }, "\uD83D\uDD17 \u9023\u7D50\uFF08\u53EF\u7559\u7A7A\uFF09"), React.createElement("input", {
+    type: "text",
+    inputMode: "url",
+    value: editUrlValue,
+    onChange: e => setEditUrlValue(e.target.value),
+    placeholder: "https://...",
+    className: "w-full p-4 mt-1 rounded-2xl border-2 border-neutral-200 outline-none text-base bg-neutral-50/50 shadow-inner font-bold text-neutral-700"
   })), React.createElement("div", {
     className: "flex gap-3 pt-2"
   }, React.createElement("button", {
